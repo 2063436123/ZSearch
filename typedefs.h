@@ -8,7 +8,10 @@
 #include <utility>
 #include <list>
 #include <unordered_map>
+#include <thread>
 #include <mutex>
+#include <algorithm>
+#include <numeric>
 
 #include <Poco/Exception.h>
 #include <Poco/String.h>

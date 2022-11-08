@@ -7,7 +7,10 @@
 class Document {
 public:
     explicit Document(size_t doc_id, std::filesystem::path origin_path_)
-            : id(doc_id), origin_path(std::move(origin_path_)) {}
+            : id(doc_id), origin_path(std::move(origin_path_)) {
+        if (!is_regular_file(origin_path))
+            throw FileTypeUnmatchException();
+    }
 
     size_t getId() const
     {
@@ -19,29 +22,40 @@ public:
         return origin_path;
     }
 
+    // 获取文档中的字符串，直接匹配的部分位于 [offset, offset + len) —— 一定会被完全输出，res_len 指明我们期望的总输出宽度.
     std::string getString(size_t offset, size_t len, size_t res_len) const
     {
+        auto file_len = file_size(origin_path);
         int fd = ::open(origin_path.c_str(), O_RDONLY);
         if (fd < 0)
             throw Poco::FileNotFoundException();
 
         // if output like: xxx matched yyy
+        // offset points to 'm' of "matched"
         // left_len is len(xxx)
         // right_len is len(matched yyy)
+        // left_len + right_len == max(res_len, len)
         size_t left_len = 0;
-        size_t right_len = len;
         if (res_len > len)
         {
+            bool is_left_enough_chars = (res_len - len) / 2 <= offset;
+            bool is_right_enough_chars = (res_len - len + 1) / 2 + len <= file_len - offset;
+
             // 尝试均匀输出左右侧上下文
-            if ((res_len - len) / 2 <= offset)
+            if (is_left_enough_chars && is_right_enough_chars)
             {
                 left_len = (res_len - len) / 2;
-                right_len += (res_len - len + 1) / 2;
             }
-            else // 在最左侧，所以我们不均匀输出而是从左开始全部输出
+            else if (is_right_enough_chars)
+                // 整个文档长度小于 res_len，直接输出整个文档
+                // or
+                // 在最左侧，所以我们从左开始尽可能输出
             {
                 left_len = offset;
-                right_len = res_len - offset;
+            }
+            else // 在最右侧，所以我们从右开始尽可能输出
+            {
+                left_len = res_len - (file_len - offset);
             }
         }
         assert(left_len >= 0);

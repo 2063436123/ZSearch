@@ -31,6 +31,8 @@ public:
     void addTerm(const std::string& word, size_t doc_id, size_t offset_in_file)
     {
         std::lock_guard<std::mutex> guard(term_map_lock);
+        if (!term_map.contains(word))
+            term_map[word].word = word;
         auto &posting_list = term_map[word].posting_list;
         auto &statistics_list = term_map[word].statistics_list;
 
@@ -98,5 +100,5 @@ private:
 
     }
 
-    std::atomic_size_t next_doc_id = 0;
+    std::atomic_size_t next_doc_id = 1;
 };
