@@ -12,6 +12,7 @@
 #include <mutex>
 #include <algorithm>
 #include <numeric>
+#include <fstream>
 
 #include <Poco/Exception.h>
 #include <Poco/String.h>

@@ -15,7 +15,9 @@ struct SearchResult {
     {
         if (score != rhs.score)
             return score < rhs.score;
-        return document.getId() < rhs.document.getId();
+        if (document.getId() != rhs.document.getId())
+            return document.getId() < rhs.document.getId();
+        return offset_in_file < rhs.offset_in_file;
     }
 };
 

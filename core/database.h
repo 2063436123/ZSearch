@@ -6,15 +6,19 @@
 
 class Database {
 public:
-    explicit Database(std::filesystem::path path_) : database_path(std::move(path_))
+    explicit Database(std::filesystem::path path_, bool create = false) : database_path(std::move(path_))
     {
         if (!exists(database_path))
         {
-            return;
+            if (!create)
+                return;
+            else
+                std::filesystem::create_directory(database_path);
         }
         if (!is_directory(database_path))
             throw DatabaseTypeException();
-        deserialize();
+        if (!create)
+            deserialize();
     }
 
     size_t newDocId()
@@ -58,7 +62,7 @@ public:
         return document_map.find(doc_id)->second;
     }
 
-    Term findTerm(const std::string &word)
+    Term findTerm(const std::string &word) const
     {
         std::lock_guard<std::mutex> guard(term_map_lock);
         auto iter = term_map.find(word);
@@ -88,16 +92,54 @@ private:
 
     // 参考 Clickhouse 中的 writeVarBuf 等方法?
     void serialize() {
+        std::scoped_lock<std::mutex, std::mutex> sl(term_map_lock, document_map_lock);
+
         std::ofstream fout(database_path.string() + "/meta");
-        fout << next_doc_id << " " << term_map.size() << " ";
+        WriteBuffer buf;
+        WriteBufferHelper helper(buf);
+        term_map_lock.unlock();
+        auto test_term = this->findTerm("my");
+        term_map_lock.lock();
+
+        helper.writeInteger(next_doc_id.load());
+
+        helper.writeInteger(term_map.size());
         for (const auto& pair : term_map)
         {
-            // TODO:
-//            fout << pair.first << " " << pair.second
+            helper.writeString(pair.first);
+            pair.second.serialize(helper);
         }
-    }
-    void deserialize() {
 
+        helper.writeInteger(document_map.size());
+        for (const auto& pair : document_map)
+        {
+            helper.writeInteger(pair.first);
+            pair.second.serialize(helper);
+        }
+        buf.dumpAllToStream(fout);
+    }
+
+    void deserialize() {
+        std::scoped_lock<std::mutex, std::mutex> sl(term_map_lock, document_map_lock);
+
+        std::ifstream fin(database_path.string() + "/meta");
+        ReadBuffer buf;
+        buf.readAllFromStream(fin);
+        ReadBufferHelper helper(buf);
+
+        next_doc_id = helper.readInteger<size_t>();
+
+        auto size = helper.readInteger<size_t>();
+        for (size_t i = 0; i < size; i++)
+        {
+            term_map.emplace(helper.readString(), Term::deserialize(helper));
+        }
+
+        size = helper.readInteger<size_t>();
+        for (size_t i = 0; i < size; i++)
+        {
+            document_map.emplace(helper.readInteger<size_t>(), Document::deserialize(helper));
+        }
     }
 
     std::atomic_size_t next_doc_id = 1;

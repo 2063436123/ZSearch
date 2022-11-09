@@ -8,7 +8,7 @@ TEST(database, CreateDatabase)
 
 TEST(database, NewDocId)
 {
-    Database db(root_path + "/database1");
+    Database db(root_path + "/database1", true);
 
     // multi thread
     bool doc_ids[100001]{false, };
@@ -38,7 +38,7 @@ TEST(database, NewDocId)
 
 TEST(database, AddFind)
 {
-    Database db(root_path + "/database1");
+    Database db(root_path + "/database1", true);
 
     db.addDocument(1, root_path + "/articles/ABC.txt");
     ASSERT_THROW(db.addDocument(2, root_path + "/articles/NotFound.txt"), FileTypeUnmatchException);
@@ -70,7 +70,7 @@ TEST(database, AddFind)
 
     // not found
     auto term2 = db.findTerm("world");
-    ASSERT_EQ(term2.word, "");
+    ASSERT_EQ(term2.isEmpty(), true);
 }
 
 TEST(document, GetString)
@@ -85,6 +85,38 @@ TEST(document, GetString)
     ASSERT_EQ(document2.getString(0, 100, 100), "This is a little text.");
     ASSERT_EQ(document2.getString(0, 0, 100), "This is a little text.");
     ASSERT_EQ(document2.getString(0, 100, 0), "This is a little text.");
+}
+
+TEST(database, SerializeAndDeserialize)
+{
+    {
+        // store
+        Database db(root_path + "/database1", true);
+        db.addDocument(1, root_path + "/articles/ABC.txt");
+        db.addTerm("hello", 3, 100);
+        db.addTerm("hello", 1, 1);
+        db.addTerm("hello", 1, 30);
+    }
+
+    // restore
+    Database db(root_path + "/database1", false);
+    auto doc1 = db.findDocument(1);
+    ASSERT_EQ(doc1.getId(), 1);
+    ASSERT_EQ(doc1.getPath(), root_path + "/articles/ABC.txt");
+
+    auto term1 = db.findTerm("hello");
+    ASSERT_EQ(term1.word, "hello");
+
+    ASSERT_EQ(term1.posting_list.size(), 2);
+    ASSERT_EQ(term1.posting_list[0], 1);
+    ASSERT_EQ(term1.posting_list[1], 3);
+
+    ASSERT_EQ(term1.statistics_list.size(), 2);
+    ASSERT_EQ(term1.statistics_list[0].offsets_in_file.size(), 2);
+    ASSERT_EQ(term1.statistics_list[1].offsets_in_file.size(), 1);
+
+    ASSERT_EQ(std::accumulate(term1.statistics_list[0].offsets_in_file.begin(), term1.statistics_list[0].offsets_in_file.end(), 0), 31);
+    ASSERT_EQ(*term1.statistics_list[1].offsets_in_file.begin(), 100);
 }
 
 int main()

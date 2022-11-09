@@ -6,7 +6,7 @@
 
 class Document {
 public:
-    explicit Document(size_t doc_id, std::filesystem::path origin_path_)
+    Document(size_t doc_id, std::filesystem::path origin_path_)
             : id(doc_id), origin_path(std::move(origin_path_)) {
         if (!is_regular_file(origin_path))
             throw FileTypeUnmatchException();
@@ -71,6 +71,19 @@ public:
         auto res = std::string(buf, read_number);
         delete[] buf;
         return res;
+    }
+
+    void serialize(WriteBufferHelper &helper) const
+    {
+        helper.writeInteger(id);
+        helper.writeString(origin_path.string());
+    }
+
+    static Document deserialize(ReadBufferHelper &helper)
+    {
+        auto id = helper.readInteger<size_t>();
+        std::filesystem::path path(helper.readString());
+        return {id, path};
     }
 
 private:

@@ -6,14 +6,13 @@ void run()
 {
     std::string cmd;
     // TODO: 实现序列化反序列化方法
-    Database db(root_path + "/database1");
     while (std::cin >> cmd)
     {
         if (cmd.starts_with("index"))
         {
             std::string path;
             std::cin >> path;
-//            Database db(path);
+            Database db(path, true);
             Indexer indexer(db);
 
             std::cin >> path;
@@ -23,7 +22,7 @@ void run()
         {
             std::string path;
             std::cin >> path;
-//            Database db(path);
+            Database db(path);
 
             Searcher searcher(db);
 
@@ -33,9 +32,9 @@ void run()
             size_t no = 0;
             for (const auto &result: res)
             {
-                std::cout << "[No." << no++ << " doc id: " << result.document.getId() << " path: "
+                std::cout << "[No." << no++ << " doc id:" << result.document.getId() << " path:"
                           << result.document.getPath() << " score: " << result.score << "]" << std::endl;
-                auto matched_text = result.document.getString(result.offset_in_file, result.related_text_len, 20);
+                auto matched_text = result.document.getString(result.offset_in_file, result.related_text_len, 30);
                 std::cout << output_smooth(matched_text) << std::endl;
             }
         }

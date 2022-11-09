@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include "typedefs.h"
-#include "utils.h"
+#include "utils/stringUtils.h"
 
 struct StringInFile {
     StringInFile(const std::string &str_, size_t offset_in_file_) : str(str_), offset_in_file(offset_in_file_) {}
