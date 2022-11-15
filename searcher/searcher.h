@@ -1,7 +1,7 @@
 #pragma once
 
 #include "typedefs.h"
-#include "core/database.h"
+#include "core/Database.h"
 
 struct SearchResult {
     Document document;

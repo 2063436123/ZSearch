@@ -1,7 +1,7 @@
-#include "extractor.h"
+#include "Extractor.h"
 #include <fcntl.h>
 
-void check_string_in_file(TxtReader &reader, int file_fd, const char *expected_str, size_t expected_offset)
+void check_string_in_file(TxtLineReader &reader, int file_fd, const char *expected_str, size_t expected_offset)
 {
     assert(strlen(expected_str));
 
@@ -20,7 +20,7 @@ TEST(extractor, WordExtractor)
 {
     WordExtractor extractor;
 
-    TxtReader reader(root_path + "/articles/ABC.txt");
+    TxtLineReader reader(root_path + "/articles/ABC.txt");
 
     StringInFile line = reader.readUntil();
     StringInFiles sifs = extractor.extract(line);

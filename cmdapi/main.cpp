@@ -1,5 +1,5 @@
-#include "core/indexer.h"
-#include "searcher/searcher.h"
+#include "indexer/indexer.h"
+#include "searcher/Searcher.h"
 #include <iostream>
 
 void run()

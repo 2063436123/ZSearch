@@ -1,7 +1,7 @@
-#include "reader.h"
+#include "Reader.h"
 #include <fcntl.h>
 
-void check_string_in_file(TxtReader &reader, int file_fd, const char *expected_str, size_t expected_offset)
+void check_string_in_file(TxtLineReader &reader, int file_fd, const char *expected_str, size_t expected_offset)
 {
     assert(strlen(expected_str));
 
@@ -18,7 +18,7 @@ void check_string_in_file(TxtReader &reader, int file_fd, const char *expected_s
 
 TEST(reader, TxtReader)
 {
-    TxtReader reader(root_path + "/articles/IfIWereToFallInLove.txt");
+    TxtLineReader reader(root_path + "/articles/IfIWereToFallInLove.txt");
     int fd = ::open((root_path + "/articles/IfIWereToFallInLove.txt").c_str(), O_RDONLY);
 
     check_string_in_file(reader, fd,

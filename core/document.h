@@ -1,8 +1,9 @@
 #pragma once
 
-#include "term.h"
-#include "storage/reader.h"
-#include "extractor/extractor.h"
+#include "Term.h"
+#include "storage/Reader.h"
+#include "extractor/Extractor.h"
+#include "DocumentInfo.h"
 
 class Document {
 public:
@@ -10,6 +11,10 @@ public:
             : id(doc_id), origin_path(std::move(origin_path_)) {
         if (!is_regular_file(origin_path))
             throw FileTypeUnmatchException();
+        struct stat file_stat;
+        stat(origin_path.c_str(), &file_stat);
+        info.type = decideFileType(origin_path);
+        info.changed_time = file_stat.st_mtimespec;
     }
 
     size_t getId() const
@@ -20,6 +25,19 @@ public:
     std::filesystem::path getPath() const
     {
         return origin_path;
+    }
+
+    void setPath(std::filesystem::path path) {
+        origin_path = path;
+    }
+
+    DocumentInfo getInfo() const {
+        return info;
+    }
+
+    void setInfo(const DocumentInfo& info_)
+    {
+        info = info_;
     }
 
     // 获取文档中的字符串，直接匹配的部分位于 [offset, offset + len) —— 一定会被完全输出，res_len 指明我们期望的总输出宽度.
@@ -87,8 +105,22 @@ public:
     }
 
 private:
+    DocumentType decideFileType(const std::filesystem::path& path) {
+        auto extension = path.extension().string();
+        if (extension.empty())
+            return DocumentType::UNKNOWN;
+        if (extension == "txt")
+            return DocumentType::NORMAL;
+        if (extension == "csv")
+            return DocumentType::CSV;
+        if (extension == "json")
+            return DocumentType::JSON;
+        return DocumentType::NORMAL;
+    }
+
     size_t id;
     std::filesystem::path origin_path;
+    DocumentInfo info;
 };
 
 using DocumentMap = std::unordered_map<size_t, Document>;

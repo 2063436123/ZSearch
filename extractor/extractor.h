@@ -1,21 +1,21 @@
 #pragma once
 
 #include "typedefs.h"
-#include "storage/reader.h"
+#include "storage/Reader.h"
 
 class Extractor {
 public:
-    virtual StringInFiles extract(const StringInFile &line) = 0;
+    virtual std::tuple<StringInFiles, > extract(const StringInFile &line) = 0;
     virtual ~Extractor() = default;
 };
 
 class WordExtractor : public Extractor {
 public:
-    StringInFiles extract(const StringInFile &sif) override
+    StringInFiles extract(const StringInFile &sif)
     {
         StringInFiles res;
 
-        // split logic is referred to Poco::StringTokenizer.
+        // this split logic is referred to Poco::StringTokenizer.
         auto str = sif.str;
         std::string separators(" ,.\t\n");
         size_t offset_in_file = sif.offset_in_file;
@@ -47,5 +47,13 @@ public:
         }
 
         return res;
+    }
+};
+
+class CSVExtractor : public Extractor {
+public:
+    StringInFiles extract(const StringInFile &line) override
+    {
+
     }
 };

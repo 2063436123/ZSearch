@@ -1,5 +1,5 @@
-#include "database.h"
-#include "document.h"
+#include "core/Database.h"
+#include "core/Document.h"
 
 // 一个 Indexer 绑定到一个 database 上，并且在其中创建新的 document
 class Indexer {
@@ -20,7 +20,7 @@ public:
             return;
         }
 
-        std::unique_ptr<Reader> reader = std::make_unique<TxtReader>(file_path);
+        std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
         std::unique_ptr<Extractor> extractor = std::make_unique<WordExtractor>();
 
         size_t doc_id = db.newDocId();

@@ -90,7 +90,7 @@ public:
                 writeString(str);
         }
         else
-            assert(0);
+            throw UnreachableException("in writeLinearContainer");
     }
 
     template<template<typename, typename, typename> class C, typename T>
@@ -108,7 +108,7 @@ public:
                 writeString(str);
         }
         else
-            assert(0);
+            throw UnreachableException("in writeSetContainer");
     }
 
 private:
@@ -158,7 +158,7 @@ public:
             }
         }
         else
-            assert(0);
+            throw UnreachableException("in readLinearContainer");
         return container;
     }
 
@@ -184,7 +184,7 @@ public:
             }
         }
         else
-            assert(0);
+            throw UnreachableException("in readSetContainer");
         return container;
     }
 private:

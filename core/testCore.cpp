@@ -1,4 +1,4 @@
-#include "database.h"
+#include "Database.h"
 #include <fcntl.h>
 
 TEST(database, CreateDatabase)

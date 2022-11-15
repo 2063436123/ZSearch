@@ -2,7 +2,7 @@
 #include <utility>
 
 #include "typedefs.h"
-#include "document.h"
+#include "Document.h"
 
 class Database {
 public:

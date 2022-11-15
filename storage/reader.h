@@ -2,16 +2,8 @@
 
 #include <fstream>
 #include "typedefs.h"
-#include "utils/stringUtils.h"
-
-struct StringInFile {
-    StringInFile(const std::string &str_, size_t offset_in_file_) : str(str_), offset_in_file(offset_in_file_) {}
-
-    std::string str; // a line or a word.
-    size_t offset_in_file;
-};
-
-using StringInFiles = std::vector<StringInFile>;
+#include "utils/StringUtils.h"
+#include "extractor/ExtractResult.h"
 
 class Reader {
 public:
@@ -28,9 +20,9 @@ public:
     virtual ~Reader() = default;
 };
 
-class TxtReader : public Reader {
+class TxtLineReader : public Reader {
 public:
-    TxtReader(std::filesystem::path path) : Reader(path)
+    TxtLineReader(std::filesystem::path path) : Reader(path)
     {
         if (!std::filesystem::is_regular_file(path))
             throw FileTypeUnmatchException("file of " + path.string() + " is not a regular file");
