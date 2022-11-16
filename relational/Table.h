@@ -1,5 +1,9 @@
+#pragma once
+
 #include "../typedefs.h"
 #include "Column.h"
+#include "Rows.h"
+#include "utils/SerializerUtils.h"
 
 // 逻辑行，引用底层的列式存储
 struct RowRef
@@ -8,22 +12,31 @@ struct RowRef
     std::vector<ColumnPtr> columns;
 };
 
-// 物理行
-struct Rows
-{
-    std::vector<ColumnPtr> columns;
-
-    size_t size() const {
-        if (!columns.empty())
-            return columns[0]->size();
-        return 0;
-    }
-};
-
 class Table
 {
 public:
+    Table() = default;
+
     Table(const std::string& table_name_) : table_name(table_name_) {}
+
+    Table(const std::string& table_name_, const Rows& rows) : table_name(table_name_) {
+        for (const auto& column : rows.columns)
+        {
+            addColumn(column->copy());
+        }
+    }
+
+    std::string name() const {
+        return table_name;
+    }
+
+    size_t docId() const {
+        return doc_id;
+    }
+
+    void setDocId(size_t doc_id_) {
+        doc_id = doc_id_;
+    }
 
     void addColumn(ColumnPtr column) {
         columns.emplace(column->column_name, column);
@@ -53,8 +66,38 @@ public:
         return iter->second;
     }
 
+    void serialize(WriteBufferHelper &helper) const
+    {
+        helper.writeNumber(doc_id);
+        helper.writeString(table_name);
+        helper.writeNumber(columns.size());
+        for (const auto& pair : columns)
+        {
+            // key:column_name == value:column->column_name
+            // in other words, pair.first is inside pair.second->column_name
+            pair.second->serialize(helper);
+        }
+    }
+
+    static Table deserialize(ReadBufferHelper &helper)
+    {
+        auto doc_id = helper.readNumber<size_t>();
+        auto table_name = helper.readString();
+        Table table(table_name);
+        table.setDocId(doc_id);
+
+        auto size = helper.readNumber<size_t>();
+        for (size_t i = 0; i < size; i++)
+        {
+            ColumnPtr column = ColumnBase::deserialize(helper);
+            table.addColumn(column);
+        }
+        return table;
+    }
 
 private:
+    size_t doc_id = 0;
     std::string table_name;
     std::unordered_map<std::string, ColumnPtr> columns;
 };
+using TableMap = std::unordered_map<std::string, Table>;

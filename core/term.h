@@ -21,7 +21,7 @@ struct Term {
     {
         helper.writeString(word);
         helper.writeLinearContainer(posting_list);
-        helper.writeInteger(statistics_list.size());
+        helper.writeNumber(statistics_list.size());
         for (const auto& stat : statistics_list)
             helper.writeSetContainer(stat.offsets_in_file);
     }
@@ -31,7 +31,7 @@ struct Term {
         Term term;
         term.word = helper.readString();
         term.posting_list = helper.readLinearContainer<std::vector, size_t>();
-        auto size = helper.readInteger<size_t>();
+        auto size = helper.readNumber<size_t>();
         for (size_t i = 0; i < size; i++)
             term.statistics_list.push_back(TermStatisticsWithInDoc{.offsets_in_file = helper.readSetContainer<std::set, size_t>()});
         return term;

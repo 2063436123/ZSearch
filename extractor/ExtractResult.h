@@ -1,3 +1,5 @@
+#pragma once
+
 #include "typedefs.h"
 #include "relational/Table.h"
 
@@ -10,8 +12,8 @@ struct StringInFile {
 };
 using StringInFiles = std::vector<StringInFile>;
 
-
-union ExtractResult {
+struct ExtractResult {
+    bool is_valid = false; // not eof, has meaningful data
     StringInFiles words;
     Table table;
 };

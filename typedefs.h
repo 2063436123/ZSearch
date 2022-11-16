@@ -19,6 +19,7 @@
 #include <Poco/Ascii.h>
 #include <Poco/StringTokenizer.h>
 #include <Poco/DateTime.h>
+#include <Poco/Format.h>
 
 #include <gtest/gtest.h>
 

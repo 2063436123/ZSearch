@@ -93,13 +93,13 @@ public:
 
     void serialize(WriteBufferHelper &helper) const
     {
-        helper.writeInteger(id);
+        helper.writeNumber(id);
         helper.writeString(origin_path.string());
     }
 
     static Document deserialize(ReadBufferHelper &helper)
     {
-        auto id = helper.readInteger<size_t>();
+        auto id = helper.readNumber<size_t>();
         std::filesystem::path path(helper.readString());
         return {id, path};
     }

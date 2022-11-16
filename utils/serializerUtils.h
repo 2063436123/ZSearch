@@ -1,12 +1,21 @@
+#pragma once
+
 #include "../typedefs.h"
+#include "TimeUtils.h"
 
 class BufferBase
 {
 public:
-    std::pair<const char*, size_t> string_ref() const
+    std::pair<const char *, size_t> string_ref() const
     {
         return {buf.c_str(), buf.size()};
     }
+
+    void clear()
+    {
+        buf.clear();
+    }
+
 protected:
     std::string buf;
 };
@@ -35,7 +44,7 @@ public:
     {
         if (buf.size() - next >= consume_bytes)
         {
-            const char * next_pointer = buf.c_str() + next;
+            const char *next_pointer = buf.c_str() + next;
             next += consume_bytes;
             return next_pointer;
         }
@@ -64,51 +73,54 @@ public:
     explicit WriteBufferHelper(WriteBuffer &buffer) : buf(buffer) {}
 
     template<typename T>
-    void writeInteger(T number)
+    void writeNumber(T number)
     {
         buf.append(reinterpret_cast<const char *>(&number), sizeof(T));
     }
 
     void writeString(const std::string &str)
     {
-        writeInteger(str.size());
+        writeNumber(str.size());
         buf.append(str.c_str(), str.size());
     }
 
-    template<template<typename, typename> class C, typename T>
-    void writeLinearContainer(const C<T, std::allocator<T>>& container)
+    void writeDateTime(const DateTime &date_time)
     {
-        writeInteger(container.size());
-        if constexpr (std::is_integral_v<T>)
+        writeString(date_time.string());
+    }
+
+    template<template<typename, typename> class C, typename T>
+    void writeLinearContainer(const C<T, std::allocator<T>> &container)
+    {
+        writeNumber(container.size());
+        for (auto ele: container)
         {
-            for (auto number: container)
-                writeInteger(number);
+            if constexpr (std::is_arithmetic_v<T>)
+                writeNumber(ele);
+            else if constexpr (std::is_same_v<T, std::string>)
+                writeString(ele);
+            else if constexpr (std::is_same_v<T, DateTime>)
+                writeDateTime(ele);
+            else
+                throw UnreachableException("in writeLinearContainer");
         }
-        else if constexpr (std::is_same_v<T, std::string>)
-        {
-            for (const auto& str : container)
-                writeString(str);
-        }
-        else
-            throw UnreachableException("in writeLinearContainer");
     }
 
     template<template<typename, typename, typename> class C, typename T>
-    void writeSetContainer(const C<T, std::less<T>, std::allocator<T>>& container)
+    void writeSetContainer(const C<T, std::less<T>, std::allocator<T>> &container)
     {
-        writeInteger(container.size());
-        if constexpr (std::is_integral_v<T>)
+        writeNumber(container.size());
+        for (auto ele: container)
         {
-            for (auto number: container)
-                writeInteger(number);
+            if constexpr (std::is_arithmetic_v<T>)
+                writeNumber(ele);
+            else if constexpr (std::is_same_v<T, std::string>)
+                writeString(ele);
+            else if constexpr (std::is_same_v<T, DateTime>)
+                writeDateTime(ele);
+            else
+                throw UnreachableException("in writeSetContainer");
         }
-        else if constexpr (std::is_same_v<T, std::string>)
-        {
-            for (const auto& str : container)
-                writeString(str);
-        }
-        else
-            throw UnreachableException("in writeSetContainer");
     }
 
 private:
@@ -121,7 +133,7 @@ public:
     explicit ReadBufferHelper(ReadBuffer &buffer) : buf(buffer) {}
 
     template<typename T>
-    T readInteger()
+    T readNumber()
     {
         const char *str = buf.consume(sizeof(T));
         T number = *(T *) (str);
@@ -130,35 +142,42 @@ public:
 
     std::string readString()
     {
-        auto size = readInteger<size_t>();
+        auto size = readNumber<size_t>();
         const char *str = buf.consume(size);
         return {str, size};
+    }
+
+    DateTime readDateTime()
+    {
+        return DateTime(readString());
     }
 
     template<template<typename, typename> class T, typename N>
     auto readLinearContainer()
     {
         T<N, std::allocator<N>> container;
-        auto size = readInteger<size_t>();
+        auto size = readNumber<size_t>();
 
-        if constexpr (std::is_integral_v<N>)
+        for (size_t i = 0; i < size; i++)
         {
-            for (size_t i = 0; i < size; i++)
+            if constexpr (std::is_arithmetic_v<N>)
             {
-                auto number = readInteger<N>();
+                auto number = readNumber<N>();
                 container.push_back(number);
             }
-        }
-        else if constexpr (std::is_same_v<N, std::string>)
-        {
-            for (size_t i = 0; i < size; i++)
+            else if constexpr (std::is_same_v<N, std::string>)
             {
                 auto string = readString();
                 container.push_back(string);
             }
+            else if constexpr (std::is_same_v<N, DateTime>)
+            {
+                auto date_time = readDateTime();
+                container.push_back(date_time);
+            }
+            else
+                throw UnreachableException("in readLinearContainer");
         }
-        else
-            throw UnreachableException("in readLinearContainer");
         return container;
     }
 
@@ -166,27 +185,30 @@ public:
     auto readSetContainer()
     {
         C<T, std::less<T>, std::allocator<T>> container;
-        auto size = readInteger<size_t>();
-        if constexpr (std::is_integral_v<T>)
+        auto size = readNumber<size_t>();
+        for (size_t i = 0; i < size; i++)
         {
-            for (size_t i = 0; i < size; i++)
+            if constexpr (std::is_arithmetic_v<T>)
             {
-                auto number = readInteger<T>();
+                auto number = readNumber<T>();
                 container.insert(number);
             }
-        }
-        else if constexpr (std::is_same_v<T, std::string>)
-        {
-            for (size_t i = 0; i < size; i++)
+            else if constexpr (std::is_same_v<T, std::string>)
             {
                 auto string = readString();
                 container.insert(string);
             }
+            else if constexpr (std::is_same_v<T, DateTime>)
+            {
+                auto date_time = readDateTime();
+                container.insert(date_time);
+            }
+            else
+                throw UnreachableException("in readSetContainer");
         }
-        else
-            throw UnreachableException("in readSetContainer");
         return container;
     }
+
 private:
     ReadBuffer &buf;
 };

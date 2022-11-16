@@ -5,7 +5,6 @@
 void run()
 {
     std::string cmd;
-    // TODO: 实现序列化反序列化方法
     while (std::cin >> cmd)
     {
         if (cmd.starts_with("index"))
@@ -35,7 +34,7 @@ void run()
                 std::cout << "[No." << no++ << " doc id:" << result.document.getId() << " path:"
                           << result.document.getPath() << " score: " << result.score << "]" << std::endl;
                 auto matched_text = result.document.getString(result.offset_in_file, result.related_text_len, 30);
-                std::cout << output_smooth(matched_text) << std::endl;
+                std::cout << outputSmooth(matched_text) << std::endl;
             }
         }
         else if (cmd.starts_with("q"))

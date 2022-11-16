@@ -5,18 +5,14 @@
 /// Removes all leading and trailing whitespace/unprintable in str.
 /// return trimmed chars number of characters from left/from right.
 template<class S>
-std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str)
+std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str, const std::function<bool(char)>& isUseless)
 {
     std::ptrdiff_t first = 0;
     std::ptrdiff_t last = static_cast<std::ptrdiff_t>(str.size()) - 1;
 
-    while (first <= last &&
-           (Poco::Ascii::isSpace(str[first]) || !Poco::Ascii::isPrintable(str[first]))
-            )
+    while (first <= last && isUseless(str[first]))
         ++first;
-    while (last >= first &&
-           (Poco::Ascii::isSpace(str[last]) || !Poco::Ascii::isPrintable(str[last]))
-            )
+    while (last >= first && isUseless(str[last]))
         --last;
 
     if (last >= 0) {
@@ -28,7 +24,7 @@ std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str)
     return {first, static_cast<std::ptrdiff_t>(str.size()) - 1 - last};
 }
 
-std::string output_smooth(const std::string& output)
+std::string outputSmooth(const std::string& output)
 {
     std::string res;
     for (auto ch : output)
@@ -39,4 +35,60 @@ std::string output_smooth(const std::string& output)
             res.push_back(ch);
     }
     return res;
+}
+
+std::string trimQuote(std::string str)
+{
+    trimInPlace(str, [](char ch) {
+        return ch == '\"';
+    });
+    return str;
+}
+
+// only [-]<number>+ is allowed
+template <typename T>
+T restrictStoi(const std::string& str) {
+    T base{};
+    bool is_minus = false;
+
+    if (str.empty())
+        throw Poco::InvalidArgumentException("restrict_stoi requires an not empty string! -- " + str);
+
+    size_t i = 0;
+    if (str[0] == '-')
+    {
+        is_minus = true;
+        ++i;
+    }
+
+    for (; i < str.size(); i++)
+    {
+        auto ch = str[i];
+        if (!Poco::Ascii::isDigit(ch))
+            throw Poco::InvalidArgumentException("restrict_stoi requires a string contains only number char! -- " + str);
+        else
+            base = base * 10 + ch - '0';
+    }
+
+    return is_minus ? 0 - base : base;
+}
+
+double restrictStod(const std::string& str) {
+    if (str.empty())
+        throw Poco::InvalidArgumentException("restrict_stod requires an not empty string! -- " + str);
+
+    size_t i = 0;
+    if (str[0] == '-')
+    {
+        ++i;
+    }
+
+    for (; i < str.size(); i++)
+    {
+        auto ch = str[i];
+        if (!Poco::Ascii::isDigit(ch) && ch != '.')
+            throw Poco::InvalidArgumentException("restrict_stod requires a string contains only number char! -- " + str);
+    }
+
+    return std::stod(str);
 }

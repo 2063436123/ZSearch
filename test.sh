@@ -1,0 +1,16 @@
+build=$1
+
+cd $build || exit
+
+for file in *; do
+  if [ -f $file ]; then
+    if [[ $file == gtest* ]]; then
+        echo "testing $file ..."
+      ./$file
+      if [[ $? -ne 0 ]]; then
+        echo "$file failed."
+        exit 1
+      fi
+    fi
+  fi
+done

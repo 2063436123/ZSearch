@@ -1,5 +1,6 @@
-#include <utility>
+#pragma once
 
+#include <utility>
 #include "../typedefs.h"
 #include "relational/Table.h"
 

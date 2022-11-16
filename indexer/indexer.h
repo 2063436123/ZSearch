@@ -1,3 +1,5 @@
+#pragma once
+
 #include "core/Database.h"
 #include "core/Document.h"
 
@@ -20,22 +22,39 @@ public:
             return;
         }
 
-        std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
-        std::unique_ptr<Extractor> extractor = std::make_unique<WordExtractor>();
-
         size_t doc_id = db.newDocId();
         db.addDocument(doc_id, file_path);
 
-        while (true)
+        if (file_path.extension() == "txt")
         {
-            auto line = reader->readUntil();
-            if (line.str.empty())
-                break;
-            auto word_in_files = extractor->extract(line);
-            for (const auto &word_in_file: word_in_files)
+            std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
+            std::unique_ptr<Extractor> extractor = std::make_unique<WordExtractor>(std::move(reader));
+
+            while (true)
             {
-                db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
+                auto word_in_files = extractor->extract();
+                if (!word_in_files.is_valid)
+                    break;
+                for (const auto &word_in_file : word_in_files.words)
+                {
+                    db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
+                }
             }
+        }
+        else if (file_path.extension() == "csv")
+        {
+            std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
+            std::unique_ptr<Extractor> extractor = std::make_unique<CSVExtractor>(file_path.stem(), std::move(reader));
+
+            auto table_in_file = extractor->extract();
+            if (!table_in_file.is_valid)
+                return;
+            table_in_file.table.setDocId(doc_id);
+            db.addTable(table_in_file.table.name(), table_in_file.table);
+        }
+        else
+        {
+            throw Poco::NotImplementedException();
         }
     }
 

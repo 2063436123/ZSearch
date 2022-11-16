@@ -5,7 +5,8 @@
 #include "utils/StringUtils.h"
 #include "extractor/ExtractResult.h"
 
-class Reader {
+class Reader
+{
 public:
     virtual StringInFile readUntil(const std::string &endSymbols = "\n") = 0;
 
@@ -20,7 +21,8 @@ public:
     virtual ~Reader() = default;
 };
 
-class TxtLineReader : public Reader {
+class TxtLineReader : public Reader
+{
 public:
     TxtLineReader(std::filesystem::path path) : Reader(path)
     {
@@ -42,11 +44,14 @@ public:
             {
                 std::getline(fin, line);
                 read_number = line.size() + 1;
-                left_trim_number = trimInPlace(line).first;
+                left_trim_number = trimInPlace(line, [](char ch) {
+                    return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
+                }).first;
                 offset_in_file += read_number;
             }
             return {line, offset_in_file - read_number + left_trim_number};
-        } else
+        }
+        else
             throw Poco::NotImplementedException();
     }
 
