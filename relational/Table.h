@@ -59,7 +59,7 @@ public:
         }
     }
 
-    ColumnPtr operator[](const std::string& column_name) {
+    ColumnPtr operator[](const std::string& column_name) const {
         auto iter = columns.find(column_name);
         if (iter == columns.end())
             throw Poco::NotFoundException("can't found column " + column_name + " in table " + table_name);
@@ -93,6 +93,15 @@ public:
             table.addColumn(column);
         }
         return table;
+    }
+
+    Rows dumpRows() const {
+        Rows rows;
+        for (const auto& pair : columns)
+        {
+            rows.columns.push_back(pair.second->copy());
+        }
+        return rows;
     }
 
 private:

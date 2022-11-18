@@ -77,6 +77,15 @@ public:
         return iter->second;
     }
 
+    Table findTable(const std::string &word) const
+    {
+        std::lock_guard<std::mutex> guard(table_map_lock);
+        auto iter = table_map.find(word);
+        if (iter == table_map.end())
+            return {};
+        return iter->second;
+    }
+
     static void createDatabase(const std::filesystem::path& path)
     {
         if (!create_directory(path))

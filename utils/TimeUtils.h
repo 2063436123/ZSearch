@@ -38,12 +38,28 @@ public:
         return date_time;
     }
 
-    auto operator<(const DateTime& rhs) const {
+    bool operator<(const DateTime& rhs) const {
         return date_time < rhs.date_time;
     }
 
-    auto operator==(const DateTime& rhs) const {
+    bool operator==(const DateTime& rhs) const {
         return date_time == rhs.date_time;
+    }
+
+    bool operator>(const DateTime& rhs) const {
+        return date_time > rhs.date_time;
+    }
+
+    bool operator>=(const DateTime& rhs) const {
+        return date_time >= rhs.date_time;
+    }
+
+    bool operator<=(const DateTime& rhs) const {
+        return date_time <= rhs.date_time;
+    }
+
+    bool operator!=(const DateTime& rhs) const {
+        return date_time != rhs.date_time;
     }
 
 private:

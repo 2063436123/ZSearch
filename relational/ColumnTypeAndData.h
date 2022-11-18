@@ -9,10 +9,7 @@ enum class ColumnType
     Int,
     Decimal,
     String,
-//    UUID,
-//    Date,
-    DateTime,
-    Blob
+    DateTime
 };
 
 // column type storage
@@ -20,6 +17,12 @@ template<typename T>
 class ColumnDataBase
 {
 public:
+    ColumnDataBase() = default;
+
+    explicit ColumnDataBase(const std::initializer_list<T>& list) : data(list) {
+        null_map.insert(null_map.end(), data.size(), 0);
+    }
+
     size_t size() const
     {
         return data.size();
@@ -174,9 +177,7 @@ ColumnType getType()
         return ColumnType::String;
     if constexpr (std::is_same_v<T, DateTime>)
         return ColumnType::DateTime;
-    if constexpr (std::is_same_v<T, char>)
-        return ColumnType::Blob;
-    throw UnreachableException("in getType");
+    throw UnreachableException("in getNodeType");
 }
 
 ColumnType getTypeByName(const std::string& name)
@@ -189,8 +190,6 @@ ColumnType getTypeByName(const std::string& name)
         return ColumnType::String;
     if (name == "DateTime")
         return ColumnType::DateTime;
-    if (name == "Blob")
-        return ColumnType::Blob;
     throw UnreachableException("in getTypeByName");
 }
 
@@ -205,8 +204,6 @@ std::string getNameByType()
         return "String";
     if constexpr (std::is_same_v<T, DateTime>)
         return "DateTime";
-    if constexpr (std::is_same_v<T, char>)
-        return "Blob";
     throw UnreachableException("in getNameByType");
 }
 
@@ -214,4 +211,3 @@ using Int = int64_t;
 using Decimal = double;
 using String = std::string;
 using DateTime = DateTime;
-using Blob = char;

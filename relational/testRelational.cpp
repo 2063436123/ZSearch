@@ -1,6 +1,6 @@
 #include "Table.h"
 #include "Function.h"
-#include <fcntl.h>
+#include "PlanNode.h"
 
 TEST(table, Base)
 {
@@ -75,7 +75,7 @@ TEST(table, SimpleAggFunc)
     ASSERT_EQ(op2.result().value_or(0), 82.3);
 
     CountOperator<Decimal> op3;
-        column->handleEverything(std::ref(op3));
+    column->handleEverything(std::ref(op3));
     ASSERT_EQ(op3.result(), 4);
 
     MaxOperator<Decimal> op4;
@@ -134,6 +134,123 @@ TEST(table, SerializeAndDeserialize)
     auto string_ref2 = write_buffer.string_ref();
     std::string cp2(string_ref2.first, string_ref2.second);
     ASSERT_EQ(cp1, cp2);
+}
+
+TEST(plan_node, SimpleFilter)
+{
+    Rows rows;
+    auto number_data = std::make_shared<ColumnDataBase<Int>>(std::initializer_list<Int>{100, 200, 300, 500});
+    rows.columns.push_back(std::make_shared<ColumnInt>("number", number_data));
+
+    // number < 300
+    {
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::Less));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(300ll))));
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 2);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        ASSERT_NE(number_column, nullptr);
+
+        ASSERT_EQ(number_column->data->size(), 2);
+        ASSERT_EQ(number_column->data->operator[](0), 100);
+        ASSERT_EQ(number_column->data->operator[](1), 200);
+    }
+
+    // number != 100
+    {
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::NotEqual));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 3);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        ASSERT_NE(number_column, nullptr);
+
+        ASSERT_EQ(number_column->data->size(), 3);
+        ASSERT_EQ(number_column->data->operator[](0), 200);
+        ASSERT_EQ(number_column->data->operator[](1), 300);
+        ASSERT_EQ(number_column->data->operator[](2), 500);
+    }
+
+    // number > 100
+    {
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::Great));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 3);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        ASSERT_NE(number_column, nullptr);
+
+        ASSERT_EQ(number_column->data->size(), 3);
+        ASSERT_EQ(number_column->data->operator[](0), 200);
+        ASSERT_EQ(number_column->data->operator[](1), 300);
+        ASSERT_EQ(number_column->data->operator[](2), 500);
+    }
+
+    // number <= 300
+    {
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::LessEqual));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(300ll))));
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 3);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        ASSERT_NE(number_column, nullptr);
+
+        ASSERT_EQ(number_column->data->size(), 3);
+        ASSERT_EQ(number_column->data->operator[](0), 100);
+        ASSERT_EQ(number_column->data->operator[](1), 200);
+        ASSERT_EQ(number_column->data->operator[](2), 300);
+    }
+
+    // number >= 300
+    {
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::GreatEqual));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(300ll))));
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 2);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        ASSERT_NE(number_column, nullptr);
+
+        ASSERT_EQ(number_column->data->size(), 2);
+        ASSERT_EQ(number_column->data->operator[](0), 300);
+        ASSERT_EQ(number_column->data->operator[](1), 500);
+    }
+
+    // number == 100
+    {
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::Equal));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 1);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        ASSERT_NE(number_column, nullptr);
+
+        ASSERT_EQ(number_column->data->size(), 1);
+        ASSERT_EQ(number_column->data->operator[](0), 100);
+    }
 }
 
 int main()

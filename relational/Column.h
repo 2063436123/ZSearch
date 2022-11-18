@@ -3,6 +3,7 @@
 #include "../typedefs.h"
 #include "ColumnTypeAndData.h"
 #include "utils/SerializerUtils.h"
+#include "Value.h"
 
 class ColumnBase
 {
@@ -11,6 +12,11 @@ public:
 
     ColumnType type;
     std::string column_name;
+
+    virtual Value operator[](size_t index) const = 0;
+    virtual void insert(const Value& value) = 0;
+
+    virtual std::shared_ptr<ColumnBase> copyWithoutData() const = 0;
 
     virtual std::shared_ptr<ColumnBase> copy() const = 0;
 
@@ -39,7 +45,26 @@ public: \
                                                                                    data(data_) {                                    \
         if (!data)   \
             data = std::make_shared<ColumnDataBase<ClassType>>();\
-                                                                                   } \
+    }                                                \
+                               \
+    Value operator[](size_t index) const override                                                                                   \
+    {                          \
+        return Value(data->operator[](index));                           \
+    }                          \
+                               \
+    void insert(const Value& value) override\
+    {                          \
+        if (value.getValueType() == ValueType::Null)                                                                                \
+            data->insertNull();                       \
+        else \
+            data->insert(value.as<ClassType>()); \
+    }    \
+                               \
+                               \
+    std::shared_ptr<ColumnBase> copyWithoutData() const override {                                                                             \
+        return std::make_shared<Column##ClassType>(column_name, nullptr); \
+    }                          \
+                               \
     std::shared_ptr<ColumnBase> copy() const override {                                                                             \
         return std::make_shared<Column##ClassType>(column_name, data->copy()); \
     }                                     \
@@ -75,7 +100,7 @@ public: \
         return std::make_shared<Column##ClassType>(column_name, data); \
     } \
     \
-    void handleEverything(std::function<void(ClassType, bool)> handler) const       \
+    void handleEverything(const std::function<void(ClassType, bool)>& handler) const       \
     {                          \
         for (size_t i = 0; i < data->size(); i++)                                       \
             handler((*data)[i], data->is_null(i));\
@@ -88,7 +113,6 @@ COLUMN_IMPL(Int)
 COLUMN_IMPL(String)
 COLUMN_IMPL(Decimal)
 COLUMN_IMPL(DateTime)
-COLUMN_IMPL(Blob)
 
 
 std::shared_ptr<ColumnBase> ColumnBase::deserialize(ReadBufferHelper &helper)
@@ -103,7 +127,5 @@ std::shared_ptr<ColumnBase> ColumnBase::deserialize(ReadBufferHelper &helper)
         ret = ColumnDecimal::deserialize(helper);
     if (type == ColumnType::DateTime)
         ret = ColumnDateTime::deserialize(helper);
-    if (type == ColumnType::Blob)
-        ret = ColumnBlob::deserialize(helper);
     return ret;
 }

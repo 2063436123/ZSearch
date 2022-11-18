@@ -103,9 +103,6 @@ public:
                 case ColumnType::DateTime:
                     rows.columns.push_back(std::make_shared<ColumnDateTime>(name_tokenizer[i]));
                     break;
-                case ColumnType::Blob:
-                    rows.columns.push_back(std::make_shared<ColumnBlob>(name_tokenizer[i]));
-                    break;
                 default:
                     throw Poco::NotImplementedException("unknown type name in csv extractor");
             }
@@ -140,9 +137,6 @@ public:
                         case ColumnType::DateTime:
                             std::dynamic_pointer_cast<ColumnDateTime>(rows.columns[i])->data->insertNull();;
                             break;
-                        case ColumnType::Blob:
-                            std::dynamic_pointer_cast<ColumnBlob>(rows.columns[i])->data->insertNull();
-                            break;
                     }
                 }
                 else{
@@ -159,9 +153,6 @@ public:
                             break;
                         case ColumnType::DateTime:
                             std::dynamic_pointer_cast<ColumnDateTime>(rows.columns[i])->data->insert(DateTime(column_value.substr(0, 19)));
-                            break;
-                        case ColumnType::Blob:
-                            std::dynamic_pointer_cast<ColumnBlob>(rows.columns[i])->data->insert(column_value[0]); // TODO: 实现 Blob insert
                             break;
                     }
                 }
