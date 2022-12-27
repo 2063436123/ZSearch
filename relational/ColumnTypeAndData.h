@@ -207,7 +207,3 @@ std::string getNameByType()
     throw UnreachableException("in getNameByType");
 }
 
-using Int = int64_t;
-using Decimal = double;
-using String = std::string;
-using DateTime = DateTime;

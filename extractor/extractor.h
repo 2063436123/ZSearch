@@ -92,16 +92,16 @@ public:
             switch (type)
             {
                 case ColumnType::Int:
-                    rows.columns.push_back(std::make_shared<ColumnInt>(name_tokenizer[i]));
+                    rows.addColumn(std::make_shared<ColumnInt>(name_tokenizer[i]));
                     break;
                 case ColumnType::Decimal:
-                    rows.columns.push_back(std::make_shared<ColumnDecimal>(name_tokenizer[i]));
+                    rows.addColumn(std::make_shared<ColumnDecimal>(name_tokenizer[i]));
                     break;
                 case ColumnType::String:
-                    rows.columns.push_back(std::make_shared<ColumnString>(name_tokenizer[i]));
+                    rows.addColumn(std::make_shared<ColumnString>(name_tokenizer[i]));
                     break;
                 case ColumnType::DateTime:
-                    rows.columns.push_back(std::make_shared<ColumnDateTime>(name_tokenizer[i]));
+                    rows.addColumn(std::make_shared<ColumnDateTime>(name_tokenizer[i]));
                     break;
                 default:
                     throw Poco::NotImplementedException("unknown type name in csv extractor");
@@ -123,36 +123,36 @@ public:
             {
                 if (column_value.empty())
                 {
-                    switch (rows.columns[i]->type)
+                    switch (rows.getColumns()[i]->type)
                     {
                         case ColumnType::Int:
-                            std::dynamic_pointer_cast<ColumnInt>(rows.columns[i])->data->insertNull();
+                            std::dynamic_pointer_cast<ColumnInt>(rows.getColumns()[i])->data->insertNull();
                             break;
                         case ColumnType::String:
-                            std::dynamic_pointer_cast<ColumnString>(rows.columns[i])->data->insertNull();
+                            std::dynamic_pointer_cast<ColumnString>(rows.getColumns()[i])->data->insertNull();
                             break;
                         case ColumnType::Decimal:
-                            std::dynamic_pointer_cast<ColumnDecimal>(rows.columns[i])->data->insertNull();;
+                            std::dynamic_pointer_cast<ColumnDecimal>(rows.getColumns()[i])->data->insertNull();;
                             break;
                         case ColumnType::DateTime:
-                            std::dynamic_pointer_cast<ColumnDateTime>(rows.columns[i])->data->insertNull();;
+                            std::dynamic_pointer_cast<ColumnDateTime>(rows.getColumns()[i])->data->insertNull();;
                             break;
                     }
                 }
                 else{
-                    switch (rows.columns[i]->type)
+                    switch (rows.getColumns()[i]->type)
                     {
                         case ColumnType::Int:
-                            std::dynamic_pointer_cast<ColumnInt>(rows.columns[i])->data->insert(restrictStoi<Int>(column_value));
+                            std::dynamic_pointer_cast<ColumnInt>(rows.getColumns()[i])->data->insert(restrictStoi<Int>(column_value));
                             break;
                         case ColumnType::String:
-                            std::dynamic_pointer_cast<ColumnString>(rows.columns[i])->data->insert(trimQuote(column_value));
+                            std::dynamic_pointer_cast<ColumnString>(rows.getColumns()[i])->data->insert(trimQuote(column_value));
                             break;
                         case ColumnType::Decimal:
-                            std::dynamic_pointer_cast<ColumnDecimal>(rows.columns[i])->data->insert(restrictStod(column_value));
+                            std::dynamic_pointer_cast<ColumnDecimal>(rows.getColumns()[i])->data->insert(restrictStod(column_value));
                             break;
                         case ColumnType::DateTime:
-                            std::dynamic_pointer_cast<ColumnDateTime>(rows.columns[i])->data->insert(DateTime(column_value.substr(0, 19)));
+                            std::dynamic_pointer_cast<ColumnDateTime>(rows.getColumns()[i])->data->insert(DateTime(column_value.substr(0, 19)));
                             break;
                     }
                 }

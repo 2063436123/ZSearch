@@ -5,13 +5,6 @@
 #include "Rows.h"
 #include "utils/SerializerUtils.h"
 
-// 逻辑行，引用底层的列式存储
-struct RowRef
-{
-    size_t index; // row number, begin from 1
-    std::vector<ColumnPtr> columns;
-};
-
 class Table
 {
 public:
@@ -20,7 +13,7 @@ public:
     Table(const std::string& table_name_) : table_name(table_name_) {}
 
     Table(const std::string& table_name_, const Rows& rows) : table_name(table_name_) {
-        for (const auto& column : rows.columns)
+        for (const auto& column : rows.getColumns())
         {
             addColumn(column->copy());
         }
@@ -49,7 +42,7 @@ public:
     }
 
     void insertRows(const Rows& rows) const {
-        for (const auto& column : rows.columns)
+        for (const auto& column : rows.getColumns())
         {
             auto iter = columns.find(column->column_name);
             if (iter != columns.end() && iter->second->type == column->type)
@@ -99,7 +92,7 @@ public:
         Rows rows;
         for (const auto& pair : columns)
         {
-            rows.columns.push_back(pair.second->copy());
+            rows.addColumn(pair.second);
         }
         return rows;
     }

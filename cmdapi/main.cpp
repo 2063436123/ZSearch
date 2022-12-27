@@ -1,4 +1,4 @@
-#include "indexer/indexer.h"
+#include "indexer/Indexer.h"
 #include "searcher/Searcher.h"
 #include <iostream>
 

@@ -21,10 +21,10 @@ TEST(table, Base)
     date_data->insert(DateTime("2021-01-29 00:33:15"));
 
     ASSERT_EQ(rows.size(), 0);
-    rows.columns.push_back(std::make_shared<ColumnString>("student", student_data));
+    rows.addColumn(std::make_shared<ColumnString>("student", student_data));
     ASSERT_EQ(rows.size(), 2);
-    rows.columns.push_back(std::make_shared<ColumnDecimal>("score", score_data));
-    rows.columns.push_back(std::make_shared<ColumnDateTime>("date", date_data));
+    rows.addColumn(std::make_shared<ColumnDecimal>("score", score_data));
+    rows.addColumn(std::make_shared<ColumnDateTime>("date", date_data));
     ASSERT_EQ(rows.size(), 2);
 
     ASSERT_EQ(table.size(), 0);
@@ -54,37 +54,33 @@ TEST(table, SimpleAggFunc)
     table.addColumn(std::make_shared<ColumnDecimal>("score"));
 
     Rows rows;
-    auto score_data = std::make_shared<ColumnDataBase<Decimal>>();
-    score_data->insert(100.0);
-    score_data->insert(99.0);
-    score_data->insert(80.2);
-    score_data->insert(50.0);
-    rows.columns.push_back(std::make_shared<ColumnDecimal>("score", score_data));
+    auto score_data = std::make_shared<ColumnDataBase<Decimal>>(std::initializer_list<double>{100.0, 99.0, 80.2, 50.0});
+    rows.addColumn(std::make_shared<ColumnDecimal>("score", score_data));
 
     table.insertRows(rows);
 
     auto column = std::dynamic_pointer_cast<ColumnDecimal>(table["score"]);
     ASSERT_NE(column, nullptr);
 
-    SumOperator<Decimal> op;
+    SumOperator op;
     column->handleEverything(std::ref(op)); // NOTE: use std::ref, avoid copying SumOperator
-    ASSERT_EQ(op.result(), 329.2);
+    ASSERT_EQ(op.result().as<Decimal>(), 329.2);
 
-    AvgOperator<Decimal> op2;
+    AvgOperator op2;
     column->handleEverything(std::ref(op2));
-    ASSERT_EQ(op2.result().value_or(0), 82.3);
+    ASSERT_EQ(op2.result().as<Decimal>(), 82.3);
 
-    CountOperator<Decimal> op3;
+    CountOperator op3;
     column->handleEverything(std::ref(op3));
-    ASSERT_EQ(op3.result(), 4);
+    ASSERT_EQ(op3.result().as<Int>(), 4);
 
-    MaxOperator<Decimal> op4;
+    MaxOperator op4;
     column->handleEverything(std::ref(op4));
-    ASSERT_EQ(op4.result().value_or(0), 100.0);
+    ASSERT_EQ(op4.result().as<Decimal>(), 100.0);
 
-    MinOperator<Decimal> op5;
+    MinOperator op5;
     column->handleEverything(std::ref(op5));
-    ASSERT_EQ(op5.result().value_or(0), 50.0);
+    ASSERT_EQ(op5.result().as<Decimal>(), 50.0);
 }
 
 TEST(table, SerializeAndDeserialize)
@@ -105,9 +101,9 @@ TEST(table, SerializeAndDeserialize)
     date_data->insert(DateTime("2011-04-19 04:33:15"));
     date_data->insert(DateTime("2021-01-29 00:33:15"));
 
-    rows.columns.push_back(std::make_shared<ColumnString>("student", student_data));
-    rows.columns.push_back(std::make_shared<ColumnDecimal>("score", score_data));
-    rows.columns.push_back(std::make_shared<ColumnDateTime>("date", date_data));
+    rows.addColumn(std::make_shared<ColumnString>("student", student_data));
+    rows.addColumn(std::make_shared<ColumnDecimal>("score", score_data));
+    rows.addColumn(std::make_shared<ColumnDateTime>("date", date_data));
 
     table.insertRows(rows);
 
@@ -140,19 +136,19 @@ TEST(plan_node, SimpleFilter)
 {
     Rows rows;
     auto number_data = std::make_shared<ColumnDataBase<Int>>(std::initializer_list<Int>{100, 200, 300, 500});
-    rows.columns.push_back(std::make_shared<ColumnInt>("number", number_data));
+    rows.addColumn(std::make_shared<ColumnInt>("number", number_data));
 
     // number < 300
     {
         ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::Less));
-        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
         where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(300ll))));
 
         PlanNodePtr filter = std::make_shared<FilterNode>(where);
         Rows res = filter->transform(rows);
 
         ASSERT_EQ(res.size(), 2);
-        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.getColumns()[0]);
         ASSERT_NE(number_column, nullptr);
 
         ASSERT_EQ(number_column->data->size(), 2);
@@ -163,14 +159,14 @@ TEST(plan_node, SimpleFilter)
     // number != 100
     {
         ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::NotEqual));
-        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
         where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
 
         PlanNodePtr filter = std::make_shared<FilterNode>(where);
         Rows res = filter->transform(rows);
 
         ASSERT_EQ(res.size(), 3);
-        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.getColumns()[0]);
         ASSERT_NE(number_column, nullptr);
 
         ASSERT_EQ(number_column->data->size(), 3);
@@ -182,14 +178,14 @@ TEST(plan_node, SimpleFilter)
     // number > 100
     {
         ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::Great));
-        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
         where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
 
         PlanNodePtr filter = std::make_shared<FilterNode>(where);
         Rows res = filter->transform(rows);
 
         ASSERT_EQ(res.size(), 3);
-        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.getColumns()[0]);
         ASSERT_NE(number_column, nullptr);
 
         ASSERT_EQ(number_column->data->size(), 3);
@@ -201,14 +197,14 @@ TEST(plan_node, SimpleFilter)
     // number <= 300
     {
         ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::LessEqual));
-        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
         where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(300ll))));
 
         PlanNodePtr filter = std::make_shared<FilterNode>(where);
         Rows res = filter->transform(rows);
 
         ASSERT_EQ(res.size(), 3);
-        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.getColumns()[0]);
         ASSERT_NE(number_column, nullptr);
 
         ASSERT_EQ(number_column->data->size(), 3);
@@ -220,14 +216,14 @@ TEST(plan_node, SimpleFilter)
     // number >= 300
     {
         ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::GreatEqual));
-        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
         where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(300ll))));
 
         PlanNodePtr filter = std::make_shared<FilterNode>(where);
         Rows res = filter->transform(rows);
 
         ASSERT_EQ(res.size(), 2);
-        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.getColumns()[0]);
         ASSERT_NE(number_column, nullptr);
 
         ASSERT_EQ(number_column->data->size(), 2);
@@ -238,18 +234,64 @@ TEST(plan_node, SimpleFilter)
     // number == 100
     {
         ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::Equal));
-        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, ColumnName{.column_name = "number"})));
+        where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
         where->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
 
         PlanNodePtr filter = std::make_shared<FilterNode>(where);
         Rows res = filter->transform(rows);
 
         ASSERT_EQ(res.size(), 1);
-        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.columns[0]);
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res.getColumns()[0]);
         ASSERT_NE(number_column, nullptr);
 
         ASSERT_EQ(number_column->data->size(), 1);
         ASSERT_EQ(number_column->data->operator[](0), 100);
+    }
+}
+
+// TODO: 多列 filter（根据一列筛选，其他列保持同步），复杂条件 filter
+TEST(plan_node, MoreFilter)
+{
+    Rows rows;
+    auto number_data = std::make_shared<ColumnDataBase<Int>>(std::initializer_list<Int>{100, 200, 300, 500});
+    rows.addColumn(std::make_shared<ColumnInt>("number", number_data));
+
+    auto string_data = std::make_shared<ColumnDataBase<String>>(std::initializer_list<String>{"hello", "shi", "lm", "world"});
+    rows.addColumn(std::make_shared<ColumnString>("string", string_data));
+
+    // number >= 100 && number < 400 && True
+    {
+        ExpressionPtr where1 = std::make_shared<Expression>(Symbol(SymbolType::GreatEqual));
+        where1->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
+        where1->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(100ll))));
+
+        ExpressionPtr where2 = std::make_shared<Expression>(Symbol(SymbolType::Less));
+        where2->addChild(std::make_shared<Expression>(Symbol(SymbolType::Id, IdentifierName{.column_name = "number"})));
+        where2->addChild(std::make_shared<Expression>(Symbol(SymbolType::Value, Value(400ll))));
+
+        ExpressionPtr where3 = std::make_shared<Expression>(Symbol(SymbolType::True));
+
+        ExpressionPtr where = std::make_shared<Expression>(Symbol(SymbolType::And));
+        where->addChild(where1);
+        where->addChild(where2);
+        where->addChild(where3);
+
+        PlanNodePtr filter = std::make_shared<FilterNode>(where);
+        Rows res = filter->transform(rows);
+
+        ASSERT_EQ(res.size(), 3);
+
+        auto number_column = std::dynamic_pointer_cast<ColumnInt>(res["number"]);
+        ASSERT_NE(number_column, nullptr);
+        ASSERT_EQ((*number_column)[0].as<Int>(), 100);
+        ASSERT_EQ((*number_column)[1].as<Int>(), 200);
+        ASSERT_EQ((*number_column)[2].as<Int>(), 300);
+
+        auto string_column = std::dynamic_pointer_cast<ColumnString>(res["string"]);
+        ASSERT_NE(string_column, nullptr);
+        ASSERT_EQ((*string_column)[0].as<String>(), "hello");
+        ASSERT_EQ((*string_column)[1].as<String>(), "shi");
+        ASSERT_EQ((*string_column)[2].as<String>(), "lm");
     }
 }
 

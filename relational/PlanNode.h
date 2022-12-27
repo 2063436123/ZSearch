@@ -53,6 +53,10 @@ private:
 class AggNode : public PlanNode
 {
 public:
+
+private:
+    std::unordered_map<IdentifierName, AggOperator> agg_op;
+    std::vector<IdentifierName> group_by;
 };
 
 class JoinNode : public PlanNode
@@ -60,11 +64,13 @@ class JoinNode : public PlanNode
 public:
 };
 
+// only filter columns, remain rows count unchanged.
 class ProjectionNode : public PlanNode
 {
 public:
 };
 
+// only filter rows, remain column species number unchanged.
 class FilterNode : public PlanNode
 {
 public:
@@ -73,36 +79,56 @@ public:
     Rows transform(const Rows &input) override
     {
         assert(filter);
-        Rows res;
-        res.depict(input);
-        if (filter->getSymbolType() == SymbolType::And)
+        return filterPredicate(RowsRef(input.getColumns()), filter).materialize();
+    }
+
+    static RowsRef filterPredicate(const RowsRef& input, const ExpressionPtr& flt)
+    {
+        RowsRef res(input.getColumns());
+        if (flt->getSymbolType() == SymbolType::And)
+        {
+            RowsRef left_res = filterPredicate(input, flt->getChild(0));
+            for (size_t i = 1; i < flt->getChildSize(); i++)
+            {
+                RowsRef right_res = filterPredicate(input, flt->getChild(i));
+                left_res = left_res & right_res;
+            }
+            res = std::move(left_res);
+        }
+        else if (flt->getSymbolType() == SymbolType::Or)
         {
 
         }
-        else if (filter->getSymbolType() == SymbolType::Or)
+        else if (flt->getSymbolType() == SymbolType::Not)
         {
 
         }
-        else if (filter->getSymbolType() == SymbolType::Not)
-        {
-
-        }
-        else if (filter->getSymbolType() == SymbolType::InTuple)
+        else if (flt->getSymbolType() == SymbolType::InTuple)
         {
 
         }
         else
         {
-            res = filterExpression(input, filter);
+            res = filterExpression(RowsRef(input.getColumns()), flt);
         }
         return res;
     }
 
-    Rows filterExpression(const Rows &input, ExpressionPtr flt) const
+    static RowsRef filterExpression(const RowsRef &input, ExpressionPtr flt)
     {
-        Rows res;
-        res.depict(input);
-        auto id = get<ColumnName>(flt->getChild(0)->getSymbol().var);
+        RowsRef res(input.getColumns());
+
+        if (flt->getSymbolType() == SymbolType::True)
+        {
+            assert(!res.getColumns().empty());
+            for (size_t i = 0; i < res.getColumns()[0]->size(); i++)
+                res.addIndex(i);
+            return res;
+        }
+        if (flt->getSymbolType() == SymbolType::False)
+            return res;
+
+        auto id = get<IdentifierName>(flt->getChild(0)->getSymbol().var);
         auto value = get<Value>(flt->getChild(1)->getSymbol().var);
         auto id_column = input[id.column_name];
 
@@ -127,7 +153,7 @@ public:
         {
             Value va = id_column->operator[](i);
             if (op(va, value))
-                res.operator[](id.column_name)->insert(va);
+                res.addIndex(i);
         }
         return res;
     }

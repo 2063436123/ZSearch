@@ -27,6 +27,8 @@ public:
 
     virtual void setOrdered() = 0;
 
+    virtual void handleEverything(const std::function<void(Value)>& handler) const = 0;
+
     void serialize(WriteBufferHelper &helper) const
     {
         helper.writeNumber(static_cast<int>(type));
@@ -100,10 +102,10 @@ public: \
         return std::make_shared<Column##ClassType>(column_name, data); \
     } \
     \
-    void handleEverything(const std::function<void(ClassType, bool)>& handler) const       \
+    void handleEverything(const std::function<void(Value)>& handler) const override       \
     {                          \
         for (size_t i = 0; i < data->size(); i++)                                       \
-            handler((*data)[i], data->is_null(i));\
+            handler((*data)[i]);\
     }\
     \
     ColumnDataPtr<ClassType> data; \

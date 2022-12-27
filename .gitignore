@@ -2,6 +2,9 @@
 /cmake-build-debug
 /.idea
 /database*
+/Cpp
+/antlr4-runtime
+/gen
 *.csv
 
 .DS_Store

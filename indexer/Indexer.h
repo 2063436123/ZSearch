@@ -6,7 +6,6 @@
 // 一个 Indexer 绑定到一个 database 上，并且在其中创建新的 document
 class Indexer {
 public:
-    // TODO: 支持更多文本类型，only txt at present.
     explicit Indexer(Database &db_)
             : db(db_) {}
 
@@ -29,7 +28,7 @@ public:
         {
             std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
             std::unique_ptr<Extractor> extractor = std::make_unique<WordExtractor>(std::move(reader));
-
+            // 我是傻逼
             while (true)
             {
                 auto word_in_files = extractor->extract();

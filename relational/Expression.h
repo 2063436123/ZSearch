@@ -2,17 +2,11 @@
 #include "../typedefs.h"
 #include "Value.h"
 
-struct ColumnName
-{
-    std::string table_name;
-    std::string column_name;
-    std::string getName() const {
-        return table_name + '.' + column_name;
-    }
-};
 
 enum class SymbolType
 {
+    True,
+    False,
     Id, // equals to ColumnName in general; single
     Value, // single
     // = < > <= >= !=, a Op b
@@ -30,7 +24,7 @@ enum class SymbolType
 
 struct Symbol {
     SymbolType type;
-    std::variant<ColumnName, Value> var;
+    std::variant<IdentifierName, Value> var;
 
     Symbol(SymbolType type_) : type(type_)
     {
@@ -38,7 +32,7 @@ struct Symbol {
             throw Poco::InvalidArgumentException("non-value need SymbolType::Other...!");
     }
 
-    Symbol(SymbolType type_, const ColumnName& str) : type(type_)
+    Symbol(SymbolType type_, const IdentifierName& str) : type(type_)
     {
         if (type_ != SymbolType::Id)
             throw Poco::InvalidArgumentException("ColumnName type need SymbolType::Id!");
@@ -71,6 +65,11 @@ public:
     Symbol getSymbol() const
     {
         return symbol;
+    }
+
+    size_t getChildSize() const
+    {
+        return children.size();
     }
 
     ExpressionPtr getChild(size_t index = 0) const

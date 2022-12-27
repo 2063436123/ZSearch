@@ -40,6 +40,20 @@ public:
         info = info_;
     }
 
+    void addKV(const std::string& key, Value value)
+    {
+        kvs.emplace(key, value);
+    }
+
+    Value findKV(const std::string &key) const
+    {
+        std::lock_guard<std::mutex> guard(kvs_lock);
+        auto iter = kvs.find(key);
+        if (iter == kvs.end())
+            return {};
+        return iter->second;
+    }
+
     // 获取文档中的字符串，直接匹配的部分位于 [offset, offset + len) —— 一定会被完全输出，res_len 指明我们期望的总输出宽度.
     std::string getString(size_t offset, size_t len, size_t res_len) const
     {
@@ -91,6 +105,7 @@ public:
         return res;
     }
 
+    // TODO: 序列化/反序列化添加 kvs, info 字段
     void serialize(WriteBufferHelper &helper) const
     {
         helper.writeNumber(id);
@@ -120,6 +135,10 @@ private:
 
     size_t id;
     std::filesystem::path origin_path;
+
+    mutable std::mutex kvs_lock;
+    std::unordered_map<std::string, Value> kvs;
+
     DocumentInfo info;
 };
 

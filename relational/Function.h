@@ -2,72 +2,86 @@
 
 #include "../typedefs.h"
 
-template<typename T>
-class SumOperator
+class AggOperator
 {
 public:
-    void operator()(T value, bool is_null)
+    virtual void operator()(const Value& value) = 0;
+    virtual Value result() const = 0;
+};
+
+class SumOperator : public AggOperator
+{
+public:
+    void operator()(const Value& value) override
     {
+        bool is_null = value.getValueType() == ValueType::Null;
         if (is_null)
             return;
-        sum = sum + value;
+        if (!has_call)
+        {
+            has_call = true;
+            sum = value;
+        }
+        else
+        {
+            sum = sum + value;
+        }
     }
 
-    T result()
+    Value result() const override
     {
         return sum;
     }
 
 private:
-    T sum{};
+    bool has_call = false;
+    Value sum;
 };
 
-template<typename T>
-class CountOperator
+class CountOperator : public AggOperator
 {
 public:
-    void operator()(T, bool is_null)
+    void operator()(const Value&) override
     {
         ++cnt;
     }
 
-    size_t result()
+    Value result() const override
     {
-        return cnt;
+        return (int64_t)cnt;
     }
 
 private:
     size_t cnt = 0;
 };
 
-template<typename T>
-class AvgOperator
+class AvgOperator : public AggOperator
 {
 public:
-    void operator()(T value, bool is_null)
+    void operator()(const Value& value) override
     {
-        sum(value, is_null);
-        cnt(value, is_null);
+        sum(value);
+        cnt(value);
     }
 
-    std::optional<T> result()
+    Value result() const override
     {
-        if (cnt.result() == 0)
-            return std::nullopt;
-        return std::make_optional(sum.result() / cnt.result());
+        if (cnt.result().as<Int>() == 0)
+            return {};
+        return sum.result() / cnt.result();
     }
 
 private:
-    SumOperator<T> sum;
-    CountOperator<T> cnt;
+    SumOperator sum;
+    CountOperator cnt;
 };
 
-template<typename T>
-class MaxOperator
+class MaxOperator : public AggOperator
 {
 public:
-    void operator()(T value, bool is_null)
+    void operator()(const Value& value) override
     {
+        bool is_null = value.getValueType() == ValueType::Null;
         if (is_null)
             return;
         if (!has_compared)
@@ -81,22 +95,22 @@ public:
         }
     }
 
-    std::optional<T> result()
+    Value result() const override
     {
-        return has_compared ? std::make_optional(max) : std::nullopt;
+        return max;
     }
 
 private:
     bool has_compared = false;
-    T max;
+    Value max;
 };
 
-template<typename T>
-class MinOperator
+class MinOperator : public AggOperator
 {
 public:
-    void operator()(T value, bool is_null)
+    void operator()(const Value& value) override
     {
+        bool is_null = value.getValueType() == ValueType::Null;
         if (is_null)
             return;
         if (!has_compared)
@@ -110,12 +124,12 @@ public:
         }
     }
 
-    std::optional<T> result()
+    Value result() const override
     {
-        return has_compared ? std::make_optional(min) : std::nullopt;
+        return min;
     }
 
 private:
     bool has_compared = false;
-    T min;
+    Value min;
 };

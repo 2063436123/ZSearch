@@ -13,7 +13,7 @@ struct StringInFile {
 using StringInFiles = std::vector<StringInFile>;
 
 struct ExtractResult {
-    bool is_valid = false; // not eof, has meaningful data
+    bool is_valid = false; // is not eof, and has meaningful data
     StringInFiles words;
     Table table;
 };

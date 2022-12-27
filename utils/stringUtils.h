@@ -39,9 +39,16 @@ std::string outputSmooth(const std::string& output)
 
 std::string trimQuote(std::string str)
 {
-    trimInPlace(str, [](char ch) {
-        return ch == '\"';
-    });
+    if (str.empty())
+        return str;
+    if (str[0] == '\"')
+        trimInPlace(str, [](char ch) {
+            return ch == '\"';
+        });
+    else if (str[0] == '\'')
+        trimInPlace(str, [](char ch) {
+            return ch == '\'';
+        });
     return str;
 }
 

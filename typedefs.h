@@ -37,4 +37,13 @@ POCO_IMPLEMENT_EXCEPTION(DateTimeFormatException, Poco::LogicException, "date ti
 POCO_DECLARE_EXCEPTION(Foundation_API, UnreachableException, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(UnreachableException, Poco::LogicException, "unreachable!")
 
+POCO_DECLARE_EXCEPTION(Foundation_API, UnexpectedChar, Poco::LogicException)
+POCO_IMPLEMENT_EXCEPTION(UnexpectedChar, Poco::LogicException, "Unexpected Char!")
+
+POCO_DECLARE_EXCEPTION(Foundation_API, UnexpectedToken, Poco::LogicException)
+POCO_IMPLEMENT_EXCEPTION(UnexpectedToken, Poco::LogicException, "Unexpected Token!")
+
+POCO_DECLARE_EXCEPTION(Foundation_API, UnmatchedToken, Poco::LogicException)
+POCO_IMPLEMENT_EXCEPTION(UnmatchedToken, Poco::LogicException, "Unmatched Token!")
+
 const std::string root_path = "/Users/peter/Code/GraduationDesignSrc/master";
