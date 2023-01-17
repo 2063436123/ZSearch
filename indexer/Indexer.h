@@ -28,16 +28,32 @@ public:
         {
             std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
             std::unique_ptr<Extractor> extractor = std::make_unique<WordExtractor>(std::move(reader));
-            // 我是傻逼
-            while (true)
+
+            auto word_in_files = extractor->extract();
+            if (!word_in_files.is_valid)
+                return;
+            for (const auto &word_in_file : word_in_files.words)
             {
-                auto word_in_files = extractor->extract();
-                if (!word_in_files.is_valid)
-                    break;
-                for (const auto &word_in_file : word_in_files.words)
-                {
-                    db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
-                }
+                db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
+            }
+        }
+        else if (file_path.extension() == "json")
+        {
+            std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
+            std::unique_ptr<Extractor> extractor = std::make_unique<JsonExtractor>(std::move(reader));
+
+            auto words_and_kvs = extractor->extract();
+            if (!words_and_kvs.is_valid)
+                return;
+            for (const auto &word_in_file : words_and_kvs.words)
+            {
+                db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
+            }
+
+            auto document_ptr = db.findDocument(doc_id);
+            for (const auto& [key, value] : words_and_kvs.kvs)
+            {
+                document_ptr->addKV(key, value);
             }
         }
         else if (file_path.extension() == "csv")
@@ -49,11 +65,11 @@ public:
             if (!table_in_file.is_valid)
                 return;
             table_in_file.table.setDocId(doc_id);
-            db.addTable(table_in_file.table.name(), table_in_file.table);
+            db.addTable(table_in_file.table.name(), std::make_shared<Table>(table_in_file.table));
         }
         else
         {
-            throw Poco::NotImplementedException();
+            THROW(Poco::NotImplementedException());
         }
     }
 

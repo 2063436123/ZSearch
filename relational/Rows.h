@@ -30,7 +30,7 @@ public:
             return ptr->column_name == column_name;
         });
         if (iter == columns.end())
-            throw Poco::NotFoundException("can't found column " + column_name + " in Rows");
+            THROW(Poco::NotFoundException("can't found column " + column_name + " in Rows"));
         return *iter;
     }
 
@@ -76,7 +76,7 @@ public:
     RowsRef& operator=(const RowsRef& rhs)
     {
         if (columns != rhs.columns)
-            throw Poco::InvalidArgumentException("unmatched columns type when reset RowsRef");
+            THROW(Poco::InvalidArgumentException("unmatched columns type when reset RowsRef"));
         indexs = rhs.indexs;
         return *this;
     }
@@ -84,7 +84,7 @@ public:
     RowsRef& operator=(RowsRef&& rhs)
     {
         if (columns != rhs.columns)
-            throw Poco::InvalidArgumentException("unmatched columns type when reset RowsRef");
+            THROW(Poco::InvalidArgumentException("unmatched columns type when reset RowsRef"));
         indexs = std::move(rhs.indexs);
         return *this;
     }
@@ -95,7 +95,7 @@ public:
             return ptr->column_name == column_name;
         });
         if (iter == columns.end())
-            throw Poco::NotFoundException("can't found column " + column_name + " in RowsRef");
+            THROW(Poco::NotFoundException("can't found column " + column_name + " in RowsRef"));
         return *iter;
     }
 
@@ -124,7 +124,7 @@ public:
     RowsRef operator&(const RowsRef& rhs) const
     {
         if (columns != rhs.columns)
-            throw Poco::InvalidArgumentException("unmatched columns type in RowsRef");
+            THROW(Poco::InvalidArgumentException("unmatched columns type in RowsRef"));
         RowsRef res(columns);
         std::set_intersection(indexs.begin(), indexs.end(), rhs.indexs.begin(), rhs.indexs.end(), std::inserter(res.indexs, res.indexs.begin()));
         return res;
@@ -133,7 +133,7 @@ public:
     RowsRef operator|(const RowsRef& rhs) const
     {
         if (columns != rhs.columns)
-            throw Poco::InvalidArgumentException("unmatched columns type in RowsRef");
+            THROW(Poco::InvalidArgumentException("unmatched columns type in RowsRef"));
         RowsRef res(columns);
         std::set_union(indexs.begin(), indexs.end(), rhs.indexs.begin(), rhs.indexs.end(), std::inserter(res.indexs, res.indexs.begin()));
         return res;
@@ -142,7 +142,7 @@ public:
     RowsRef operator-(const RowsRef& rhs) const
     {
         if (columns != rhs.columns)
-            throw Poco::InvalidArgumentException("unmatched columns type in RowsRef");
+            THROW(Poco::InvalidArgumentException("unmatched columns type in RowsRef"));
         RowsRef res(columns);
         std::set_difference(indexs.begin(), indexs.end(), rhs.indexs.begin(), rhs.indexs.end(), std::inserter(res.indexs, res.indexs.begin()));
         return res;

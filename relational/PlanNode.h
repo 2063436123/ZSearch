@@ -147,7 +147,7 @@ public:
         else if (flt->getSymbolType() == SymbolType::GreatEqual)
             op = [](const Value& lhs, const Value& rhs) {return lhs >= rhs;};
         else
-            throw Poco::InvalidArgumentException("unexpected filter type in filterExpression");
+            THROW(Poco::InvalidArgumentException("unexpected filter type in filterExpression"));
 
         for (size_t i = 0; i < id_column->size(); i++)
         {
@@ -173,15 +173,15 @@ public:
 
     Rows transform(const Rows &input) override
     {
-        throw UnreachableException("ScanNode has no rows input");
+        THROW(UnreachableException("ScanNode has no rows input"));
     }
 
     Rows read()
     {
-        Table table = db.findTable(table_name);
-        if (table.name() != table_name)
-            throw Poco::NotFoundException("can't found this table - " + table_name);
-        return table.dumpRows();
+        TablePtr table = db.findTable(table_name);
+        if (!table || table->name() != table_name)
+            THROW(Poco::NotFoundException("can't found this table - " + table_name));
+        return table->dumpRows();
     }
 
 private:

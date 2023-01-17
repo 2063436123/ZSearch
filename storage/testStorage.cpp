@@ -18,8 +18,8 @@ void check_string_in_file(TxtLineReader &reader, int file_fd, const char *expect
 
 TEST(reader, TxtReader)
 {
-    TxtLineReader reader(root_path + "/articles/IfIWereToFallInLove.txt");
-    int fd = ::open((root_path + "/articles/IfIWereToFallInLove.txt").c_str(), O_RDONLY);
+    TxtLineReader reader(ROOT_PATH + "/articles/IfIWereToFallInLove.txt");
+    int fd = ::open((ROOT_PATH + "/articles/IfIWereToFallInLove.txt").c_str(), O_RDONLY);
 
     check_string_in_file(reader, fd,
                          "If I were to fall in love,It would have to be with youYour eyes, your smile,The way you laugh,The things you say and do",

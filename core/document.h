@@ -5,12 +5,16 @@
 #include "extractor/Extractor.h"
 #include "DocumentInfo.h"
 
+class Document;
+using DocumentPtr = std::shared_ptr<Document>;
+using DocumentMap = std::unordered_map<size_t, DocumentPtr>;
+
 class Document {
 public:
     Document(size_t doc_id, std::filesystem::path origin_path_)
             : id(doc_id), origin_path(std::move(origin_path_)) {
         if (!is_regular_file(origin_path))
-            throw FileTypeUnmatchException();
+            THROW(FileTypeUnmatchException());
         struct stat file_stat;
         stat(origin_path.c_str(), &file_stat);
         info.type = decideFileType(origin_path);
@@ -42,6 +46,7 @@ public:
 
     void addKV(const std::string& key, Value value)
     {
+        std::lock_guard<std::mutex> guard(kvs_lock);
         kvs.emplace(key, value);
     }
 
@@ -60,7 +65,7 @@ public:
         auto file_len = file_size(origin_path);
         int fd = ::open(origin_path.c_str(), O_RDONLY);
         if (fd < 0)
-            throw Poco::FileNotFoundException();
+            THROW(Poco::FileNotFoundException());
 
         // if output like: xxx matched yyy
         // offset points to 'm' of "matched"
@@ -98,7 +103,7 @@ public:
         ssize_t read_number = ::read(fd, buf, std::max(res_len, len));
 
         if (read_number < 0)
-            throw Poco::ReadFileException();
+            THROW(Poco::ReadFileException());
 
         auto res = std::string(buf, read_number);
         delete[] buf;
@@ -112,11 +117,11 @@ public:
         helper.writeString(origin_path.string());
     }
 
-    static Document deserialize(ReadBufferHelper &helper)
+    static DocumentPtr deserialize(ReadBufferHelper &helper)
     {
         auto id = helper.readNumber<size_t>();
         std::filesystem::path path(helper.readString());
-        return {id, path};
+        return std::make_shared<Document>(id, path);
     }
 
 private:
@@ -130,7 +135,7 @@ private:
             return DocumentType::CSV;
         if (extension == "json")
             return DocumentType::JSON;
-        return DocumentType::NORMAL;
+        return DocumentType::BLOB;
     }
 
     size_t id;
@@ -141,5 +146,3 @@ private:
 
     DocumentInfo info;
 };
-
-using DocumentMap = std::unordered_map<size_t, Document>;

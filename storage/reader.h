@@ -15,7 +15,7 @@ public:
     explicit Reader(const std::filesystem::path &path_)
     {
         if (!std::filesystem::exists(path_))
-            throw Poco::FileNotFoundException();
+            THROW(Poco::FileNotFoundException());
     }
 
     virtual ~Reader() = default;
@@ -27,7 +27,7 @@ public:
     TxtLineReader(std::filesystem::path path) : Reader(path)
     {
         if (!std::filesystem::is_regular_file(path))
-            throw FileTypeUnmatchException("file of " + path.string() + " is not a regular file");
+            THROW(FileTypeUnmatchException("file of " + path.string() + " is not a regular file"));
         fin.open(path);
     }
 
@@ -52,12 +52,12 @@ public:
             return {line, offset_in_file - read_number + left_trim_number};
         }
         else
-            throw Poco::NotImplementedException();
+            THROW(Poco::NotImplementedException());
     }
 
     Names getFieldNames() const override
     {
-        throw Poco::NotImplementedException();
+        THROW(Poco::NotImplementedException());
     }
 
 private:

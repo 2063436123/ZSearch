@@ -17,46 +17,52 @@ public:
 
     ExtractResult extract() override
     {
-        auto line = reader->readUntil();
-        if (line.str.empty())
-            return ExtractResult{};
         StringInFiles res;
-
-        // this split logic is referred to Poco::StringTokenizer.
-        auto str = line.str;
-        std::string separators(" ,.\t\n");
-        size_t offset_in_file = line.offset_in_file;
-
-        auto begin = str.begin(), end = str.end();
-        auto it = str.begin();
-
-        std::string token;
-        for (; it != end; ++it)
+        while(true)
         {
-            if (separators.find(*it) != std::string::npos)
+            auto line = reader->readUntil();
+            if (line.str.empty())
+                break;
+
+            // this split logic is referred to Poco::StringTokenizer.
+            auto str = line.str;
+            std::string separators(" ,.\t\n");
+            size_t offset_in_file = line.offset_in_file;
+
+            auto begin = str.begin(), end = str.end();
+            auto it = str.begin();
+
+            std::string token;
+            for (; it != end; ++it)
+            {
+                if (separators.find(*it) != std::string::npos)
+                {
+                    size_t old_token_size = token.size();
+                    size_t left_trim_number = trimInPlace(token, [](char ch) {
+                        return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
+                    }).first;
+                    if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
+                    token.clear();
+                }
+                else
+                {
+                    token += *it;
+                }
+            }
+
+            if (!token.empty())
             {
                 size_t old_token_size = token.size();
                 size_t left_trim_number = trimInPlace(token, [](char ch) {
                     return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
                 }).first;
                 if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
-                token.clear();
             }
-            else
-            {
-                token += *it;
-            }
+
         }
 
-        if (!token.empty())
-        {
-            size_t old_token_size = token.size();
-            size_t left_trim_number = trimInPlace(token, [](char ch) {
-                return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
-            }).first;
-            if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
-        }
-
+        if (res.empty())
+            return ExtractResult{};
         return ExtractResult{.is_valid = true, .words = res};
     }
 
@@ -82,10 +88,10 @@ public:
         // read column type
         line = reader->readUntil();
         if (line.str.empty())
-            throw Poco::DataFormatException("format error in file " + table_name);
+            THROW(Poco::DataFormatException("format error in file " + table_name));
         Poco::StringTokenizer type_tokenizer(line.str, ",", Poco::StringTokenizer::Options::TOK_TRIM);
         if (type_tokenizer.count() != column_count)
-            throw Poco::DataFormatException("format error in file " + table_name);
+            THROW(Poco::DataFormatException("format error in file " + table_name));
         for (size_t i = 0; i < type_tokenizer.count(); i++)
         {
             auto type = getTypeByName(type_tokenizer[i]);
@@ -104,7 +110,7 @@ public:
                     rows.addColumn(std::make_shared<ColumnDateTime>(name_tokenizer[i]));
                     break;
                 default:
-                    throw Poco::NotImplementedException("unknown type name in csv extractor");
+                    THROW(Poco::NotImplementedException("unknown type name in csv extractor"));
             }
         }
 
@@ -116,7 +122,7 @@ public:
                 break;
             Poco::StringTokenizer value_tokenizer(line.str, ",", Poco::StringTokenizer::Options::TOK_TRIM);
             if (value_tokenizer.count() != column_count)
-                throw Poco::DataFormatException("format error in file " + table_name);
+                THROW(Poco::DataFormatException("format error in file " + table_name));
 
             int i = 0;
             for (const auto& column_value : value_tokenizer)
@@ -167,5 +173,70 @@ public:
 
 private:
     std::string table_name;
+    std::unique_ptr<Reader> reader;
+};
+
+
+class JsonExtractor : public Extractor {
+public:
+    explicit JsonExtractor(std::unique_ptr<Reader> reader_) : reader(std::move(reader_)) {}
+
+    ExtractResult extract() override
+    {
+        StringInFiles res;
+        while(true)
+        {
+            auto line = reader->readUntil();
+            if (line.str.empty())
+                break;
+
+            // this split logic is referred to Poco::StringTokenizer.
+            auto str = line.str;
+            std::string separators(" ,.\t\n");
+            size_t offset_in_file = line.offset_in_file;
+
+            auto begin = str.begin(), end = str.end();
+            auto it = str.begin();
+
+            std::string token;
+            for (; it != end; ++it)
+            {
+                if (separators.find(*it) != std::string::npos)
+                {
+                    size_t old_token_size = token.size();
+                    size_t left_trim_number = trimInPlace(token, [](char ch) {
+                        return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
+                    }).first;
+                    if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
+                    token.clear();
+                }
+                else
+                {
+                    token += *it;
+                }
+            }
+
+            if (!token.empty())
+            {
+                size_t old_token_size = token.size();
+                size_t left_trim_number = trimInPlace(token, [](char ch) {
+                    return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
+                }).first;
+                if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
+            }
+
+        }
+
+        // TODO： 目前只提取 words，需要提取 kvs
+        {
+            // TODO: 解析 json
+        }
+
+        if (res.empty())
+            return ExtractResult{};
+        return ExtractResult{.is_valid = true, .words = res};
+    }
+
+private:
     std::unique_ptr<Reader> reader;
 };

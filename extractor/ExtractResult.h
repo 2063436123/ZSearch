@@ -12,8 +12,13 @@ struct StringInFile {
 };
 using StringInFiles = std::vector<StringInFile>;
 
+// when is_valid == true:
+// WordExtractor 只填充 words;
+// JsonExtractor 只填充 words, kvs;
+// CsvExtractor 只填充 table.
 struct ExtractResult {
     bool is_valid = false; // is not eof, and has meaningful data
     StringInFiles words;
+    std::unordered_map<std::string, Value> kvs;
     Table table;
 };

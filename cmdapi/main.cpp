@@ -31,9 +31,9 @@ void run()
             size_t no = 0;
             for (const auto &result: res)
             {
-                std::cout << "[No." << no++ << " doc id:" << result.document.getId() << " path:"
-                          << result.document.getPath() << " score: " << result.score << "]" << std::endl;
-                auto matched_text = result.document.getString(result.offset_in_file, result.related_text_len, 30);
+                std::cout << "[No." << no++ << " doc id:" << result.document->getId() << " path:"
+                          << result.document->getPath() << " score: " << result.score << "]" << std::endl;
+                auto matched_text = result.document->getString(result.offset_in_file, result.related_text_len, 30);
                 std::cout << outputSmooth(matched_text) << std::endl;
             }
         }

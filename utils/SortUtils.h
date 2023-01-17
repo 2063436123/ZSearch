@@ -4,7 +4,7 @@
 template<typename T, typename U>
 auto sync_sort(std::vector<T> oa, std::vector<U> ob)
 {
-    // TODO: 不适用额外数组，完成原地 sync_sort
+    // TODO: 不使用额外数组，完成原地 sync_sort
     auto a = oa, b = ob;
     assert(a.size() == b.size());
 

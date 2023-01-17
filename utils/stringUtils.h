@@ -59,7 +59,7 @@ T restrictStoi(const std::string& str) {
     bool is_minus = false;
 
     if (str.empty())
-        throw Poco::InvalidArgumentException("restrict_stoi requires an not empty string! -- " + str);
+        THROW(Poco::InvalidArgumentException("restrict_stoi requires an not empty string! -- " + str));
 
     size_t i = 0;
     if (str[0] == '-')
@@ -72,7 +72,7 @@ T restrictStoi(const std::string& str) {
     {
         auto ch = str[i];
         if (!Poco::Ascii::isDigit(ch))
-            throw Poco::InvalidArgumentException("restrict_stoi requires a string contains only number char! -- " + str);
+            THROW(Poco::InvalidArgumentException("restrict_stoi requires a string contains only number char! -- " + str));
         else
             base = base * 10 + ch - '0';
     }
@@ -82,7 +82,7 @@ T restrictStoi(const std::string& str) {
 
 double restrictStod(const std::string& str) {
     if (str.empty())
-        throw Poco::InvalidArgumentException("restrict_stod requires an not empty string! -- " + str);
+        THROW(Poco::InvalidArgumentException("restrict_stod requires an not empty string! -- " + str));
 
     size_t i = 0;
     if (str[0] == '-')
@@ -94,7 +94,7 @@ double restrictStod(const std::string& str) {
     {
         auto ch = str[i];
         if (!Poco::Ascii::isDigit(ch) && ch != '.')
-            throw Poco::InvalidArgumentException("restrict_stod requires a string contains only number char! -- " + str);
+            THROW(Poco::InvalidArgumentException("restrict_stod requires a string contains only number char! -- " + str));
     }
 
     return std::stod(str);

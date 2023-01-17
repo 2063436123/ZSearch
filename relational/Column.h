@@ -80,7 +80,7 @@ public: \
     { \
         auto column_ptr = std::dynamic_pointer_cast<Column##ClassType>(column_ptr_); \
         if (!column_ptr) \
-            throw Poco::BadCastException("can't convert ColumnBase to Column" #ClassType); \
+            THROW(Poco::BadCastException("can't convert ColumnBase to Column" #ClassType)); \
         data->appendBlock(column_ptr->data); \
     } \
     \

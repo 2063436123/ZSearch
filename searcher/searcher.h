@@ -4,7 +4,7 @@
 #include "core/Database.h"
 
 struct SearchResult {
-    Document document;
+    DocumentPtr document;
     size_t offset_in_file;
     size_t related_text_len;
 
@@ -15,8 +15,10 @@ struct SearchResult {
     {
         if (score != rhs.score)
             return score < rhs.score;
-        if (document.getId() != rhs.document.getId())
-            return document.getId() < rhs.document.getId();
+        if (!document || !rhs.document)
+            return false;
+        if (document->getId() != rhs.document->getId())
+            return document->getId() < rhs.document->getId();
         return offset_in_file < rhs.offset_in_file;
     }
 };
@@ -32,19 +34,23 @@ public:
     {
         if (std::all_of(query.begin(), query.end(), [](char c) { return isalnum(c); }))
         {
-            Term term = db.findTerm(query);
             SearchResultSet res;
-            assert(term.posting_list.size() == term.statistics_list.size());
-            for (size_t i = 0; i < term.posting_list.size(); i++)
+
+            TermPtr term = db.findTerm(query);
+            if (!term)
+                return res;
+            assert(term->posting_list.size() == term->statistics_list.size());
+
+            for (size_t i = 0; i < term->posting_list.size(); i++)
             {
-                for (auto offset_in_file : term.statistics_list[i].offsets_in_file)
-                    res.insert(SearchResult{.document = db.findDocument(term.posting_list[i]), .offset_in_file = offset_in_file, .related_text_len = query.size()});
+                for (auto offset_in_file : term->statistics_list[i].offsets_in_file)
+                    res.insert(SearchResult{.document = db.findDocument(term->posting_list[i]), .offset_in_file = offset_in_file, .related_text_len = query.size()});
             }
             return res;
         }
         else
         {
-            throw Poco::NotImplementedException();
+            THROW(Poco::NotImplementedException());
         }
     }
 

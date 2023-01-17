@@ -1,6 +1,6 @@
 build=$1
 
-cd $build || exit
+cd $build || exit 1
 
 for file in *; do
   if [ -f $file ]; then

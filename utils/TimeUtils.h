@@ -13,7 +13,7 @@ public:
     DateTime(const std::string& date_time_str)
     {
         if (date_time_str.size() != strlen("0000-00-00 00:00:00"))
-            throw DateTimeFormatException("not enough len of " + date_time_str);
+            THROW(DateTimeFormatException("not enough len of " + date_time_str));
         try
         {
             int year = restrictStoi<int>(date_time_str.substr(0, 4));
@@ -26,7 +26,7 @@ public:
         }
         catch (std::exception &e)
         {
-            throw DateTimeFormatException("in " + date_time_str);
+            THROW(DateTimeFormatException("in " + date_time_str));
         }
     }
 

@@ -29,20 +29,20 @@ struct Symbol {
     Symbol(SymbolType type_) : type(type_)
     {
         if (type_ == SymbolType::Id || type_ == SymbolType::Value)
-            throw Poco::InvalidArgumentException("non-value need SymbolType::Other...!");
+            THROW(Poco::InvalidArgumentException("non-value need SymbolType::Other...!"));
     }
 
     Symbol(SymbolType type_, const IdentifierName& str) : type(type_)
     {
         if (type_ != SymbolType::Id)
-            throw Poco::InvalidArgumentException("ColumnName type need SymbolType::Id!");
+            THROW(Poco::InvalidArgumentException("ColumnName type need SymbolType::Id!"));
         var = str;
     }
 
     Symbol(SymbolType type_, const Value& val) : type(type_)
     {
         if (type != SymbolType::Value)
-            throw Poco::InvalidArgumentException("Value type need SymbolType::Value!");
+            THROW(Poco::InvalidArgumentException("Value type need SymbolType::Value!"));
         var = val;
     }
 };

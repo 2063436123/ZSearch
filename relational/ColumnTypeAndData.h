@@ -41,21 +41,21 @@ public:
     T operator[](size_t index) const
     {
         if (index >= data.size())
-            throw Poco::RangeException("ColumnDataBase operator[] out of range");
+            THROW(Poco::RangeException("ColumnDataBase operator[] out of range"));
         return data[index];
     }
 
     bool is_null(size_t index) const
     {
         if (index >= null_map.size())
-            throw Poco::RangeException("ColumnDataBase is_null(size_t) out of range");
+            THROW(Poco::RangeException("ColumnDataBase is_null(size_t) out of range"));
         return null_map[index];
     }
 
     T &operator[](size_t index)
     {
         if (index >= data.size())
-            throw Poco::RangeException("ColumnDataBase operator[] out of range");
+            THROW(Poco::RangeException("ColumnDataBase operator[] out of range"));
         return data[index];
     }
 
@@ -99,8 +99,8 @@ public:
         assert(data.size() == null_map.size());
 //        auto rhs_data = std::dynamic_pointer_cast<ColumnDataBase<T>>(rhs);
 //        if (!rhs_data)
-//            throw Poco::InvalidArgumentException(
-//                    "ColumnDatabase::appendBlock, can't convert ColumnDataPtr to ColumnDataBasePtr");
+//            THROW(Poco::InvalidArgumentException(
+//                    "ColumnDatabase::appendBlock, can't convert ColumnDataPtr to ColumnDataBasePtr"));
         if (!is_ordered)
         {
             std::copy(rhs->data.begin(), rhs->data.end(), std::back_inserter(data));
@@ -108,7 +108,7 @@ public:
         }
         else
         {
-            throw Poco::NotImplementedException("appendBlock");
+            THROW(Poco::NotImplementedException("appendBlock"));
         }
     }
 
@@ -122,7 +122,7 @@ public:
         }
         else
         {
-            throw Poco::NotImplementedException("appendBlock");
+            THROW(Poco::NotImplementedException("appendBlock"));
         }
     }
 
@@ -177,7 +177,7 @@ ColumnType getType()
         return ColumnType::String;
     if constexpr (std::is_same_v<T, DateTime>)
         return ColumnType::DateTime;
-    throw UnreachableException("in getNodeType");
+    THROW(UnreachableException("in getNodeType"));
 }
 
 ColumnType getTypeByName(const std::string& name)
@@ -190,7 +190,7 @@ ColumnType getTypeByName(const std::string& name)
         return ColumnType::String;
     if (name == "DateTime")
         return ColumnType::DateTime;
-    throw UnreachableException("in getTypeByName");
+    THROW(UnreachableException("in getTypeByName"));
 }
 
 template<typename T>
@@ -204,6 +204,6 @@ std::string getNameByType()
         return "String";
     if constexpr (std::is_same_v<T, DateTime>)
         return "DateTime";
-    throw UnreachableException("in getNameByType");
+    THROW(UnreachableException("in getNameByType"));
 }
 

@@ -52,7 +52,7 @@ public:
         for (const auto& value : values)
         {
             if (value.type == ValueType::ValueList)
-                throw Poco::InvalidArgumentException("nesting ValueList is not supported!");
+                THROW(Poco::InvalidArgumentException("nesting ValueList is not supported!"));
         }
         var = values;
     }
@@ -71,25 +71,25 @@ public:
     Value operator+(const Value& rhs) const
     {
         if (type != rhs.type)
-            throw Poco::InvalidArgumentException("Value type unmatch");
+            THROW(Poco::InvalidArgumentException("Value type unmatch"));
         if (type == ValueType::Int)
             return std::get<Int>(var) + std::get<Int>(rhs.var);
         if (type == ValueType::Decimal)
             return std::get<Decimal>(var) + std::get<Decimal>(rhs.var);
-        throw UnreachableException("Value::operator+ unimplement this type.");
+        THROW(UnreachableException("Value::operator+ unimplement this type."));
     }
 
     Value operator/(const Value& rhs) const
     {
         if (ValueType::Int != rhs.type)
-            throw Poco::InvalidArgumentException("Value type unmatch");
+            THROW(Poco::InvalidArgumentException("Value type unmatch"));
         if (type == ValueType::Null)
             return {};
         if (type == ValueType::Int)
             return std::get<Int>(var) / std::get<Int>(rhs.var);
         if (type == ValueType::Decimal)
             return std::get<Decimal>(var) / std::get<Int>(rhs.var);
-        throw UnreachableException("Value::operator/ unimplement this type.");
+        THROW(UnreachableException("Value::operator/ unimplement this type."));
     }
 
     bool operator==(const Value& rhs) const
@@ -105,28 +105,28 @@ public:
     bool operator<(const Value& rhs) const
     {
         if (type != rhs.type)
-            throw Poco::InvalidArgumentException("Value type unmatch");
+            THROW(Poco::InvalidArgumentException("Value type unmatch"));
         return var < rhs.var;
     }
 
     bool operator<=(const Value& rhs) const
     {
         if (type != rhs.type)
-            throw Poco::InvalidArgumentException("value type unmatch");
+            THROW(Poco::InvalidArgumentException("value type unmatch"));
         return var <= rhs.var;
     }
 
     bool operator>(const Value& rhs) const
     {
         if (type != rhs.type)
-            throw Poco::InvalidArgumentException("value type unmatch");
+            THROW(Poco::InvalidArgumentException("value type unmatch"));
         return var > rhs.var;
     }
 
     bool operator>=(const Value& rhs) const
     {
         if (type != rhs.type)
-            throw Poco::InvalidArgumentException("value type unmatch");
+            THROW(Poco::InvalidArgumentException("value type unmatch"));
         return var >= rhs.var;
     }
 

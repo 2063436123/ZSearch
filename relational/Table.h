@@ -5,6 +5,10 @@
 #include "Rows.h"
 #include "utils/SerializerUtils.h"
 
+class Table;
+using TablePtr = std::shared_ptr<Table>;
+using TableMap = std::unordered_map<std::string, TablePtr>;
+
 class Table
 {
 public:
@@ -55,7 +59,7 @@ public:
     ColumnPtr operator[](const std::string& column_name) const {
         auto iter = columns.find(column_name);
         if (iter == columns.end())
-            throw Poco::NotFoundException("can't found column " + column_name + " in table " + table_name);
+            THROW(Poco::NotFoundException("can't found column " + column_name + " in table " + table_name));
         return iter->second;
     }
 
@@ -72,18 +76,18 @@ public:
         }
     }
 
-    static Table deserialize(ReadBufferHelper &helper)
+    static TablePtr deserialize(ReadBufferHelper &helper)
     {
         auto doc_id = helper.readNumber<size_t>();
         auto table_name = helper.readString();
-        Table table(table_name);
-        table.setDocId(doc_id);
+        TablePtr table = std::make_shared<Table>(table_name);
+        table->setDocId(doc_id);
 
         auto size = helper.readNumber<size_t>();
         for (size_t i = 0; i < size; i++)
         {
             ColumnPtr column = ColumnBase::deserialize(helper);
-            table.addColumn(column);
+            table->addColumn(column);
         }
         return table;
     }
@@ -102,4 +106,3 @@ private:
     std::string table_name;
     std::unordered_map<std::string, ColumnPtr> columns;
 };
-using TableMap = std::unordered_map<std::string, Table>;

@@ -49,7 +49,7 @@ public:
             return next_pointer;
         }
         else
-            throw Poco::RangeException();
+            THROW(Poco::RangeException());
 
     }
 
@@ -102,7 +102,7 @@ public:
             else if constexpr (std::is_same_v<T, DateTime>)
                 writeDateTime(ele);
             else
-                throw UnreachableException("in writeLinearContainer");
+                THROW(UnreachableException("in writeLinearContainer"));
         }
     }
 
@@ -119,7 +119,7 @@ public:
             else if constexpr (std::is_same_v<T, DateTime>)
                 writeDateTime(ele);
             else
-                throw UnreachableException("in writeSetContainer");
+                THROW(UnreachableException("in writeSetContainer"));
         }
     }
 
@@ -176,7 +176,7 @@ public:
                 container.push_back(date_time);
             }
             else
-                throw UnreachableException("in readLinearContainer");
+                THROW(UnreachableException("in readLinearContainer"));
         }
         return container;
     }
@@ -204,7 +204,7 @@ public:
                 container.insert(date_time);
             }
             else
-                throw UnreachableException("in readSetContainer");
+                THROW(UnreachableException("in readSetContainer"));
         }
         return container;
     }

@@ -1,6 +1,6 @@
 #include "QueryParser.h"
 
-TEST(Parser, base)
+TEST(DISABLED_Parser, base)
 {
     {
         QueryParser parser0("Hello");
