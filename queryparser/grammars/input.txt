@@ -1,0 +1,1 @@
+HELLO having COUNT(*) = 3 AND SUM(a) <= 100;

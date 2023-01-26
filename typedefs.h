@@ -49,11 +49,14 @@ POCO_IMPLEMENT_EXCEPTION(UnmatchedToken, Poco::LogicException, "Unmatched Token!
 const std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
 
 template<typename T>
+void THROW_HELPER(const char* file, int line, const char* func, const T& e) __attribute__ ((noreturn));
+
+#define THROW(exception) THROW_HELPER(__FILE__, __LINE__, __func__, exception)
+
+template<typename T>
 void THROW_HELPER(const char* file, int line, const char* func, const T& e)
 {
     static_assert(std::is_base_of_v<Poco::Exception, T>);
     std::string location_msg = std::string(file) + ':' + std::to_string(line) + "," + func;
     throw T("<message - " + e.message() + "> <location - " + location_msg + ">");
 }
-
-#define THROW(exception) THROW_HELPER(__FILE__, __LINE__, __func__, exception)

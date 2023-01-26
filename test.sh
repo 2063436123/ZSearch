@@ -1,4 +1,4 @@
-build=$1
+build=$1 # $1 maybe 'cmake-build-debug'
 
 cd $build || exit 1
 

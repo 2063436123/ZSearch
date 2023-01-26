@@ -6,5 +6,6 @@
 /antlr4-runtime
 /gen
 *.csv
-
+.vscode
+.antlr
 .DS_Store

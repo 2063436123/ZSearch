@@ -55,6 +55,6 @@ ID: [a-zA-Z_]+ ;
 
 INT : [0-9]+ ;
 
-STRING: [a-zA-Z]+ ;
+STRING:  '"' .*? '"';
 
 WS : [ \r\t\n]+ -> skip ;
