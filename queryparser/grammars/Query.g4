@@ -1,8 +1,6 @@
 grammar Query;
 
-
 prog : query ';'
-    | cquery ';'
     ;
 
 parameter : ID
@@ -24,14 +22,14 @@ term : ID
     | ID ':' ID // 前缀限定单词的查询范围
     ;
 
-query : query 'AND' query
-    | query 'OR' query
-    | 'NOT' query
-    | '(' query ')'
+terms : terms 'AND' terms
+    | terms 'OR' terms
+    | 'NOT' terms
+    | '(' terms ')'
     | term
     ;
 
-cquery : query 'having' having;
+query : terms? ('having' having)? ('order by' (ID|agg_expr))?;
 
 Agg_op : 'SUM'
     | 'COUNT'

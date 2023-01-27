@@ -1,1 +1,1 @@
-HELLO having COUNT(*) = 3 AND SUM(a) <= 100;
+HELLO having COUNT(*) = 3 AND (SUM(a) <= 100 OR MIN(b) = 1) order by a;

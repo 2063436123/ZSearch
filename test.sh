@@ -1,6 +1,11 @@
+set -e
+
 build=$1 # $1 maybe 'cmake-build-debug'
 
 cd $build || exit 1
+
+cmake ..
+make
 
 for file in *; do
   if [ -f $file ]; then

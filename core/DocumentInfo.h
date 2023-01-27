@@ -2,7 +2,6 @@
 
 #include <utility>
 #include "../typedefs.h"
-#include "relational/Table.h"
 
 enum class DocumentType {
     NORMAL, // natural language paragraphs, such as literature

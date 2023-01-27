@@ -4,6 +4,7 @@
 #include "storage/Reader.h"
 #include "extractor/Extractor.h"
 #include "DocumentInfo.h"
+#include "core/Value.h"
 
 class Document;
 using DocumentPtr = std::shared_ptr<Document>;

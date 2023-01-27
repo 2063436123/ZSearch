@@ -58,14 +58,15 @@ public:
         }
         else if (file_path.extension() == "csv")
         {
-            std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
-            std::unique_ptr<Extractor> extractor = std::make_unique<CSVExtractor>(file_path.stem(), std::move(reader));
-
-            auto table_in_file = extractor->extract();
-            if (!table_in_file.is_valid)
-                return;
-            table_in_file.table.setDocId(doc_id);
-            db.addTable(table_in_file.table.name(), std::make_shared<Table>(table_in_file.table));
+            THROW(Poco::NotImplementedException());
+//            std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
+//            std::unique_ptr<Extractor> extractor = std::make_unique<CSVExtractor>(file_path.stem(), std::move(reader));
+//
+//            auto table_in_file = extractor->extract();
+//            if (!table_in_file.is_valid)
+//                return;
+//            table_in_file.table.setDocId(doc_id);
+//            db.addTable(table_in_file.table.name(), std::make_shared<Table>(table_in_file.table));
         }
         else
         {
