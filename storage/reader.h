@@ -8,6 +8,8 @@
 class Reader
 {
 public:
+    virtual void reset() = 0;
+
     virtual StringInFile readUntil(const std::string &endSymbols = "\n") = 0;
 
     virtual Names getFieldNames() const = 0;
@@ -29,6 +31,11 @@ public:
         if (!std::filesystem::is_regular_file(path))
             THROW(FileTypeUnmatchException("file of " + path.string() + " is not a regular file"));
         fin.open(path);
+    }
+
+    void reset() override
+    {
+        fin.seekg(0);
     }
 
     // trim all space and unprintable characters.

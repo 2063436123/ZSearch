@@ -189,6 +189,30 @@ TEST(Value, base)
     ASSERT_EQ(v7.as<String>(1), "world");
 }
 
+TEST(Key, base)
+{
+    {
+        EXPECT_THROW(Key key1("hello..b"), Poco::LogicException);
+        EXPECT_NO_THROW(Key key2(""));
+        EXPECT_THROW(Key key3(".c"), Poco::LogicException);
+    }
+    Key key("a.b.c");
+    EXPECT_EQ(key.string(), "a.b.c");
+    EXPECT_EQ(*key.begin(), "a");
+    EXPECT_EQ(*++key.begin(), "b");
+    EXPECT_EQ(*--key.end(), "c");
+
+    std::unordered_map<Key, int> map;
+    map.emplace("a.c", 100);
+    map.emplace("a.c", 200);
+    map.emplace("a.b", 100);
+    map.emplace("t.c", 300);
+
+    EXPECT_EQ(map[Key("a.c")], 100);
+    EXPECT_EQ(map[Key("a.b")], 100);
+    EXPECT_EQ(map[Key("t.c")], 300);
+}
+
 int main()
 {
     testing::InitGoogleTest();

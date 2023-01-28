@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "typedefs.h"
-#include "storage/Reader.h"
+#include "ExtractUtils.h"
 
 class Extractor {
 public:
@@ -18,48 +18,7 @@ public:
     ExtractResult extract() override
     {
         StringInFiles res;
-        while(true)
-        {
-            auto line = reader->readUntil();
-            if (line.str.empty())
-                break;
-
-            // this split logic is referred to Poco::StringTokenizer.
-            auto str = line.str;
-            std::string separators(" ,.\t\n");
-            size_t offset_in_file = line.offset_in_file;
-
-            auto begin = str.begin(), end = str.end();
-            auto it = str.begin();
-
-            std::string token;
-            for (; it != end; ++it)
-            {
-                if (separators.find(*it) != std::string::npos)
-                {
-                    size_t old_token_size = token.size();
-                    size_t left_trim_number = trimInPlace(token, [](char ch) {
-                        return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
-                    }).first;
-                    if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
-                    token.clear();
-                }
-                else
-                {
-                    token += *it;
-                }
-            }
-
-            if (!token.empty())
-            {
-                size_t old_token_size = token.size();
-                size_t left_trim_number = trimInPlace(token, [](char ch) {
-                    return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
-                }).first;
-                if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
-            }
-
-        }
+        extractWords(reader, res);
 
         if (res.empty())
             return ExtractResult{};
@@ -184,53 +143,11 @@ public:
     ExtractResult extract() override
     {
         StringInFiles res;
-        while(true)
-        {
-            auto line = reader->readUntil();
-            if (line.str.empty())
-                break;
+        extractWords(reader, res, " \"{}:,.\t\n");
 
-            // this split logic is referred to Poco::StringTokenizer.
-            auto str = line.str;
-            std::string separators(" ,.\t\n");
-            size_t offset_in_file = line.offset_in_file;
-
-            auto begin = str.begin(), end = str.end();
-            auto it = str.begin();
-
-            std::string token;
-            for (; it != end; ++it)
-            {
-                if (separators.find(*it) != std::string::npos)
-                {
-                    size_t old_token_size = token.size();
-                    size_t left_trim_number = trimInPlace(token, [](char ch) {
-                        return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
-                    }).first;
-                    if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
-                    token.clear();
-                }
-                else
-                {
-                    token += *it;
-                }
-            }
-
-            if (!token.empty())
-            {
-                size_t old_token_size = token.size();
-                size_t left_trim_number = trimInPlace(token, [](char ch) {
-                    return Poco::Ascii::isSpace(ch) || !Poco::Ascii::isPrintable(ch);
-                }).first;
-                if (!token.empty()) res.emplace_back(token, offset_in_file + (it - begin) - old_token_size + left_trim_number);
-            }
-
-        }
-
+        reader.reset();
         // TODO： 目前只提取 words，需要提取 kvs
-        {
-            // TODO: 解析 json
-        }
+        extractKvs(reader, res);
 
         if (res.empty())
             return ExtractResult{};

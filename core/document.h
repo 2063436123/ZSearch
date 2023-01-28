@@ -4,6 +4,7 @@
 #include "storage/Reader.h"
 #include "extractor/Extractor.h"
 #include "DocumentInfo.h"
+#include "core/Key.h"
 #include "core/Value.h"
 
 class Document;
@@ -45,13 +46,13 @@ public:
         info = info_;
     }
 
-    void addKV(const std::string& key, Value value)
+    void addKV(const Key& key, Value value)
     {
         std::lock_guard<std::mutex> guard(kvs_lock);
         kvs.emplace(key, value);
     }
 
-    Value findKV(const std::string &key) const
+    Value findKV(const Key &key) const
     {
         std::lock_guard<std::mutex> guard(kvs_lock);
         auto iter = kvs.find(key);
@@ -143,7 +144,7 @@ private:
     std::filesystem::path origin_path;
 
     mutable std::mutex kvs_lock;
-    std::unordered_map<std::string, Value> kvs;
+    std::unordered_map<Key, Value> kvs;
 
     DocumentInfo info;
 };
