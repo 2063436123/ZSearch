@@ -1,4 +1,5 @@
 #include "Database.h"
+#include "Value.h"
 #include <fcntl.h>
 
 TEST(database, CreateDatabase)
@@ -8,7 +9,7 @@ TEST(database, CreateDatabase)
     try
     {
         Database::createDatabase(ROOT_PATH + "/database1");
-    } catch (const Poco::Exception& e)
+    } catch (const Poco::Exception &e)
     {
         std::stringstream oss;
         oss << e.what() << " " << e.message();
@@ -23,7 +24,7 @@ TEST(database, NewDocId)
     Database db(ROOT_PATH + "/database1", true);
 
     // multi thread
-    bool doc_ids[100001]{false, };
+    bool doc_ids[100001]{false,};
     auto f = [&db, &doc_ids]() {
         for (int i = 0; i < 10000; i++)
         {
@@ -78,7 +79,8 @@ TEST(database, AddFind)
     ASSERT_EQ(term1->statistics_list[0].offsets_in_file.size(), 2);
     ASSERT_EQ(term1->statistics_list[1].offsets_in_file.size(), 1);
 
-    ASSERT_EQ(std::accumulate(term1->statistics_list[0].offsets_in_file.begin(), term1->statistics_list[0].offsets_in_file.end(), 0), 31);
+    ASSERT_EQ(std::accumulate(term1->statistics_list[0].offsets_in_file.begin(),
+                              term1->statistics_list[0].offsets_in_file.end(), 0), 31);
     ASSERT_EQ(*term1->statistics_list[1].offsets_in_file.begin(), 100);
 
     // not found
@@ -128,8 +130,63 @@ TEST(database, SerializeAndDeserialize)
     ASSERT_EQ(term1->statistics_list[0].offsets_in_file.size(), 2);
     ASSERT_EQ(term1->statistics_list[1].offsets_in_file.size(), 1);
 
-    ASSERT_EQ(std::accumulate(term1->statistics_list[0].offsets_in_file.begin(), term1->statistics_list[0].offsets_in_file.end(), 0), 31);
+    ASSERT_EQ(std::accumulate(term1->statistics_list[0].offsets_in_file.begin(),
+                              term1->statistics_list[0].offsets_in_file.end(), 0), 31);
     ASSERT_EQ(*term1->statistics_list[1].offsets_in_file.begin(), 100);
+}
+
+TEST(Value, base)
+{
+    Value v1;
+    ASSERT_EQ(v1.isNull(), true);
+    ASSERT_EQ(v1.getValueType(), ValueType::Null);
+
+    Value v2("hello");
+    ASSERT_EQ(v2.isArray(), false);
+    ASSERT_EQ(v2.getValueType(), ValueType::String);
+
+    Value v3(123ll);
+    ASSERT_EQ(v3.getValueType(), ValueType::Number);
+    ASSERT_EQ(v3.as<Number>(), 123);
+
+    Value v4(34.6f);
+    ASSERT_EQ(v4.getValueType(), ValueType::Number);
+
+    Value v5(false);
+    ASSERT_EQ(v5.getValueType(), ValueType::Bool);
+
+    Value v6(DateTime("1930-12-22 05:12:33"));
+    ASSERT_EQ(v6.getValueType(), ValueType::DateTime);
+
+    Value v7(ArrayLabel{}, ValueType::String);
+    ASSERT_EQ(v7.getValueType(), ValueType::String);
+    ASSERT_EQ(v7.isArray(), true);
+
+    v7.doArrayHandler(PanicValueArrayHandler<Number>,
+                      [](std::vector<String> *vec) {
+                          vec->push_back("hello");
+                          vec->push_back("world");
+                      },
+                      PanicValueArrayHandler<DateTime>);
+
+    size_t size = 0;
+    v7.doArrayHandler(PanicValueArrayHandler<Number>,
+                      [&size](std::vector<String> *vec) {
+                          size = vec->size();
+                      },
+                      PanicValueArrayHandler<DateTime>);
+    ASSERT_EQ(size, 2);
+
+    EXPECT_NO_THROW(v7.doArrayHandler(EmptyValueArrayHandler<Number>,
+                                      EmptyValueArrayHandler<String>,
+                                      EmptyValueArrayHandler<DateTime>));
+
+    EXPECT_THROW(v7.doArrayHandler(EmptyValueArrayHandler<Number>,
+                      PanicValueArrayHandler<String>,
+                      EmptyValueArrayHandler<DateTime>),
+                 UnreachableException);
+
+    ASSERT_EQ(v7.as<String>(1), "world");
 }
 
 int main()

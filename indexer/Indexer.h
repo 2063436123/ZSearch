@@ -14,7 +14,7 @@ public:
     {
         if (is_directory(file_path))
         {
-            for (const auto& file : std::filesystem::recursive_directory_iterator( file_path))
+            for (const auto& file : std::filesystem::recursive_directory_iterator(file_path))
             {
                 index(file.path());
             }
