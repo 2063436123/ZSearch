@@ -1,12 +1,15 @@
 #pragma once
 
 #include "../typedefs.h"
-#include "Poco/Hash.h"
+#include "utils/SerializeUtils.h"
+
 
 // 使用 Key 来表示 a.b.c 这种 json 中的子对象名
 class Key
 {
 public:
+    Key(const char* str) : Key(std::string(str)) { }
+
     Key(const std::string& str)
     {
         Poco::StringTokenizer tk(str, ".", Poco::StringTokenizer::Options::TOK_TRIM);
@@ -16,6 +19,18 @@ public:
                 THROW(Poco::LogicException("Key format error"));
             tokens.push_back(token);
         }
+    }
+
+    void push_back(const std::string& token)
+    {
+        tokens.push_back(token);
+    }
+
+    void pop_back()
+    {
+        if (tokens.empty())
+            THROW(Poco::RangeException());
+        tokens.pop_back();
     }
 
     auto begin() const
@@ -30,10 +45,11 @@ public:
 
     std::string string() const
     {
+        if (tokens.empty())
+            return "";
         std::string ret;
         for (int i = 0; i < tokens.size() - 1; i++)
             ret += tokens[i] + '.';
-        if (!tokens.empty())
             ret += tokens.back();
         return ret;
     }
@@ -41,6 +57,16 @@ public:
     bool operator==(const Key& rhs) const
     {
         return tokens == rhs.tokens;
+    }
+
+    void serialize(WriteBufferHelper& helper) const
+    {
+        helper.writeString(string());
+    }
+
+    static Key deserialize(ReadBufferHelper& helper)
+    {
+        return Key(helper.readString());
     }
 
 private:

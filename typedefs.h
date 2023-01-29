@@ -20,6 +20,8 @@
 #include <Poco/StringTokenizer.h>
 #include <Poco/DateTime.h>
 #include <Poco/Format.h>
+#include <Poco/StreamCopier.h>
+#include <Poco/Hash.h>
 
 #include <gtest/gtest.h>
 

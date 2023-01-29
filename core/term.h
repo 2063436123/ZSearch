@@ -1,7 +1,7 @@
 #pragma once
 
 #include "typedefs.h"
-#include "utils/SerializerUtils.h"
+#include "utils/SerializeUtils.h"
 
 
 struct TermStatisticsWithInDoc

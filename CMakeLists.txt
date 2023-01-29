@@ -26,6 +26,7 @@ add_executable(gtest_utils utils/testUtils.cpp)
 #add_executable(testXapianIndexer third-party-tests/testXapianIndexer.cpp)
 #add_executable(testXapianSearcher third-party-tests/testXapianSearcher.cpp)
 add_executable(testPoco third-party-tests/testPoco.cpp)
+add_executable(testJson third-party-tests/testJson.cpp)
 
 add_executable(testAntlr4 queryparser/grammars/testAntlr4.cpp
         queryparser/grammars/QueryListener.cpp

@@ -8,7 +8,7 @@
 class Reader
 {
 public:
-    virtual void reset() = 0;
+    virtual std::istream& reset() = 0;
 
     virtual StringInFile readUntil(const std::string &endSymbols = "\n") = 0;
 
@@ -33,9 +33,13 @@ public:
         fin.open(path);
     }
 
-    void reset() override
+    std::ifstream& reset() override
     {
+        // 必须调用 clear，因为第一遍读到了 eof
+        fin.clear();
         fin.seekg(0);
+        offset_in_file = 0;
+        return fin;
     }
 
     // trim all space and unprintable characters.

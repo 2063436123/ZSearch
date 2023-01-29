@@ -1,7 +1,8 @@
-#include "SerializerUtils.h"
+#include "SerializeUtils.h"
 #include "TimeUtils.h"
 #include "StringUtils.h"
 #include "SortUtils.h"
+#include "JsonUtils.h"
 #include <fcntl.h>
 
 TEST(WriteBuffer, dumpAllToStream)
@@ -86,6 +87,84 @@ TEST(sortUtils, SyncSort)
     std::vector<int> res_b{300, 200, 400, 100};
     ASSERT_EQ(ra, res_a);
     ASSERT_EQ(rb, res_b);
+}
+
+TEST(jsonUtils, dfs1)
+{
+    std::string raw = R"(
+        {
+          "widget": {
+            "debug": "on",
+            "window": {
+              "title": "Sample Konfabulator Widget",
+              "height": 500
+            },
+            "image": {
+              "src": "Images/Sun.png"
+            },
+            "arr": [1, 2, 3, 100]
+          }
+        }
+    )";
+    auto res = flattenJsonKvs(raw);
+
+    EXPECT_EQ(res.size(), 5);
+    EXPECT_EQ(res[Key("widget.window.title")].is_string(), true);
+    EXPECT_EQ(res[Key("widget.window.height")].is_number(), true);
+    EXPECT_EQ(res[Key("widget.image.src")].is_string(), true);
+    EXPECT_EQ(res[Key("widget.debug")].is_string(), true);
+    EXPECT_EQ(res[Key("widget.arr")].is_array(), true);
+
+    EXPECT_EQ(res[Key("widget.window.title")].get<std::string>(), "Sample Konfabulator Widget");
+    EXPECT_EQ(res[Key("widget.window.height")].get<int>(), 500);
+    EXPECT_EQ(res[Key("widget.image.src")], "Images/Sun.png");
+    EXPECT_EQ(res[Key("widget.debug")].get<std::string>(), "on");
+    EXPECT_EQ(res[Key("widget.arr")][0], 1);
+    EXPECT_EQ(res[Key("widget.arr")][1], 2);
+    EXPECT_EQ(res[Key("widget.arr")][2], 3);
+    EXPECT_EQ(res[Key("widget.arr")][3], 100);
+}
+
+TEST(jsonUtils, dfs2)
+{
+    {
+        std::string raw = R"({})";
+        auto res = flattenJsonKvs(raw);
+        EXPECT_EQ(res.size(), 0);
+    }
+    {
+        std::string raw = R"([])";
+        auto res = flattenJsonKvs(raw);
+        EXPECT_EQ(res.size(), 1);
+        EXPECT_EQ(res.begin()->second.is_array(), true);
+        EXPECT_EQ(res.begin()->second.empty(), true);
+    }
+
+    {
+        std::string raw = R"(
+            {
+                "arr":
+                    [{
+                    "widget":
+                        {
+                            "debug": true,
+                            "window": {
+                                "title": "Sample Konfabulator Widget",
+                                "height": 500
+                            }
+                        }
+                    }],
+                "hello": "world"
+            }
+        )";
+        auto res = flattenJsonKvs(raw);
+        EXPECT_EQ(res.size(), 4);
+
+        EXPECT_EQ(res[Key("arr.0.widget.window.height")], 500);
+        EXPECT_EQ(res[Key("arr.0.widget.window.title")], "Sample Konfabulator Widget");
+        EXPECT_EQ(res[Key("arr.0.widget.debug")], true);
+        EXPECT_EQ(res[Key("hello")], "world");
+    }
 }
 
 int main()

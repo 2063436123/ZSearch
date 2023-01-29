@@ -21,7 +21,13 @@ public:
     }
 
     // 以此法构造的 Value 是一个数组，元素应该稍后被填充，元素的类型用 ValueType 表示（注意，非数组的 Value 元素类型也是用 ValueType 表示，需要用 isArray() 加以区分）
-    Value(ArrayLabel is_array_, ValueType type_) : is_array(true), type(type_), var(DynamicArray(type))
+    Value(ArrayLabel, ValueType type_) : is_array(true), type(type_), var(DynamicArray(type))
+    {
+        // 在未正确实现拷贝构造函数时，DynamicArray 必须原地构造
+//        var.emplace<DynamicArray>(type);
+    }
+
+    Value(ArrayLabel, ValueType type_, DynamicArray da) : is_array(true), type(type_), var(std::move(da))
     {
         // 在未正确实现拷贝构造函数时，DynamicArray 必须原地构造
 //        var.emplace<DynamicArray>(type);
@@ -40,7 +46,7 @@ public:
 
     }
 
-    Value(int64_t i) : type(ValueType::Number), var(double(i))
+    Value(int i) : type(ValueType::Number), var(double(i))
     {
 
     }
@@ -93,16 +99,75 @@ public:
         get<DynamicArray>(var).applyHandler(number_handler, string_handler, datetime_handler);
     }
 
-    // TODO: 完善 ==, != 成员函数
-//    bool operator==(const Value& rhs) const
-//    {
-//        return var.index() == rhs.var.index();
-//    }
-//
-//    bool operator!=(const Value& rhs) const
-//    {
-//        return !(*this == rhs);
-//    }
+    void serialize(WriteBufferHelper& helper) const
+    {
+        helper.writeNumber<bool>(is_array);
+        helper.writeNumber<ValueType>(type);
+        if (!is_array)
+        {
+            switch (type)
+            {
+                case ValueType::Null:
+                    THROW(Poco::NotImplementedException());
+                case ValueType::Bool:
+                    helper.writeNumber<Bool>(get<Bool>(var));
+                    break;
+                case ValueType::Number:
+                    helper.writeNumber<Number>(get<Number>(var));
+                    break;
+                case ValueType::String:
+                    helper.writeString(get<String>(var));
+                    break;
+                case ValueType::DateTime:
+                    helper.writeDateTime(get<DateTime>(var));
+                    break;
+            }
+        }
+        else
+        {
+            get<DynamicArray>(var).serialize(helper);
+        }
+    }
+
+    static Value deserialize(ReadBufferHelper& helper)
+    {
+        bool is_array = helper.readNumber<bool>();
+        ValueType type = helper.readNumber<ValueType>();
+        if (!is_array)
+        {
+            switch (type)
+            {
+                case ValueType::Null:
+                    THROW(Poco::NotImplementedException());
+                case ValueType::Bool:
+                    return Value(helper.readNumber<Bool>());
+                    break;
+                case ValueType::Number:
+                    return Value(helper.readNumber<Number>());
+                    break;
+                case ValueType::String:
+                    return Value(helper.readString());
+                    break;
+                case ValueType::DateTime:
+                    return Value(helper.readDateTime());
+                    break;
+            }
+        }
+        else
+        {
+            return Value(ArrayLabel{}, type, DynamicArray::deserialize(helper));
+        }
+    }
+
+    bool operator==(const Value& rhs) const
+    {
+        return is_array == rhs.is_array && type == rhs.type && var == rhs.var;
+    }
+
+    bool operator!=(const Value& rhs) const
+    {
+        return !(*this == rhs);
+    }
 
 private:
     bool is_array = false;

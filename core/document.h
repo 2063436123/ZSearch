@@ -19,7 +19,6 @@ public:
             THROW(FileTypeUnmatchException());
         struct stat file_stat;
         stat(origin_path.c_str(), &file_stat);
-        info.type = decideFileType(origin_path);
         info.changed_time = file_stat.st_mtimespec;
     }
 
@@ -44,6 +43,18 @@ public:
     void setInfo(const DocumentInfo& info_)
     {
         info = info_;
+    }
+
+    std::unordered_map<Key, Value> getKvs() const
+    {
+        std::lock_guard<std::mutex> guard(kvs_lock);
+        return kvs;
+    }
+
+    void setKvs(const std::unordered_map<Key, Value> &kvs_)
+    {
+        std::lock_guard<std::mutex> guard(kvs_lock);
+        kvs = kvs_;
     }
 
     void addKV(const Key& key, Value value)
@@ -112,34 +123,41 @@ public:
         return res;
     }
 
-    // TODO: 序列化/反序列化添加 kvs, info 字段
     void serialize(WriteBufferHelper &helper) const
     {
         helper.writeNumber(id);
         helper.writeString(origin_path.string());
+        {
+            std::lock_guard lg(kvs_lock);
+            helper.writeNumber(kvs.size());
+            for (const auto& pair : kvs)
+            {
+                pair.first.serialize(helper);
+                pair.second.serialize(helper);
+            }
+        }
+        info.serialize(helper);
     }
 
     static DocumentPtr deserialize(ReadBufferHelper &helper)
     {
         auto id = helper.readNumber<size_t>();
         std::filesystem::path path(helper.readString());
-        return std::make_shared<Document>(id, path);
+        auto document_ptr = std::make_shared<Document>(id, path);
+
+        auto size = helper.readNumber<size_t>();
+        std::unordered_map<Key, Value> kvs;
+        for (size_t i = 0; i < size; i++)
+        {
+            kvs.emplace(Key::deserialize(helper), Value::deserialize(helper));
+        }
+        document_ptr->setKvs(kvs);
+
+        document_ptr->setInfo(DocumentInfo::deserialize(helper));
+        return document_ptr;
     }
 
 private:
-    DocumentType decideFileType(const std::filesystem::path& path) {
-        auto extension = path.extension().string();
-        if (extension.empty())
-            return DocumentType::UNKNOWN;
-        if (extension == "txt")
-            return DocumentType::NORMAL;
-        if (extension == "csv")
-            return DocumentType::CSV;
-        if (extension == "json")
-            return DocumentType::JSON;
-        return DocumentType::BLOB;
-    }
-
     size_t id;
     std::filesystem::path origin_path;
 

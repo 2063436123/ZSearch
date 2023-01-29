@@ -1,5 +1,6 @@
 #include "Database.h"
 #include "Value.h"
+#include "indexer/Indexer.h"
 #include <fcntl.h>
 
 TEST(database, CreateDatabase)
@@ -107,10 +108,13 @@ TEST(database, SerializeAndDeserialize)
     {
         // store
         Database db(ROOT_PATH + "/database1", true);
-        db.addDocument(1, ROOT_PATH + "/articles/ABC.txt");
+        db.addDocument(db.newDocId(), ROOT_PATH + "/articles/ABC.txt");
         db.addTerm("hello", 3, 100);
         db.addTerm("hello", 1, 1);
         db.addTerm("hello", 1, 30);
+
+        Indexer indexer(db);
+        indexer.index(ROOT_PATH + "/articles/single-jsons/webapp.json");
     }
 
     // restore
@@ -133,6 +137,17 @@ TEST(database, SerializeAndDeserialize)
     ASSERT_EQ(std::accumulate(term1->statistics_list[0].offsets_in_file.begin(),
                               term1->statistics_list[0].offsets_in_file.end(), 0), 31);
     ASSERT_EQ(*term1->statistics_list[1].offsets_in_file.begin(), 100);
+
+    auto document_ptr = db.findDocument(2);
+    auto kvs = document_ptr->getKvs();
+    EXPECT_EQ(kvs.size(), 74);
+
+    EXPECT_EQ(kvs["web-app.servlet.0.init-param.useJSP"].as<Bool>(), false);
+    EXPECT_EQ(kvs["web-app.servlet.0.init-param.jspListTemplate"].as<String>(), "listTemplate.jsp");
+    EXPECT_EQ(kvs["web-app.servlet.2.servlet-name"].as<String>(), "cofaxAdmin");
+    EXPECT_EQ(kvs["web-app.servlet.3.servlet-name"].as<String>(), "fileServlet");
+    EXPECT_EQ(kvs["web-app.servlet.4.servlet-name"].as<String>(), "cofaxTools");
+    EXPECT_EQ(kvs["web-app.taglib.taglib-uri"].as<String>(), "cofax.tld");
 }
 
 TEST(Value, base)
@@ -145,7 +160,7 @@ TEST(Value, base)
     ASSERT_EQ(v2.isArray(), false);
     ASSERT_EQ(v2.getValueType(), ValueType::String);
 
-    Value v3(123ll);
+    Value v3(123);
     ASSERT_EQ(v3.getValueType(), ValueType::Number);
     ASSERT_EQ(v3.as<Number>(), 123);
 
@@ -211,6 +226,91 @@ TEST(Key, base)
     EXPECT_EQ(map[Key("a.c")], 100);
     EXPECT_EQ(map[Key("a.b")], 100);
     EXPECT_EQ(map[Key("t.c")], 300);
+}
+
+TEST(keyValue, SerializeAndDeserialize)
+{
+    WriteBuffer wbuf;
+    WriteBufferHelper whelper(wbuf);
+
+    std::stringstream io;
+
+    ReadBuffer rbuf;
+    ReadBufferHelper rhelper(rbuf);
+    auto handleKey = [&whelper, &wbuf, &rbuf, &rhelper, &io](const std::string& str) {
+        Key key1(str);
+
+        key1.serialize(whelper);
+        wbuf.dumpAllToStream(io);
+
+        rbuf.readAllFromStream(io);
+        io.clear();
+        Key key2 = Key::deserialize(rhelper);
+
+        ASSERT_EQ(key1, key2);
+    };
+
+    handleKey("");
+    handleKey("a");
+    handleKey("a.b");
+    handleKey("a.b.c");
+    handleKey("falweijfioesa.af091823mrf120.sjfoicxfa6566");
+
+    auto handleSingleValue = [&whelper, &wbuf, &rbuf, &rhelper, &io]<typename T>(const T& value) {
+        Value value1(value);
+
+        value1.serialize(whelper);
+        wbuf.dumpAllToStream(io);
+
+        rbuf.readAllFromStream(io);
+        io.clear();
+        Value value2 = Value::deserialize(rhelper);
+
+        ASSERT_EQ(value1, value2);
+    };
+
+    handleSingleValue(true);
+    handleSingleValue("hello");
+    handleSingleValue(std::string("fu\0 cko"));
+    handleSingleValue(123);
+    handleSingleValue(523.452);
+    handleSingleValue(DateTime("1921-12-12 23:45:59"));
+
+    auto handleArrayValue = [&whelper, &wbuf, &rbuf, &rhelper, &io](const DynamicArray& da) {
+        Value value1(ArrayLabel{}, da.getType(), da);
+
+        value1.serialize(whelper);
+        wbuf.dumpAllToStream(io);
+
+        rbuf.readAllFromStream(io);
+        io.clear();
+        Value value2 = Value::deserialize(rhelper);
+
+        ASSERT_EQ(value1, value2);
+    };
+
+    DynamicArray arr1(ValueType::String);
+    arr1.applyHandler(PanicValueArrayHandler<Number>,[](std::vector<String>* vec){
+            vec->insert(vec->end(), {"hello", "word", "fkla", "xianxian"});
+        }, PanicValueArrayHandler<DateTime>);
+    handleArrayValue(arr1);
+
+    DynamicArray arr2(ValueType::Number);
+    arr2.applyHandler([](std::vector<Number>* vec){
+        vec->insert(vec->end(), {10293.532, 123213, 3425945, 32421});
+    }, PanicValueArrayHandler<String>, PanicValueArrayHandler<DateTime>);
+    handleArrayValue(arr2);
+
+    DynamicArray arr3(ValueType::DateTime);
+    arr3.applyHandler(PanicValueArrayHandler<Number>, PanicValueArrayHandler<String>,
+                      [](std::vector<DateTime>* vec){
+                          vec->insert(vec->end(), {DateTime("1253-12-12 12:43:12")});
+                      });
+    handleArrayValue(arr3);
+
+    EXPECT_EQ(arr1.get<String>(3), "xianxian");
+    EXPECT_EQ(arr2.get<Number>(2), 3425945);
+    EXPECT_EQ(arr3.get<DateTime>(0).string(), "1253-12-12 12:43:12");
 }
 
 int main()

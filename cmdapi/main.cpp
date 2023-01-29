@@ -7,6 +7,9 @@ void run()
     std::string cmd;
     while (std::cin >> cmd)
     {
+        /*
+         * example: index database1 ../articles/single-jsons/css.json
+         * */
         if (cmd.starts_with("index"))
         {
             std::string path;

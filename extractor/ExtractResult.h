@@ -1,6 +1,7 @@
 #pragma once
 
 #include "typedefs.h"
+#include "core/Key.h"
 #include "core/Value.h"
 
 struct StringInFile {
@@ -18,5 +19,5 @@ using StringInFiles = std::vector<StringInFile>;
 struct ExtractResult {
     bool is_valid = false; // is not eof, and has meaningful data
     StringInFiles words;
-    std::unordered_map<std::string, Value> kvs;
+    std::unordered_map<Key, Value> kvs;
 };

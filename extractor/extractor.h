@@ -142,16 +142,15 @@ public:
 
     ExtractResult extract() override
     {
-        StringInFiles res;
-        extractWords(reader, res, " \"{}:,.\t\n");
+        StringInFiles word_res;
+        extractWords(reader, word_res, " \"{}:,.\t\n");
 
-        reader.reset();
-        // TODO： 目前只提取 words，需要提取 kvs
-        extractKvs(reader, res);
+        std::unordered_map<Key, Value> kv_res;
+        extractKvs(reader, kv_res);
 
-        if (res.empty())
+        if (word_res.empty())
             return ExtractResult{};
-        return ExtractResult{.is_valid = true, .words = res};
+        return ExtractResult{.is_valid = true, .words = word_res, .kvs = kv_res};
     }
 
 private:

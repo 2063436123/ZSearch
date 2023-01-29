@@ -24,7 +24,7 @@ public:
         size_t doc_id = db.newDocId();
         db.addDocument(doc_id, file_path);
 
-        if (file_path.extension() == "txt")
+        if (file_path.extension() == ".txt")
         {
             std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
             std::unique_ptr<Extractor> extractor = std::make_unique<WordExtractor>(std::move(reader));
@@ -37,7 +37,7 @@ public:
                 db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
             }
         }
-        else if (file_path.extension() == "json")
+        else if (file_path.extension() == ".json")
         {
             std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
             std::unique_ptr<Extractor> extractor = std::make_unique<JsonExtractor>(std::move(reader));
@@ -51,12 +51,9 @@ public:
             }
 
             auto document_ptr = db.findDocument(doc_id);
-            for (const auto& [key, value] : words_and_kvs.kvs)
-            {
-                document_ptr->addKV(key, value);
-            }
+            document_ptr->setKvs(words_and_kvs.kvs);
         }
-        else if (file_path.extension() == "csv")
+        else if (file_path.extension() == ".csv")
         {
             THROW(Poco::NotImplementedException());
 //            std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);

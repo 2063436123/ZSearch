@@ -34,7 +34,6 @@ public:
         buf.clear();
     }
 
-private:
 };
 
 class ReadBuffer : public BufferBase
@@ -61,6 +60,7 @@ public:
     void readAllFromStream(std::istream &fin)
     {
         buf = std::string(std::istreambuf_iterator<char>(fin), std::istreambuf_iterator<char>());
+        next = 0;
     }
 
 private:
