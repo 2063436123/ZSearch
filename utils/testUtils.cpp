@@ -3,6 +3,7 @@
 #include "StringUtils.h"
 #include "SortUtils.h"
 #include "JsonUtils.h"
+#include "DynamicBitSet.h"
 #include <fcntl.h>
 
 TEST(WriteBuffer, dumpAllToStream)
@@ -165,6 +166,50 @@ TEST(jsonUtils, dfs2)
         EXPECT_EQ(res[Key("arr.0.widget.debug")], true);
         EXPECT_EQ(res[Key("hello")], "world");
     }
+}
+
+TEST(dynamicBitSet, base)
+{
+    DynamicBitSet s1(7);
+    EXPECT_EQ(s1.toSet(), std::set<size_t>{});
+    s1.fill();
+    EXPECT_EQ(s1.toSet(), std::set<size_t>({0, 1, 2, 3, 4, 5, 6}));
+
+    DynamicBitSet s2(65);
+    s2.set(65);
+    EXPECT_EQ(s2.toSet(1), std::set<size_t>({65}));
+
+    DynamicBitSet s3(3);
+    s3.set(2);
+    s3.flip();
+    EXPECT_EQ(s3.toSet(1), std::set<size_t>({1, 3}));
+
+    DynamicBitSet s4(64);
+    s4.set(1);
+    s4.set(64);
+
+    EXPECT_EQ(s4.toSet(0), std::set<size_t>({0, 63}));
+    {
+        DynamicBitSet set_and(64);
+        set_and.set(63);
+        set_and.set(64);
+        set_and &= s4;
+        EXPECT_EQ(set_and.toSet(1), std::set<size_t>({64}));
+    }
+    {
+        DynamicBitSet set_or(64);
+        set_or.set(63);
+        set_or.set(64);
+        set_or |= s4;
+        EXPECT_EQ(set_or.toSet(1), std::set<size_t>({1, 63, 64}));
+    }
+
+    DynamicBitSet s5(128);
+    s5.set(1);
+    s5.set(64);
+    s5.set(65);
+    s5.set(128);
+    EXPECT_EQ(s5.toSet(1), std::set<size_t>({1, 64, 65, 128}));
 }
 
 int main()

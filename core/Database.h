@@ -26,6 +26,11 @@ public:
         return next_doc_id++;
     }
 
+    size_t maxAllocatedDocId() const
+    {
+        return next_doc_id - 1;
+    }
+
     void addDocument(size_t doc_id, const std::string& doc_path)
     {
         std::lock_guard<std::mutex> guard(document_map_lock);

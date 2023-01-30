@@ -16,7 +16,7 @@ TEST(database, CreateDatabase)
         oss << e.what() << " " << e.message();
         ASSERT_EQ(oss.str(),
                   "Cannot create file <message - can't create directory in /Users/peter/Code/GraduationDesignSrc/master/database1> "
-                  "<location - /Users/peter/Code/GraduationDesignSrc/master/core/Database.h:97,createDatabase>");
+                  "<location - /Users/peter/Code/GraduationDesignSrc/master/core/Database.h:102,createDatabase>");
     }
 }
 

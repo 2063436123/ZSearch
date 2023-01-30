@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <numeric>
 #include <fstream>
+#include <unordered_set>
 
 #include <Poco/Exception.h>
 #include <Poco/String.h>
@@ -48,7 +49,11 @@ POCO_IMPLEMENT_EXCEPTION(UnexpectedToken, Poco::LogicException, "Unexpected Toke
 POCO_DECLARE_EXCEPTION(Foundation_API, UnmatchedToken, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(UnmatchedToken, Poco::LogicException, "Unmatched Token!")
 
+POCO_DECLARE_EXCEPTION(Foundation_API, ParseException, Poco::LogicException)
+POCO_IMPLEMENT_EXCEPTION(ParseException, Poco::LogicException, "Parse Error!")
+
 const std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
+const std::unordered_set<std::string> IGNORED_FILE_EXTENSIONS = {".DS_Store", "", ".csv"};
 
 template<typename T>
 void THROW_HELPER(const char* file, int line, const char* func, const T& e) __attribute__ ((noreturn));

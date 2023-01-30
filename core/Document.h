@@ -17,9 +17,7 @@ public:
             : id(doc_id), origin_path(std::move(origin_path_)) {
         if (!is_regular_file(origin_path))
             THROW(FileTypeUnmatchException());
-        struct stat file_stat;
-        stat(origin_path.c_str(), &file_stat);
-        info.changed_time = file_stat.st_mtimespec;
+        info.changed_time = getModifiedLastDateTime(origin_path);
     }
 
     size_t getId() const

@@ -21,12 +21,13 @@ add_executable(gtest_storage storage/testStorage.cpp)
 add_executable(gtest_extractor extractor/testExtractor.cpp)
 add_executable(gtest_core core/testCore.cpp)
 add_executable(gtest_utils utils/testUtils.cpp)
-#add_executable(gtest_relational relational/testRelational.cpp)
 
 #add_executable(testXapianIndexer third-party-tests/testXapianIndexer.cpp)
 #add_executable(testXapianSearcher third-party-tests/testXapianSearcher.cpp)
 add_executable(testPoco third-party-tests/testPoco.cpp)
 add_executable(testJson third-party-tests/testJson.cpp)
+
+add_executable(testExecutor executor/testExecutor.cpp)
 
 add_executable(testAntlr4 queryparser/grammars/testAntlr4.cpp
         queryparser/grammars/QueryListener.cpp

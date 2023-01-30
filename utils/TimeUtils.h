@@ -7,7 +7,9 @@ class DateTime {
 public:
     DateTime() = default;
 
-    DateTime(struct timespec time) : date_time(Poco::Timestamp(time.tv_sec * 1000 + time.tv_nsec / 1000)) {    }
+    DateTime(int64_t since_epoch_seconds) : date_time(Poco::Timestamp(since_epoch_seconds * 1000 * 1000)) {}
+
+    DateTime(struct timespec time) : date_time(Poco::Timestamp(time.tv_sec * 1000 * 1000 + time.tv_nsec / 1000)) {}
 
     // format like 2011-03-28 15:00:44
     DateTime(const std::string& date_time_str)
@@ -65,3 +67,8 @@ public:
 private:
     Poco::DateTime date_time;
 };
+
+DateTime getModifiedLastDateTime(const std::filesystem::path& path)
+{
+    return duration_cast<std::chrono::seconds>(last_write_time(path).time_since_epoch()).count();
+}
