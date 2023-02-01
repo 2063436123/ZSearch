@@ -95,7 +95,9 @@ public:
         writeNumber(container.size());
         for (auto ele: container)
         {
-            if constexpr (std::is_arithmetic_v<T>)
+            if constexpr (std::is_same_v<T, bool>)
+                writeNumber(char(ele));
+            else if constexpr (std::is_arithmetic_v<T>)
                 writeNumber(ele);
             else if constexpr (std::is_same_v<T, std::string>)
                 writeString(ele);

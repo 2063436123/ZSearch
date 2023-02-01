@@ -3,48 +3,55 @@
 #include "Executor.h"
 #include "ConjunctionTree.h"
 #include "utils/DynamicBitSet.h"
+#include "Predicate.h"
 
 /*
-terms : terms 'AND' terms
-    | terms 'OR' terms
-    | 'NOT' terms
-    | '(' terms ')'
-    | term
+having : where
+    | having 'AND' having
+    | having 'OR' having
+    | 'NOT' having
+    | '(' having ')'
     ;
 */
-class TermsExecutor : public Executor
+class HavingExecutor : public Executor
 {
 public:
-    TermsExecutor(Database& db_, const ConjunctionNode* root_) : Executor(db_), bit_set_size(0), root(root_) {}
+    HavingExecutor(Database& db_, const ConjunctionNode* root_) : Executor(db_), root(root_) {}
 
-    // return doc ids
-    std::any execute(const std::any&) override
+    std::any execute(const std::any &doc_ids_) override
     {
-        bit_set_size = db.maxAllocatedDocId();
-        return recursiveExecute(root).toSet(1);
+        assert(doc_ids_.type() == typeid(std::set<size_t>));
+        auto doc_ids = std::any_cast<std::set<size_t>>(doc_ids_);
+
+        std::set<size_t> ret;
+        for (size_t doc_id : doc_ids)
+        {
+            auto kvs = db.findDocument(doc_id)->getKvs();
+            if (determinePredicate(kvs, root))
+                ret.insert(doc_id);
+        }
+
+        return ret;
     }
 
 private:
-    using DocIds = DynamicBitSet;
-    // return first 表示是否要 NOT 取反，second 表示要操作的集合
-    DocIds recursiveExecute(const ConjunctionNode *node)
+    bool determinePredicate(const std::unordered_map<Key, Value>& kvs, const ConjunctionNode *node)
     {
-        if (auto leaf = dynamic_cast<const LeafNode<std::string>*>(node))
+        if (auto leaf = dynamic_cast<const LeafNode<Predicate>*>(node))
         {
             assert(leaf->children.empty());
-            auto term_ptr = db.findTerm(leaf->data);
-            return DynamicBitSet(bit_set_size, term_ptr->posting_list);
+            return leaf->data.determine(kvs);
         }
         else if (auto inter = dynamic_cast<const InterNode*>(node))
         {
-            std::vector<DocIds> children_doc_ids;
+            std::vector<bool> children_doc_ids;
             for (ConjunctionNode *child_node : node->children)
-                children_doc_ids.push_back(recursiveExecute(child_node));
+                children_doc_ids.push_back(determinePredicate(kvs, child_node));
 
             assert(!children_doc_ids.empty()); // AND, OR 至少有一个操作对象
             assert(inter->type != ConjunctionType::NOT || children_doc_ids.size() == 1); // NOT 只有一个操作对象
 
-            DocIds ret(children_doc_ids[0]);
+            bool ret(children_doc_ids[0]);
             switch (inter->type)
             {
                 case ConjunctionType::AND:
@@ -56,7 +63,7 @@ private:
                         ret |= children_doc_ids[i];
                     break;
                 case ConjunctionType::NOT:
-                    ret.flip();
+                    ret = !ret;
                     break;
                 default:
                     THROW(UnreachableException());
@@ -70,7 +77,5 @@ private:
         THROW(UnreachableException());
     }
 
-private:
-    size_t bit_set_size;
     const ConjunctionNode* root;
 };

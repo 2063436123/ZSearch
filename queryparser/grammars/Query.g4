@@ -3,13 +3,15 @@ grammar Query;
 prog : query ';'
     ;
 
-parameter : ID
-    | '*'
-    ;
+aggExpr : AggOp '(' ID ')'
+    | ID;
 
-agg_expr : Agg_op '(' parameter ')' ;
+value : INT
+    | STRING;
 
-where : agg_expr Cmp_op INT ;
+valueList : '(' (value ',')* value ')';
+
+where : aggExpr CmpOp valueList;
 
 having : where
     | having 'AND' having
@@ -29,23 +31,23 @@ terms : terms 'AND' terms
     | term
     ;
 
-query : terms? ('having' having)? ('order by' (ID|agg_expr))?;
+query : terms? ('having' having)? ('order by' aggExpr)?;
 
-Agg_op : 'SUM'
+AggOp : 'SUM'
     | 'COUNT'
     | 'AVG'
     | 'MAX'
     | 'MIN'
     ; // More ...
 
-Cmp_op : '>'
+CmpOp : '>'
     | '<'
     | '='
     | '<='
     | '>='
     | '!='
-//    | 'IN'
-//    | 'NOT IN'
+    | 'IN'
+    | 'NOT IN'
     ;
 
 

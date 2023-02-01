@@ -16,7 +16,24 @@ enum class ValueType
     String,
     DateTime
 };
-//    ValueList // tuple like (1, 2, 3), nesting is not supported.
+
+std::string valueTypeToString(ValueType type)
+{
+    switch (type)
+    {
+        case ValueType::Null:
+            return "Null";
+        case ValueType::Bool:
+            return "Bool";
+        case ValueType::Number:
+            return "Number";
+        case ValueType::String:
+            return "String";
+        case ValueType::DateTime:
+            return "DateTime";
+    }
+    THROW(UnreachableException());
+}
 
 template<typename T>
 using ValueArrayHandler = std::function<void(std::vector<T>* /* data */)>;
@@ -25,7 +42,7 @@ template<typename T>
 auto EmptyValueArrayHandler = [](std::vector<T>*) -> void {};
 
 template<typename T>
-auto PanicValueArrayHandler = [](std::vector<T>*) -> void { THROW(UnreachableException()); };
+auto PanicValueArrayHandler = [](std::vector<T>*) -> void { THROW(UnreachableException(std::string("in PanicValueArrayHandler(), T is ") + typeid(T).name())); };
 
 template<typename T>
 bool checkType(ValueType type)
@@ -63,7 +80,7 @@ public:
         safe_copy(rhs.data);
     }
 
-    DynamicArray(DynamicArray&& rhs)
+    DynamicArray(DynamicArray&& rhs) noexcept
     {
         type = rhs.type;
         data = rhs.data;
@@ -72,14 +89,18 @@ public:
 
     DynamicArray& operator=(const DynamicArray& rhs)
     {
+        if (this == &rhs)
+            return *this;
         safe_delete();
         type = rhs.type;
         safe_copy(rhs.data);
         return *this;
     }
 
-    DynamicArray& operator=(DynamicArray&& rhs)
+    DynamicArray& operator=(DynamicArray&& rhs) noexcept
     {
+        if (this == &rhs)
+            return *this;
         safe_delete();
         type = rhs.type;
         data = rhs.data;
@@ -87,16 +108,24 @@ public:
         return *this;
     }
 
+    bool operator<=>(const DynamicArray& rhs) const
+    {
+        THROW(UnreachableException()); // 作为 Value 的数组不该被比较大小
+    }
+
     // select and apply correct handler
-    void applyHandler(const ValueArrayHandler<Number>& number_handler,
+    void applyHandler(const ValueArrayHandler<Bool>& bool_handler,
+                      const ValueArrayHandler<Number>& number_handler,
                       const ValueArrayHandler<String>& string_handler,
                       const ValueArrayHandler<DateTime>& datetime_handler) const
     {
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                bool_handler((std::vector<Bool>*)data);
                 break;
             case ValueType::Number:
                 number_handler((std::vector<Number>*)data);
@@ -121,7 +150,10 @@ public:
     template<typename T>
     T get(size_t i) const
     {
-        return getRealArrayRef<T>()->operator[](i);
+        std::vector<T>* array_ref = getRealArrayRef<T>();
+        if (array_ref->size() <= i)
+            THROW(Poco::RangeException("get i >= array size " + std::to_string(i) + " vs " + std::to_string(array_ref->size())));
+        return array_ref->operator[](i);
     }
 
     template<typename T>
@@ -141,8 +173,10 @@ public:
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                helper.writeLinearContainer(*(std::vector<Bool>*)data);
                 break;
             case ValueType::Number:
                 helper.writeLinearContainer(*(std::vector<Number>*)data);
@@ -164,8 +198,10 @@ public:
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                *(std::vector<Bool>*)data = helper.readLinearContainer<std::vector, Bool>();
                 break;
             case ValueType::Number:
                 *(std::vector<Number>*)data = helper.readLinearContainer<std::vector, Number>();
@@ -187,8 +223,10 @@ public:
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                return *(std::vector<Bool>*)data == *(std::vector<Bool>*)rhs.data;
                 break;
             case ValueType::Number:
                 return *(std::vector<Number>*)data == *(std::vector<Number>*)rhs.data;
@@ -215,8 +253,10 @@ private:
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                *(std::vector<Bool>*)data = *(std::vector<Bool>*)rhs_data;
                 break;
             case ValueType::Number:
                 *(std::vector<Number>*)data = *(std::vector<Number>*)rhs_data;
@@ -235,8 +275,10 @@ private:
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                data = new std::vector<Bool>;
                 break;
             case ValueType::Number:
                 data = new std::vector<Number>;
@@ -255,8 +297,10 @@ private:
         switch (type)
         {
             case ValueType::Null:
-            case ValueType::Bool:
                 THROW(Poco::NotImplementedException());
+                break;
+            case ValueType::Bool:
+                delete (std::vector<Bool>*)data;
                 break;
             case ValueType::Number:
                 delete (std::vector<Number>*)data;

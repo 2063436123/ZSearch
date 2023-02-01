@@ -67,10 +67,12 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
         {
             res.emplace(key, value.get<double>());
         }
-        else if (value.is_array() && !value.empty()) // 空数组没有意义，经 flatten 后数组元素已经是同一种类型
+        else if (value.is_array() && !value.empty()) // 空数组没有意义; 经 flatten 后数组中元素已经是同一种类型
         {
             ValueType type;
-            if (value[0].is_number())
+            if (value[0].is_boolean())
+                type = ValueType::Bool;
+            else if (value[0].is_number())
                 type = ValueType::Number;
             else if (value[0].is_string())
                 type = ValueType::String;
@@ -79,28 +81,34 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
 
             Value v(ArrayLabel{}, type);
 
+            ValueArrayHandler<Bool> hb;
             ValueArrayHandler<Number> hn;
             ValueArrayHandler<String> hs;
             ValueArrayHandler<DateTime> hd = PanicValueArrayHandler<DateTime>;
 
-            if (type == ValueType::Number)
+            if (type == ValueType::Bool)
             {
-                auto vec0 = value.get<std::vector<Number>>();
-                hn = [&vec0](std::vector<Number>* vec) {
+                hb = [vec0 = value.get<std::vector<Bool>>()](std::vector<Bool>* vec) {
+                    vec->insert(vec->end(), vec0.begin(), vec0.end());
+                };
+            }
+            else if (type == ValueType::Number)
+            {
+                hn = [vec0 = value.get<std::vector<Number>>()](std::vector<Number>* vec) {
                     vec->insert(vec->end(), vec0.begin(), vec0.end());
                 };
             }
             else if (type == ValueType::String)
             {
-                auto vec0 = value.get<std::vector<String>>();
-                hs = [&vec0](std::vector<String>* vec) {
+                hs = [vec0 = value.get<std::vector<String>>()](std::vector<String>* vec) {
                     vec->insert(vec->end(), vec0.begin(), vec0.end());
                 };
             }
             else
                 THROW(Poco::NotImplementedException());
 
-            v.doArrayHandler(hn, hs, hd);
+            v.doArrayHandler(hb, hn, hs, hd);
+
             res.emplace(key, v);
         }
         else

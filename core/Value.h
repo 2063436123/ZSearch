@@ -71,6 +71,26 @@ public:
         return type == ValueType::Null;
     }
 
+    bool isBool() const
+    {
+        return type == ValueType::Bool;
+    }
+
+    bool isNumber() const
+    {
+        return type == ValueType::Number;
+    }
+
+    bool isString() const
+    {
+        return type == ValueType::String;
+    }
+
+    bool isDateTime() const
+    {
+        return type == ValueType::DateTime;
+    }
+
     bool isArray() const
     {
         return is_array;
@@ -90,14 +110,33 @@ public:
         THROW(Poco::NotImplementedException());
     }
 
-    void doArrayHandler(const ValueArrayHandler<Number>& number_handler,
+    void doArrayHandler(const ValueArrayHandler<Bool>& bool_handler,
+                        const ValueArrayHandler<Number>& number_handler,
                         const ValueArrayHandler<String>& string_handler,
                         const ValueArrayHandler<DateTime>& datetime_handler) const
     {
         if (!is_array)
-            THROW(Poco::LogicException("only array value can call doArrayHandler"));
-        get<DynamicArray>(var).applyHandler(number_handler, string_handler, datetime_handler);
+            THROW(Poco::LogicException("only array value can call doArrayHandler()"));
+        get<DynamicArray>(var).applyHandler(bool_handler, number_handler, string_handler, datetime_handler);
     }
+
+    template<typename T>
+    void doArrayHandler(const ValueArrayHandler<T>& array_handler) const
+    {
+        if (!is_array)
+            THROW(Poco::LogicException("only array value can call doArrayHandler()"));
+        if constexpr (std::is_same_v<T, Bool>)
+            get<DynamicArray>(var).applyHandler(array_handler, PanicValueArrayHandler<Number>, PanicValueArrayHandler<String>, PanicValueArrayHandler<DateTime>);
+        else if constexpr (std::is_same_v<T, Number>)
+            get<DynamicArray>(var).applyHandler(PanicValueArrayHandler<Bool>, array_handler, PanicValueArrayHandler<String>, PanicValueArrayHandler<DateTime>);
+        else if constexpr (std::is_same_v<T, String>)
+            get<DynamicArray>(var).applyHandler(PanicValueArrayHandler<Bool>, PanicValueArrayHandler<Number>, array_handler, PanicValueArrayHandler<DateTime>);
+        else if constexpr (std::is_same_v<T, DateTime>)
+            get<DynamicArray>(var).applyHandler(PanicValueArrayHandler<Bool>, PanicValueArrayHandler<Number>, PanicValueArrayHandler<String>, array_handler);
+        else
+            THROW(UnreachableException());
+    }
+
 
     void serialize(WriteBufferHelper& helper) const
     {
@@ -159,17 +198,68 @@ public:
         }
     }
 
-    bool operator==(const Value& rhs) const
+    bool operator<(const Value& rhs) const
     {
-        return is_array == rhs.is_array && type == rhs.type && var == rhs.var;
+        if (type != rhs.type || is_array || rhs.is_array || isNull() || isBool())
+            THROW(Poco::InvalidArgumentException("Value operator< invalid argument for " +
+                totalType(is_array, type) + " vs " +
+                totalType(rhs.is_array, rhs.type)));
+        return var < rhs.var;
+    }
+
+    bool operator<=(const Value& rhs) const
+    {
+        if (type != rhs.type || is_array || rhs.is_array || isNull() || isBool())
+            THROW(Poco::InvalidArgumentException("Value operator<= invalid argument for " +
+                                                 totalType(is_array, type) + " vs " +
+                                                 totalType(rhs.is_array, rhs.type)));
+        return var <= rhs.var;
+    }
+
+    bool operator>(const Value& rhs) const
+    {
+        if (type != rhs.type || is_array || rhs.is_array || isNull() || isBool())
+            THROW(Poco::InvalidArgumentException("Value operator> invalid argument for " +
+                                                 totalType(is_array, type) + " vs " +
+                                                 totalType(rhs.is_array, rhs.type)));
+        return var > rhs.var;
+    }
+
+    bool operator>=(const Value& rhs) const
+    {
+        if (type != rhs.type || is_array || rhs.is_array || isNull() || isBool())
+            THROW(Poco::InvalidArgumentException("Value operator>= invalid argument for " +
+                                                 totalType(is_array, type) + " vs " +
+                                                 totalType(rhs.is_array, rhs.type)));
+        return var >= rhs.var;
     }
 
     bool operator!=(const Value& rhs) const
     {
-        return !(*this == rhs);
+        if (type != rhs.type)
+            THROW(Poco::InvalidArgumentException("Value operator!= invalid argument for " +
+                                                 totalType(is_array, type) + " vs " +
+                                                 totalType(rhs.is_array, rhs.type)));
+        return var != rhs.var;
+    }
+
+    bool operator==(const Value& rhs) const
+    {
+        if (type != rhs.type)
+            THROW(Poco::InvalidArgumentException("Value operator== invalid argument for " +
+                                                 totalType(is_array, type) + " vs " +
+                                                 totalType(rhs.is_array, rhs.type)));
+        return var == rhs.var;
     }
 
 private:
+    static std::string totalType(bool is_array_, ValueType type_)
+    {
+        if (is_array_)
+            return "Arr[" + valueTypeToString(type_) + "]";
+        return valueTypeToString(type_);
+    }
+
     bool is_array = false;
     ValueType type;
     std::variant<bool, double, std::string, DateTime, DynamicArray> var;

@@ -115,6 +115,9 @@ TEST(database, SerializeAndDeserialize)
 
         Indexer indexer(db);
         indexer.index(ROOT_PATH + "/articles/single-jsons/webapp.json");
+
+        auto document_ptr = db.findDocument(2);
+        auto kvs = document_ptr->getKvs();
     }
 
     // restore
@@ -140,7 +143,7 @@ TEST(database, SerializeAndDeserialize)
 
     auto document_ptr = db.findDocument(2);
     auto kvs = document_ptr->getKvs();
-    EXPECT_EQ(kvs.size(), 74);
+    EXPECT_EQ(kvs.size(), 76);
 
     EXPECT_EQ(kvs["web-app.servlet.0.init-param.useJSP"].as<Bool>(), false);
     EXPECT_EQ(kvs["web-app.servlet.0.init-param.jspListTemplate"].as<String>(), "listTemplate.jsp");
@@ -148,6 +151,19 @@ TEST(database, SerializeAndDeserialize)
     EXPECT_EQ(kvs["web-app.servlet.3.servlet-name"].as<String>(), "fileServlet");
     EXPECT_EQ(kvs["web-app.servlet.4.servlet-name"].as<String>(), "cofaxTools");
     EXPECT_EQ(kvs["web-app.taglib.taglib-uri"].as<String>(), "cofax.tld");
+
+    auto barr = kvs["web-app.b-arr"];
+    barr.doArrayHandler<Bool>([](std::vector<Bool>* vec) { ASSERT_EQ(vec->size(), 2); });
+    auto iarr = kvs["web-app.i-arr"];
+    iarr.doArrayHandler<Number>([](std::vector<Number>* vec) { ASSERT_EQ(vec->size(), 3); });
+
+    EXPECT_EQ(barr.isArray(), true);
+    EXPECT_EQ(barr.as<Bool>(0), true);
+    EXPECT_EQ(barr.as<Bool>(1), false);
+    EXPECT_EQ(iarr.isArray(), true);
+    EXPECT_EQ(iarr.as<Number>(0), 100);
+    EXPECT_EQ(iarr.as<Number>(1), 200);
+    EXPECT_EQ(iarr.as<Number>(2), 300);
 }
 
 TEST(Value, base)
@@ -177,7 +193,8 @@ TEST(Value, base)
     ASSERT_EQ(v7.getValueType(), ValueType::String);
     ASSERT_EQ(v7.isArray(), true);
 
-    v7.doArrayHandler(PanicValueArrayHandler<Number>,
+    v7.doArrayHandler(PanicValueArrayHandler<Bool>,
+                      PanicValueArrayHandler<Number>,
                       [](std::vector<String> *vec) {
                           vec->push_back("hello");
                           vec->push_back("world");
@@ -185,18 +202,21 @@ TEST(Value, base)
                       PanicValueArrayHandler<DateTime>);
 
     size_t size = 0;
-    v7.doArrayHandler(PanicValueArrayHandler<Number>,
+    v7.doArrayHandler(PanicValueArrayHandler<Bool>,
+                      PanicValueArrayHandler<Number>,
                       [&size](std::vector<String> *vec) {
                           size = vec->size();
                       },
                       PanicValueArrayHandler<DateTime>);
     ASSERT_EQ(size, 2);
 
-    EXPECT_NO_THROW(v7.doArrayHandler(EmptyValueArrayHandler<Number>,
+    EXPECT_NO_THROW(v7.doArrayHandler(EmptyValueArrayHandler<Bool>,
+                                      EmptyValueArrayHandler<Number>,
                                       EmptyValueArrayHandler<String>,
                                       EmptyValueArrayHandler<DateTime>));
 
-    EXPECT_THROW(v7.doArrayHandler(EmptyValueArrayHandler<Number>,
+    EXPECT_THROW(v7.doArrayHandler(EmptyValueArrayHandler<Bool>,
+                      EmptyValueArrayHandler<Number>,
                       PanicValueArrayHandler<String>,
                       EmptyValueArrayHandler<DateTime>),
                  UnreachableException);
@@ -290,19 +310,21 @@ TEST(keyValue, SerializeAndDeserialize)
     };
 
     DynamicArray arr1(ValueType::String);
-    arr1.applyHandler(PanicValueArrayHandler<Number>,[](std::vector<String>* vec){
+    arr1.applyHandler(PanicValueArrayHandler<Bool>, PanicValueArrayHandler<Number>,
+            [](std::vector<String>* vec){
             vec->insert(vec->end(), {"hello", "word", "fkla", "xianxian"});
         }, PanicValueArrayHandler<DateTime>);
     handleArrayValue(arr1);
 
     DynamicArray arr2(ValueType::Number);
-    arr2.applyHandler([](std::vector<Number>* vec){
+    arr2.applyHandler(PanicValueArrayHandler<Bool>,
+            [](std::vector<Number>* vec){
         vec->insert(vec->end(), {10293.532, 123213, 3425945, 32421});
     }, PanicValueArrayHandler<String>, PanicValueArrayHandler<DateTime>);
     handleArrayValue(arr2);
 
     DynamicArray arr3(ValueType::DateTime);
-    arr3.applyHandler(PanicValueArrayHandler<Number>, PanicValueArrayHandler<String>,
+    arr3.applyHandler(PanicValueArrayHandler<Bool>, PanicValueArrayHandler<Number>, PanicValueArrayHandler<String>,
                       [](std::vector<DateTime>* vec){
                           vec->insert(vec->end(), {DateTime("1253-12-12 12:43:12")});
                       });
@@ -312,6 +334,7 @@ TEST(keyValue, SerializeAndDeserialize)
     EXPECT_EQ(arr2.get<Number>(2), 3425945);
     EXPECT_EQ(arr3.get<DateTime>(0).string(), "1253-12-12 12:43:12");
 }
+
 
 int main()
 {

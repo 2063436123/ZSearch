@@ -53,6 +53,28 @@ TEST(WriteReadBufferHelper, Base)
     ASSERT_THROW(read_helper.readNumber<int>(), Poco::RangeException);
 }
 
+TEST(vector_bool, serialization)
+{
+    WriteBuffer wbuf;
+    WriteBufferHelper whelper(wbuf);
+
+    std::stringstream io;
+
+    ReadBuffer rbuf;
+    ReadBufferHelper rhelper(rbuf);
+
+    std::vector<bool> vec{true, false, false, true};
+
+    whelper.writeLinearContainer(vec);
+    wbuf.dumpAllToStream(io);
+
+    rbuf.readAllFromStream(io);
+    io.clear();
+    auto res = rhelper.readLinearContainer<std::vector, bool>();
+
+    EXPECT_EQ(vec, res);
+}
+
 TEST(time, DateTime)
 {
     ASSERT_THROW(DateTime("2011-03-28 15:00:44 "), DateTimeFormatException);
