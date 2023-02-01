@@ -1,7 +1,5 @@
 #include "TermsExecutor.h"
 #include "HavingExecutor.h"
-#include "AggregateFunction.h"
-#include "CompareFunction.h"
 #include "indexer/Indexer.h"
 #include "gtest/gtest.h"
 
@@ -160,6 +158,45 @@ TEST(AggregateFunction, base)
     }
     {
         EXPECT_THROW(Value(ArrayLabel{}, ValueType::Null), Poco::NotImplementedException);
+    }
+}
+
+TEST(havingExecutor, base)
+{
+    Database db(ROOT_PATH + "/database1", true);
+
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    EXPECT_EQ(db.findDocument(3)->getPath().filename(), "webapp.json");
+
+    auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toSet(1);
+    {
+        Value arr1(ArrayLabel{}, ValueType::Number);
+        arr1.doArrayHandler<Number>([](std::vector<Number>* vec){ vec->assign({1000, 2000, 600}); });
+        // sum(web-app.i-arr) in (1000, 2000, 600)
+        LeafNode<Predicate> l1(Predicate(sumFunction, "web-app.i-arr", compareIn, arr1));
+
+        HavingExecutor executor(db, &l1);
+        EXPECT_EQ(std::any_cast<std::set<size_t>>(
+                    executor.execute(all_doc_ids)
+                ), std::set<size_t>({3}));
+    }
+
+    {
+        Value arr1(ArrayLabel{}, ValueType::Number);
+        arr1.doArrayHandler<Number>([](std::vector<Number>* vec){ vec->assign({1000, 2000}); });
+        // sum(web-app.i-arr) not in (1000, 2000, 600) AND b-arr.size = 2
+        LeafNode<Predicate> l1(Predicate(sumFunction, "web-app.i-arr", compareNotIn, arr1));
+        LeafNode<Predicate> l2(Predicate(countFunction, "web-app.b-arr", compareEqual, 2));
+
+        InterNode r1(ConjunctionType::AND);
+        r1.addChild(&l1).addChild(&l2);
+
+        HavingExecutor executor(db, &r1);
+        EXPECT_EQ(std::any_cast<std::set<size_t>>(
+                executor.execute(all_doc_ids)
+        ), std::set<size_t>({3}));
     }
 }
 

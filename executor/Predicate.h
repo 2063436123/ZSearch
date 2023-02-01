@@ -15,12 +15,13 @@ using CompareFunction = std::function<bool(const Value&, const Value&)>;
 
 class Predicate {
 public:
+    Predicate(const AggregateFunction& agg_, const String& id_, const CompareFunction& compare_, const Value& value_)
+        : agg(agg_), id(id_), compare(compare_), value(value_) {}
+
     bool determine(const std::unordered_map<Key, Value>& kvs) const
     {
         auto iter = kvs.find(id);
         if (iter == kvs.end())
-            return false;
-        if (iter->second.getValueType() != value.getValueType())
             return false;
         if (iter->second.isArray() && agg == nullptr)
             return false;
