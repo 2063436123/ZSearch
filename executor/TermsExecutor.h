@@ -21,13 +21,12 @@ public:
     std::any execute(const std::any&) override
     {
         bit_set_size = db.maxAllocatedDocId();
-        return recursiveExecute(root).toSet(1);
+        return recursiveExecute(root).toVector(1);
     }
 
 private:
-    using DocIds = DynamicBitSet;
     // return first 表示是否要 NOT 取反，second 表示要操作的集合
-    DocIds recursiveExecute(const ConjunctionNode *node)
+    DynamicBitSet recursiveExecute(const ConjunctionNode *node)
     {
         if (auto leaf = dynamic_cast<const LeafNode<std::string>*>(node))
         {
@@ -37,14 +36,14 @@ private:
         }
         else if (auto inter = dynamic_cast<const InterNode*>(node))
         {
-            std::vector<DocIds> children_doc_ids;
+            std::vector<DynamicBitSet> children_doc_ids;
             for (ConjunctionNode *child_node : node->children)
                 children_doc_ids.push_back(recursiveExecute(child_node));
 
             assert(!children_doc_ids.empty()); // AND, OR 至少有一个操作对象
             assert(inter->type != ConjunctionType::NOT || children_doc_ids.size() == 1); // NOT 只有一个操作对象
 
-            DocIds ret(children_doc_ids[0]);
+            DynamicBitSet ret(children_doc_ids[0]);
             switch (inter->type)
             {
                 case ConjunctionType::AND:

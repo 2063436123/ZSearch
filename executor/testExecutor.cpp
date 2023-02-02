@@ -1,5 +1,6 @@
 #include "TermsExecutor.h"
 #include "HavingExecutor.h"
+#include "ScoreExecutor.h"
 #include "indexer/Indexer.h"
 #include "gtest/gtest.h"
 
@@ -10,9 +11,10 @@ TEST(termsExecutor, base)
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
 
-    EXPECT_EQ(db.findDocument(4)->getPath().filename(), "IfIWereToFallInLove.txt");
-    EXPECT_EQ(db.findDocument(5)->getPath().filename(), "WhenYouAreOld.txt");
-    EXPECT_EQ(db.findDocument(14)->getPath().filename(), "WhatCanIHoldYouWith.txt");
+    const int IfI = 4, WhenYou = 5, WhatCan = 8;
+    EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
+    EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
+    EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
 
     {
         LeafNode<String> l1("fall");
@@ -21,7 +23,7 @@ TEST(termsExecutor, base)
         r1.addChild(&l1).addChild(&l2);
 
         TermsExecutor executor(db, &r1);
-        EXPECT_EQ(std::any_cast<std::set<size_t>>(executor.execute(nullptr)), std::set<size_t>({4}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(nullptr)), DocIds({IfI}));
     }
 
     {
@@ -31,7 +33,7 @@ TEST(termsExecutor, base)
         r1.addChild(&l1).addChild(&l2);
 
         TermsExecutor executor(db, &r1);
-        EXPECT_EQ(std::any_cast<std::set<size_t>>(executor.execute(nullptr)), std::set<size_t>({4, 5}));
+        EXPECT_EQ(std::any_cast<DocIds>((executor.execute(nullptr))), DocIds({IfI, WhenYou}));
     }
 
     {
@@ -40,8 +42,8 @@ TEST(termsExecutor, base)
         r2.addChild(&l10);
 
         TermsExecutor executor(db, &r2);
-        EXPECT_EQ(std::any_cast<std::set<size_t>>(executor.execute(nullptr)),
-                  DynamicBitSet(16).set(14).flip().toSet(1));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(nullptr)),
+                  DynamicBitSet(db.maxAllocatedDocId()).set(WhatCan).flip().toVector(1));
     }
 
     {
@@ -59,7 +61,7 @@ TEST(termsExecutor, base)
         r3.addChild(&r1).addChild(&r2);
 
         TermsExecutor executor(db, &r3);
-        EXPECT_EQ(std::any_cast<std::set<size_t>>(executor.execute(nullptr)), std::set<size_t>({4, 5}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(nullptr)), DocIds({IfI, WhenYou}));
     }
 }
 
@@ -170,7 +172,7 @@ TEST(havingExecutor, base)
 
     EXPECT_EQ(db.findDocument(3)->getPath().filename(), "webapp.json");
 
-    auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toSet(1);
+    auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toVector(1);
     {
         Value arr1(ArrayLabel{}, ValueType::Number);
         arr1.doArrayHandler<Number>([](std::vector<Number>* vec){ vec->assign({1000, 2000, 600}); });
@@ -178,9 +180,7 @@ TEST(havingExecutor, base)
         LeafNode<Predicate> l1(Predicate(sumFunction, "web-app.i-arr", compareIn, arr1));
 
         HavingExecutor executor(db, &l1);
-        EXPECT_EQ(std::any_cast<std::set<size_t>>(
-                    executor.execute(all_doc_ids)
-                ), std::set<size_t>({3}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(all_doc_ids)), DocIds({3}));
     }
 
     {
@@ -194,9 +194,35 @@ TEST(havingExecutor, base)
         r1.addChild(&l1).addChild(&l2);
 
         HavingExecutor executor(db, &r1);
-        EXPECT_EQ(std::any_cast<std::set<size_t>>(
-                executor.execute(all_doc_ids)
-        ), std::set<size_t>({3}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(all_doc_ids)), DocIds({3}));
+    }
+}
+
+TEST(ScoreExecutor, base)
+{
+    Database db(ROOT_PATH + "/database1", true);
+
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    EXPECT_EQ(db.findDocument(3)->getPath().filename(), "webapp.json");
+    auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toVector(1);
+
+    const int IfI = 4, WhenYou = 5, WhatCan = 8;
+    EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
+    EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
+    EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
+
+    {
+        LeafNode<String> l1("you");
+        TermsExecutor terms_executor(db, &l1);
+        ScoreExecutor score_executor(db, std::unordered_map<std::string, double>{{"you", 1.0}});
+
+        ExecutePipeline pipeline;
+        pipeline.addExecutor(&terms_executor).addExecutor(&score_executor);
+        auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
+        std::map<size_t, size_t, std::greater<>> expected({{211, IfI}, {122, WhatCan}, {65, WhenYou}});
+        EXPECT_EQ(doc_id_vs_score, expected);
     }
 }
 

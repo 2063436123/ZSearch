@@ -21,14 +21,16 @@ public:
             return;
         }
 
-        size_t doc_id = db.newDocId();
-        db.addDocument(doc_id, file_path);
-
         if (IGNORED_FILE_EXTENSIONS.contains(file_path.extension()))
         {
             // ignore
+            return;
         }
-        else if (file_path.extension() == ".json")
+
+        size_t doc_id = db.newDocId();
+        db.addDocument(doc_id, file_path);
+
+        if (file_path.extension() == ".json")
         {
             std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(file_path);
             std::unique_ptr<Extractor> extractor = std::make_unique<JsonExtractor>(std::move(reader));
@@ -52,6 +54,7 @@ public:
 
             auto document_ptr = db.findDocument(doc_id);
             document_ptr->setKvs(words_and_kvs.kvs);
+            document_ptr->setWordCount(words_and_kvs.words.size());
         }
         else if (file_path.extension() == ".csv")
         {
@@ -69,6 +72,9 @@ public:
             {
                 db.addTerm(word_in_file.str, doc_id, word_in_file.offset_in_file);
             }
+
+            auto document_ptr = db.findDocument(doc_id);
+            document_ptr->setWordCount(word_in_files.words.size());
         }
     }
 

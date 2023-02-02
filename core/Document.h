@@ -43,6 +43,16 @@ public:
         info = info_;
     }
 
+    size_t getWordCount() const
+    {
+        return info.word_count;
+    }
+
+    void setWordCount(size_t word_count)
+    {
+        info.word_count = word_count;
+    }
+
     std::unordered_map<Key, Value> getKvs() const
     {
         std::lock_guard<std::mutex> guard(kvs_lock);

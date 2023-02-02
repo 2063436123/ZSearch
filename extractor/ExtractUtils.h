@@ -3,7 +3,7 @@
 #include "core/Value.h"
 #include "utils/JsonUtils.h"
 
-void extractWords(const std::unique_ptr<Reader>& reader, StringInFiles& res, std::string separators = " ,.\t\n")
+void extractWords(const std::unique_ptr<Reader>& reader, StringInFiles& res, const std::string& separators = " ,.\t\n")
 {
     reader->reset();
     while(true)

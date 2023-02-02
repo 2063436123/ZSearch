@@ -44,6 +44,14 @@ public:
     std::set<size_t> toSet(uint64_t start_index = 0) const
     {
         std::set<size_t> ret;
+        for (size_t value : toVector(start_index))
+            ret.emplace(value);
+        return ret;
+    }
+
+    std::vector<size_t> toVector(uint64_t start_index = 0) const
+    {
+        std::vector<size_t> ret;
         for (size_t i = 0; i < bit_set.size(); i++)
         {
             uint64_t max_k_incr = ByteNum;
@@ -53,7 +61,7 @@ public:
             for (uint64_t j = One; j <= (One << (ByteNum - 1)) && k - start_index < max_k_incr; j <<= 1, k++)
             {
                 if (j & bit_set[i])
-                    ret.insert(i * ByteNum + k);
+                    ret.push_back(i * ByteNum + k);
             }
             assert(k == start_index + max_k_incr);
         }

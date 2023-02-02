@@ -20,17 +20,14 @@ public:
 
     std::any execute(const std::any &doc_ids_) override
     {
-        assert(doc_ids_.type() == typeid(std::set<size_t>));
-        auto doc_ids = std::any_cast<std::set<size_t>>(doc_ids_);
-
-        std::set<size_t> ret;
+        auto doc_ids = std::any_cast<DocIds>(doc_ids_);
+        DocIds ret;
         for (size_t doc_id : doc_ids)
         {
             auto kvs = db.findDocument(doc_id)->getKvs();
             if (determinePredicate(kvs, root))
-                ret.insert(doc_id);
+                ret.push_back(doc_id);
         }
-
         return ret;
     }
 

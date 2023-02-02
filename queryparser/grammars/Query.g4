@@ -21,7 +21,7 @@ having : where
     ;
 
 term : ID
-    | ID ':' ID // 前缀限定单词的查询范围
+//    | ID ':' ID // 前缀限定单词的查询范围 -> 可用 having a = 'b' 替代
     ;
 
 terms : terms 'AND' terms

@@ -31,6 +31,18 @@ public:
         return next_doc_id - 1;
     }
 
+    double getAvgWordCount() const
+    {
+        // TODO: 优化性能 保存 total + size 来计算 avg
+        std::lock_guard<std::mutex> guard(document_map_lock);
+        size_t sum = 0, count = document_map.size();
+        for (const auto& iter : document_map)
+        {
+            sum += iter.second->getWordCount();
+        }
+        return sum * 1.0 / count;
+    }
+
     void addDocument(size_t doc_id, const std::string& doc_path)
     {
         std::lock_guard<std::mutex> guard(document_map_lock);
@@ -65,12 +77,6 @@ public:
         offset_set.emplace(offset_in_file);
     }
 
-//    void addTable(const std::string& table_name, const TablePtr& table)
-//    {
-//        std::lock_guard<std::mutex> guard(table_map_lock);
-//        table_map[table_name] = table;
-//    }
-
     DocumentPtr findDocument(size_t doc_id) const
     {
         std::lock_guard<std::mutex> guard(document_map_lock);
@@ -86,15 +92,6 @@ public:
             return nullptr;
         return iter->second;
     }
-
-//    TablePtr findTable(const std::string &word) const
-//    {
-//        std::lock_guard<std::mutex> guard(table_map_lock);
-//        auto iter = table_map.find(word);
-//        if (iter == table_map.end())
-//            return nullptr;
-//        return iter->second;
-//    }
 
     static void createDatabase(const std::filesystem::path& path)
     {
