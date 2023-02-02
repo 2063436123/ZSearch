@@ -20,7 +20,9 @@ public:
         for (size_t doc_id : doc_ids)
         {
             double score = determineScore(doc_id);
-            scores.emplace(score * SCORE_GRANULARITY, doc_id);
+            if (score == 0.0) // document 已被删除
+                continue;
+            scores.emplace(score, doc_id);
         }
 
         // 提取 doc_ids order by score
@@ -31,12 +33,15 @@ private:
     // 计算查询与指定文档的相关性
     double determineScore(size_t doc_id)
     {
-        double score = 0;
+        auto document_ptr = db.findDocument(doc_id);
+        if (!document_ptr)
+            return 0.0;
+
+        double score = 0.0;
         for (auto iter : word_freq)
         {
             std::string word = iter.first;
             auto term_ptr = db.findTerm(word);
-            auto document_ptr = db.findDocument(doc_id);
 
             // 1.单词权重
             double df = term_ptr->posting_list.size();
@@ -61,7 +66,7 @@ private:
 
             score += idf * sqd * sqq;
         }
-        return score;
+        return score * SCORE_GRANULARITY + 1.0 /* + 1.0 是为了区分文档被删除的情况 */;
     }
 
     const double k1 = 1.5, k3 = 1.5, b = 0.75;

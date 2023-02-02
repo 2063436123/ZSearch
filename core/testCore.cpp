@@ -14,9 +14,9 @@ TEST(database, CreateDatabase)
     {
         std::stringstream oss;
         oss << e.what() << " " << e.message();
-        ASSERT_EQ(oss.str(),
+        ASSERT_EQ(oss.str().substr(0, 184),
                   "Cannot create file <message - can't create directory in /Users/peter/Code/GraduationDesignSrc/master/database1> "
-                  "<location - /Users/peter/Code/GraduationDesignSrc/master/core/Database.h:99,createDatabase>");
+                  "<location - /Users/peter/Code/GraduationDesignSrc/master/core/Database.h");
     }
 }
 
@@ -335,6 +335,31 @@ TEST(keyValue, SerializeAndDeserialize)
     EXPECT_EQ(arr3.get<DateTime>(0).string(), "1253-12-12 12:43:12");
 }
 
+TEST(database, TidyTerm)
+{
+    Database db(ROOT_PATH + "/database1", true);
+
+    db.addDocument(1, ROOT_PATH + "/articles/ABC.txt");
+
+    auto doc1 = db.findDocument(1);
+
+    // "hello" occur twice in doc1, occur once in doc3
+    db.addTerm("hello", 1, 1);
+    db.addTerm("hello", 1, 30);
+
+    auto term1 = db.findTerm("hello");
+    EXPECT_EQ(term1.operator bool(), true);
+
+    db.deleteDocument(1);
+    auto term2 = db.findTerm("hello");
+    EXPECT_EQ(term2->posting_list.size(), 1);
+    EXPECT_EQ(term2->statistics_list.size(), 1);
+
+    db.tidyTerm("hello");
+    auto term3 = db.findTerm("hello");
+    EXPECT_EQ(term3->posting_list.size(), 0);
+    EXPECT_EQ(term3->statistics_list.size(), 0);
+}
 
 int main()
 {

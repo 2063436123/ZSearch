@@ -21,17 +21,18 @@ public:
     std::any execute(const std::any&) override
     {
         bit_set_size = db.maxAllocatedDocId();
-        return recursiveExecute(root).toVector(1);
+        return recursiveExecute(root).toUnorderedSet(1);
     }
 
 private:
-    // return first 表示是否要 NOT 取反，second 表示要操作的集合
     DynamicBitSet recursiveExecute(const ConjunctionNode *node)
     {
         if (auto leaf = dynamic_cast<const LeafNode<std::string>*>(node))
         {
             assert(leaf->children.empty());
             auto term_ptr = db.findTerm(leaf->data);
+            if (!term_ptr)
+                return DynamicBitSet(bit_set_size);
             return DynamicBitSet(bit_set_size, term_ptr->posting_list);
         }
         else if (auto inter = dynamic_cast<const InterNode*>(node))

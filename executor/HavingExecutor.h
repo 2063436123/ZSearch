@@ -24,9 +24,13 @@ public:
         DocIds ret;
         for (size_t doc_id : doc_ids)
         {
-            auto kvs = db.findDocument(doc_id)->getKvs();
+            auto document_ptr = db.findDocument(doc_id);
+            if (!document_ptr)
+                continue;
+
+            auto kvs = document_ptr->getKvs();
             if (determinePredicate(kvs, root))
-                ret.push_back(doc_id);
+                ret.emplace(doc_id);
         }
         return ret;
     }

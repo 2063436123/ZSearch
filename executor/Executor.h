@@ -2,7 +2,7 @@
 #include "../typedefs.h"
 #include "core/Database.h"
 
-using DocIds = std::vector<size_t>;
+using DocIds = std::unordered_set<size_t>;
 
 class Executor
 {

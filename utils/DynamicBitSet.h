@@ -39,8 +39,6 @@ public:
         return *this;
     }
 
-    // default return set range: [0, size-1].
-    // it become [1, size] when start_index == 1.
     std::set<size_t> toSet(uint64_t start_index = 0) const
     {
         std::set<size_t> ret;
@@ -49,6 +47,16 @@ public:
         return ret;
     }
 
+    std::unordered_set<size_t> toUnorderedSet(uint64_t start_index = 0) const
+    {
+        std::unordered_set<size_t> ret;
+        for (size_t value : toVector(start_index))
+            ret.emplace(value);
+        return ret;
+    }
+
+    // default return set range: [0, size-1].
+    // it become [1, size] when start_index == 1.
     std::vector<size_t> toVector(uint64_t start_index = 0) const
     {
         std::vector<size_t> ret;

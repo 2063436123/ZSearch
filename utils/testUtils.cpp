@@ -1,7 +1,7 @@
 #include "SerializeUtils.h"
 #include "TimeUtils.h"
 #include "StringUtils.h"
-#include "SortUtils.h"
+#include "ContainerUtils.h"
 #include "JsonUtils.h"
 #include "DynamicBitSet.h"
 #include <fcntl.h>
@@ -104,12 +104,58 @@ TEST(sortUtils, SyncSort)
     std::vector<int> a{4, 2, 1, 3};
     std::vector<int> b{100, 200, 300, 400};
 
-    auto [ra, rb] = sync_sort(a, b);
+    auto [ra, rb] = syncSort(a, b);
 
     std::vector<int> res_a{1, 2, 3, 4};
     std::vector<int> res_b{300, 200, 400, 100};
     ASSERT_EQ(ra, res_a);
     ASSERT_EQ(rb, res_b);
+}
+
+TEST(sortUtils, RemoveElements)
+{
+    {
+        std::vector<int> a{1, 2};
+        std::unordered_set<size_t> index_to_delete({0, 1});
+
+        removeElements(a, index_to_delete);
+        EXPECT_EQ(a, std::vector<int>());
+    }
+    {
+        std::vector<int> a{1};
+        std::unordered_set<size_t> index_to_delete{0};
+
+        removeElements(a, index_to_delete);
+        EXPECT_EQ(a, std::vector<int>());
+    }
+    {
+        std::vector<int> a{};
+        std::unordered_set<size_t> index_to_delete{};
+
+        removeElements(a, index_to_delete);
+        EXPECT_EQ(a, std::vector<int>());
+    }
+    {
+        std::vector<int> a{1, 2, 3, 4};
+        std::unordered_set<size_t> index_to_delete{0, 3};
+
+        removeElements(a, index_to_delete);
+        EXPECT_EQ(a, std::vector<int>({2, 3}));
+    }
+    {
+        std::vector<int> a{1, 2, 3, 4, 5};
+        std::unordered_set<size_t> index_to_delete{4};
+
+        removeElements(a, index_to_delete);
+        EXPECT_EQ(a, std::vector<int>({1, 2, 3, 4}));
+    }
+    {
+        std::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
+        std::unordered_set<size_t> index_to_delete{0, 2, 3, 5, 6};
+
+        removeElements(a, index_to_delete);
+        EXPECT_EQ(a, std::vector<int>({2, 5, 8}));
+    }
 }
 
 TEST(jsonUtils, dfs1)
