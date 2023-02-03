@@ -23,6 +23,7 @@
 #include <Poco/Format.h>
 #include <Poco/StreamCopier.h>
 #include <Poco/Hash.h>
+#include <Poco/Timer.h>
 
 #include <gtest/gtest.h>
 

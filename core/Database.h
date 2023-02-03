@@ -130,8 +130,8 @@ public:
     ~Database() {
         serialize();
     }
-private:
 
+private:
     std::filesystem::path database_path;
 
     TermMap term_map;
@@ -140,21 +140,13 @@ private:
     DocumentMap document_map;
     mutable std::mutex document_map_lock;
 
-//    TableMap table_map;
-//    mutable std::mutex table_map_lock;
 
-
-    // 参考 Clickhouse 中的 writeVarBuf 等方法?
     void serialize() {
-//        std::scoped_lock<std::mutex, std::mutex, std::mutex> sl(term_map_lock, document_map_lock, table_map_lock);
         std::scoped_lock sl(term_map_lock, document_map_lock);
 
         std::ofstream fout(database_path.string() + "/meta");
         WriteBuffer buf;
         WriteBufferHelper helper(buf);
-        term_map_lock.unlock();
-        auto test_term = this->findTerm("my");
-        term_map_lock.lock();
 
         helper.writeNumber(next_doc_id.load());
 
@@ -171,19 +163,10 @@ private:
             helper.writeNumber(pair.first);
             pair.second->serialize(helper);
         }
-
-//        helper.writeNumber(table_map.size());
-//        for (const auto& pair : table_map)
-//        {
-//            helper.writeString(pair.first);
-//            pair.second->serialize(helper);
-//        }
-
         buf.dumpAllToStream(fout);
     }
 
     void deserialize() {
-//        std::scoped_lock<std::mutex, std::mutex, std::mutex> sl(term_map_lock, document_map_lock, table_map_lock);
         std::scoped_lock sl(term_map_lock, document_map_lock);
 
         std::ifstream fin(database_path.string() + "/meta");
@@ -204,12 +187,6 @@ private:
         {
             document_map.emplace(helper.readNumber<size_t>(), Document::deserialize(helper));
         }
-
-//        size = helper.readNumber<size_t>();
-//        for (size_t i = 0; i < size; i++)
-//        {
-//            table_map.emplace(helper.readString(), Table::deserialize(helper));
-//        }
     }
 
     std::atomic_size_t next_doc_id = 1;

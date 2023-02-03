@@ -10,6 +10,7 @@ TEST(termsExecutor, base)
 
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
+    EXPECT_EQ(db.maxAllocatedDocId(), 10);
 
     const int IfI = 4, WhenYou = 5, WhatCan = 8;
     EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");

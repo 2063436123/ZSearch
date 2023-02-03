@@ -17,7 +17,7 @@ public:
             : id(doc_id), origin_path(std::move(origin_path_)) {
         if (!is_regular_file(origin_path))
             THROW(FileTypeUnmatchException());
-        info.changed_time = getModifiedLastDateTime(origin_path);
+        info.modify_time = getModifiedLastDateTime(origin_path);
     }
 
     size_t getId() const
@@ -34,14 +34,21 @@ public:
         origin_path = path;
     }
 
-    DocumentInfo getInfo() const {
-        return info;
-    }
-
     void setInfo(const DocumentInfo& info_)
     {
         info = info_;
     }
+
+    DateTime getModifyTime() const
+    {
+        return info.modify_time;
+    }
+
+    void setModifyTime(size_t modify_time)
+    {
+        info.modify_time = modify_time;
+    }
+
 
     size_t getWordCount() const
     {
