@@ -32,12 +32,22 @@ public:
         }
     }
 
-    std::string string() const {
+    std::string string(bool beijing_time_zone = false) const {
+        if (beijing_time_zone)
+        {
+            return DateTime(*this).adjustTime(8 * 3600).string();
+        }
         return Poco::format("%04d-%02d-%02d %02d:%02d:%02d", date_time.year(), date_time.month(), date_time.day(), date_time.hour(), date_time.minute(), date_time.second());
     }
 
     Poco::DateTime internal() const {
         return date_time;
+    }
+
+    DateTime& adjustTime(int64_t adjust_time_seconds)
+    {
+        date_time = Poco::Timestamp(date_time.timestamp().epochMicroseconds() + adjust_time_seconds * 1000 * 1000);
+        return *this;
     }
 
     bool operator<(const DateTime& rhs) const {

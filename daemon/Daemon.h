@@ -36,6 +36,8 @@ public:
 
     // NOTE: 这些方法应该被 http 调用
     // TODO: 添加检查合并路径的机制，移除冗余的 paths 条目
+
+    // NOTE: 即使 path 当前不存在，也可以预添加
     // e.g. '/a' includes '/a/b'
     void addPath(const std::filesystem::path& path)
     {
@@ -60,6 +62,9 @@ public:
 
     static std::unordered_set<std::string> gatherExistedFiles(const std::filesystem::path& path)
     {
+        if (!exists(path))
+            return {};
+
         std::unordered_set<std::string> res;
         for (const auto& path_entry : std::filesystem::recursive_directory_iterator(path))
         {
@@ -76,6 +81,8 @@ private:
     // not thread-safe, caller promise.
     void smartIndexAndRecord(const std::filesystem::path& path)
     {
+        if (!exists(path))
+            return;
 //        std::cout << "[smartIndex " << path.string() << "]" << std::endl;
         std::unordered_map<std::string, size_t>& indexed_documents = paths[path];
         std::unordered_set<std::string> existed_files = gatherExistedFiles(path);

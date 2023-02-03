@@ -5,7 +5,7 @@ TEST(Daemon, base)
     Database db(ROOT_PATH + "/database1", true);
     FileSystemDaemon file_system_daemon(db);
 
-    const int interval_seconds = 2;
+    const int interval_seconds = 1;
     const int valid_files_number = 10;
 
     Poco::Timer timer(0, interval_seconds * 1000);
@@ -78,6 +78,12 @@ TEST(Daemon, gatherExistedFiles)
                     "/Users/peter/Code/GraduationDesignSrc/master/articles/tpch-json/tpch.json",
                     "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/css.json"};
     EXPECT_EQ(distinct_files, expected_distinct_files);
+}
+
+TEST(Daemon, gatherExistedFilesEmpty)
+{
+    auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles/tmp");
+    EXPECT_EQ(files.empty(), true);
 }
 
 int main()

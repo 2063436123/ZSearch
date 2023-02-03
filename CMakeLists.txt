@@ -12,10 +12,13 @@ link_libraries(antlr4-runtime)
 link_libraries(xapian)
 
 find_package(Poco REQUIRED Util)
+find_package(Poco REQUIRED Net)
 link_libraries(Poco::Util)
+link_libraries(Poco::Net)
 link_libraries(gtest)
 
 add_executable(ZSearch cmdapi/main.cpp)
+add_executable(ZSearchHTTP httpapi/main.cpp)
 
 add_executable(gtest_storage storage/testStorage.cpp)
 add_executable(gtest_extractor extractor/testExtractor.cpp)

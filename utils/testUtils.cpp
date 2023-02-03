@@ -75,7 +75,7 @@ TEST(vector_bool, serialization)
     EXPECT_EQ(vec, res);
 }
 
-TEST(time, DateTime)
+TEST(DateTime, base)
 {
     ASSERT_THROW(DateTime("2011-03-28 15:00:44 "), DateTimeFormatException);
     ASSERT_THROW(DateTime(" 2011-03-28 15:00:44 "), DateTimeFormatException);
@@ -84,6 +84,28 @@ TEST(time, DateTime)
     ASSERT_EQ(time1.string(), "2011-03-28 15:00:44");
     DateTime time2("2011-03-28 15:00:45");
     ASSERT_LT(time1, time2);
+}
+
+TEST(DateTime, adjustTime)
+{
+    {
+        DateTime dt1("2011-03-28 15:00:44");
+        dt1.adjustTime(3600);
+        DateTime dt2("2011-03-28 16:00:45");
+        ASSERT_LT(dt1, dt2);
+    }
+    {
+        DateTime dt1("2011-03-28 19:00:44");
+        dt1.adjustTime(8 * 3600);
+        DateTime dt2("2011-03-29 03:00:45");
+        ASSERT_LT(dt1, dt2);
+    }
+    {
+        DateTime dt1("2011-03-28 15:00:44");
+        dt1.adjustTime(-3600);
+        DateTime dt2("2011-03-28 14:00:45");
+        ASSERT_LT(dt1, dt2);
+    }
 }
 
 TEST(stringUtils, stoi)

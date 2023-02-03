@@ -24,6 +24,16 @@
 #include <Poco/StreamCopier.h>
 #include <Poco/Hash.h>
 #include <Poco/Timer.h>
+#include <Poco/Net/ServerSocket.h>
+#include <Poco/URI.h>
+#include <Poco/Net/HTMLForm.h>
+#include <Poco/Net/HTTPServer.h>
+#include <Poco/Net/HTTPRequestHandler.h>
+#include <Poco/Net/HTTPRequestHandlerFactory.h>
+#include <Poco/Net/HTTPResponse.h>
+#include <Poco/Net/HttpServerRequest.h>
+#include <Poco/Net/HTTPServerResponse.h>
+#include <Poco/Util/ServerApplication.h>
 
 #include <gtest/gtest.h>
 
