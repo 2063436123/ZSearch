@@ -84,6 +84,9 @@ public:
         if (!exists(path))
             return {};
 
+        if (!is_directory(path))
+            return {path.string()};
+
         std::unordered_set<std::string> res;
         for (const auto& path_entry : std::filesystem::recursive_directory_iterator(path))
         {

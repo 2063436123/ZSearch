@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>amis demo</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="sdk/sdk.css" />
+    <link rel="stylesheet" href="sdk/helper.css" />
+    <link rel="stylesheet" href="sdk/iconfont.css" />
+    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
+    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
+    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
+    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <style>
+      html,
+      body,
+      .app-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="app-wrapper"></div>
+    <script src="sdk/sdk.js"></script>
+    <script type="text/javascript">
+      (function () {
+        let amis = amisRequire("amis/embed");
+        // 通过替换下面这个配置来生成不同页面
+        let amisJSON = {
+          type: "page",
+          title: "开始查询",
+          body: [
+            {
+              type: "divider",
+            },
+            // {
+            //   type: "form",
+            //   wrapWithPanel: false,
+            //   body: [
+            //     {
+            //       type: "input-text",
+            //       name: "query",
+            //     },
+            //     {
+            //       type: "button",
+            //       label: "查询",
+            //       hotKey: "enter",
+            //       // hidden: true,
+            //       onEvent: {
+            //         click: {
+            //           actions: [
+            //             {
+            //               actionType: "ajax",
+            //               args: {
+            //                 api: {
+            //                   method: "get",
+            //                   url: "HOST/start-query?query=$query",
+            //                 },
+            //               },
+            //             },
+            //           ],
+            //         },
+            //       },
+            //     },
+            //   ],
+            // },
+            {
+              type: "wrapper",
+              name: "my_form",
+              body: [
+                {
+                  type: "input-text",
+                  name: "query",
+                  placeholder: "输入查询语句",
+                  clearable: true,
+                  addOn: {
+                    type: "button",
+                    hidden: true,
+                    actionType: "reload",
+                    target: "my_form.table",
+                  },
+                },
+                {
+                  type: "service",
+                  api: "HOST/start-query?query=$query",
+                  body: {
+                    type: "table",
+                    name: "table",
+                    title: "查询结果",
+                    source: "$results",
+                    columns: [
+                      {
+                        name: "id",
+                        label: "文档编号",
+                      },
+                      {
+                        name: "path",
+                        label: "文档路径",
+                        copyable: true,
+                      },
+                      {
+                        name: "score",
+                        label: "查询得分",
+                      },
+                    ],
+                    itemActions: [
+                      {
+                        // 预览
+                        type: "button",
+                        icon: "fa fa-eye",
+                        onEvent: {
+                          click: {
+                            actions: [
+                              {
+                                actionType: "drawer",
+                                drawer: {
+                                  title: "文档信息",
+                                  position: "left",
+                                  size: "lg",
+                                  resizable: true,
+                                  showCloseButton: false,
+                                  overlay: false,
+                                  closeOnEsc: true,
+                                  closeOnOutside: true,
+                                  body: {
+                                    type: "table",
+                                    source: "$highlight_texts",
+                                    columns: [
+                                      {
+                                        name: "text",
+                                        label: "匹配文本",
+                                      },
+                                    ],
+                                  },
+                                  actions: [],
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        };
+        let amisScoped = amis.embed(
+          "#root",
+          amisJSON,
+          {},
+          {
+            replaceText: {
+              HOST: "http://localhost:8080",
+            },
+          }
+        );
+        // more actions
+      })();
+    </script>
+  </body>
+</html>

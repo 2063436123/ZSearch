@@ -2,6 +2,7 @@
 #include "../typedefs.h"
 #include "HTTPHandler.h"
 #include "IndexHTTPHandler.h"
+#include "SearchHTTPHandler.h"
 
 class HTTPHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
 {
@@ -44,6 +45,10 @@ public:
         if (uri_path == "/get-index-info")
         {
             return new GetIndexInfoHandler(daemon);
+        }
+        if (uri_path == "/start-query")
+        {
+            return new StartQueryHandler(db);
         }
         return new GetFileHandler();
     }

@@ -104,6 +104,17 @@ TEST(Daemon, gatherExistedFiles)
     EXPECT_EQ(distinct_files, expected_distinct_files);
 }
 
+TEST(Daemon, gatherExistedFiles2)
+{
+    auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles/IfIWereToFallInLove.txt");
+    std::unordered_set<std::string> distinct_files;
+    for (const auto& file : files)
+        distinct_files.insert(file);
+
+    std::unordered_set<std::string> expected_distinct_files{"/Users/peter/Code/GraduationDesignSrc/master/articles/IfIWereToFallInLove.txt"};
+    EXPECT_EQ(distinct_files, expected_distinct_files);
+}
+
 TEST(Daemon, gatherExistedFilesEmpty)
 {
     auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles/tmp");

@@ -30,7 +30,7 @@ void run()
 
             std::string query;
             std::cin >> query;
-            SearchResultSet res = searcher.search(query);
+            std::set<OldSearchResult> res/* = searcher.search(query)*/;
             size_t no = 0;
             for (const auto &result: res)
             {
