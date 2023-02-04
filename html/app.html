@@ -37,56 +37,135 @@
         // 通过替换下面这个配置来生成不同页面
         let amisJSON = {
           type: "page",
-          body: {
-            type: "tabs",
-            tabsMode: "chrome",
-            tabs: [
-              {
-                title: "开始查询",
-                icon: "fa fa-search",
-                body: {
-                  type: "page",
-                  body: [
-                    {
-                      type: "divider",
-                    },
-                    {
-                      type: "wrapper",
-                      name: "my_form",
-                      body: [
-                        {
-                          type: "input-text",
-                          name: "query",
-                          placeholder: "输入查询语句",
-                          clearable: true,
-                          addOn: {
-                            type: "button",
-                            hidden: true,
-                            actionType: "reload",
-                            target: "my_form.table",
+          body: [
+            {
+              type: "tabs",
+              tabsMode: "chrome",
+              tabs: [
+                {
+                  title: "开始查询",
+                  icon: "fa fa-search",
+                  body: {
+                    type: "page",
+                    body: [
+                      {
+                        type: "divider",
+                      },
+                      {
+                        type: "wrapper",
+                        name: "my_form",
+                        body: [
+                          {
+                            type: "input-text",
+                            name: "query",
+                            placeholder: "输入查询语句",
+                            clearable: true,
+                            addOn: {
+                              type: "button",
+                              hidden: true,
+                              actionType: "reload",
+                              target: "my_form.table",
+                            },
                           },
-                        },
-                        {
-                          type: "service",
-                          api: "HOST/start-query?query=$query",
-                          body: {
+                          {
+                            type: "service",
+                            api: "HOST/start-query?query=$query",
+                            body: {
+                              type: "table",
+                              name: "table",
+                              title: "查询结果",
+                              source: "$results",
+                              columns: [
+                                {
+                                  name: "id",
+                                  label: "文档编号",
+                                },
+                                {
+                                  name: "path",
+                                  label: "文档路径",
+                                  copyable: true,
+                                },
+                                {
+                                  name: "score",
+                                  label: "查询得分",
+                                },
+                              ],
+                              itemActions: [
+                                {
+                                  // 预览
+                                  type: "button",
+                                  icon: "fa fa-eye",
+                                  onEvent: {
+                                    click: {
+                                      actions: [
+                                        {
+                                          actionType: "drawer",
+                                          drawer: {
+                                            title: "文档信息",
+                                            position: "left",
+                                            size: "lg",
+                                            resizable: true,
+                                            showCloseButton: false,
+                                            overlay: false,
+                                            closeOnEsc: true,
+                                            closeOnOutside: true,
+                                            body: {
+                                              type: "table",
+                                              source: "$highlight_texts",
+                                              columns: [
+                                                {
+                                                  name: "text",
+                                                  label: "匹配文本",
+                                                },
+                                              ],
+                                            },
+                                            actions: [],
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "索引管理",
+                  icon: "fa fa-indent",
+                  body: {
+                    type: "page",
+                    body: [
+                      {
+                        type: "divider",
+                      },
+                      {
+                        type: "service",
+                        api: "HOST/get-all-index",
+                        id: "u:8373741bf5cf",
+                        body: [
+                          {
                             type: "table",
-                            name: "table",
-                            title: "查询结果",
-                            source: "$results",
+                            source: "$paths",
+                            columnsTogglable: false,
                             columns: [
                               {
-                                name: "id",
-                                label: "文档编号",
-                              },
-                              {
+                                label: "索引路径",
                                 name: "path",
-                                label: "文档路径",
                                 copyable: true,
+                                fixed: "left",
                               },
                               {
-                                name: "score",
-                                label: "查询得分",
+                                label: "索引文档总数",
+                                name: "document_number",
+                              },
+                              {
+                                label: "最近修改时间",
+                                name: "mtime",
                               },
                             ],
                             itemActions: [
@@ -97,6 +176,15 @@
                                 onEvent: {
                                   click: {
                                     actions: [
+                                      {
+                                        actionType: "ajax",
+                                        args: {
+                                          api: {
+                                            method: "get",
+                                            url: "HOST/get-index-info?path=${path}",
+                                          },
+                                        },
+                                      },
                                       {
                                         actionType: "drawer",
                                         drawer: {
@@ -110,11 +198,16 @@
                                           closeOnOutside: true,
                                           body: {
                                             type: "table",
-                                            source: "$highlight_texts",
+                                            source: "$infos",
                                             columns: [
                                               {
-                                                name: "text",
-                                                label: "匹配文本",
+                                                name: "id",
+                                                label: "文档编号",
+                                              },
+                                              {
+                                                name: "path",
+                                                label: "文档路径",
+                                                copyable: true,
                                               },
                                             ],
                                           },
@@ -125,162 +218,19 @@
                                   },
                                 },
                               },
-                            ],
-                          },
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-              {
-                title: "索引管理",
-                icon: "fa fa-indent",
-                body: {
-                  type: "page",
-                  body: [
-                    {
-                      type: "divider",
-                    },
-                    {
-                      type: "service",
-                      api: "HOST/get-all-index",
-                      id: "u:8373741bf5cf",
-                      body: [
-                        {
-                          type: "table",
-                          source: "$paths",
-                          columnsTogglable: false,
-                          columns: [
-                            {
-                              label: "索引路径",
-                              name: "path",
-                              copyable: true,
-                              fixed: "left",
-                            },
-                            {
-                              label: "索引文档总数",
-                              name: "document_number",
-                            },
-                            {
-                              label: "最近修改时间",
-                              name: "mtime",
-                            },
-                          ],
-                          itemActions: [
-                            {
-                              // 预览
-                              type: "button",
-                              icon: "fa fa-eye",
-                              onEvent: {
-                                click: {
-                                  actions: [
-                                    {
-                                      actionType: "ajax",
-                                      args: {
-                                        api: {
-                                          method: "get",
-                                          url: "HOST/get-index-info?path=${path}",
-                                        },
-                                      },
-                                    },
-                                    {
-                                      actionType: "drawer",
-                                      drawer: {
-                                        title: "文档信息",
-                                        position: "left",
-                                        size: "lg",
-                                        resizable: true,
-                                        showCloseButton: false,
-                                        overlay: false,
-                                        closeOnEsc: true,
-                                        closeOnOutside: true,
-                                        body: {
-                                          type: "table",
-                                          source: "$infos",
-                                          columns: [
-                                            {
-                                              name: "id",
-                                              label: "文档编号",
-                                            },
-                                            {
-                                              name: "path",
-                                              label: "文档路径",
-                                              copyable: true,
-                                            },
-                                          ],
-                                        },
-                                        actions: [],
-                                      },
-                                    },
-                                  ],
-                                },
-                              },
-                            },
-                            {
-                              // 删除按钮
-                              type: "button",
-                              icon: "fa fa-times",
-                              onEvent: {
-                                click: {
-                                  actions: [
-                                    {
-                                      actionType: "ajax",
-                                      args: {
-                                        api: {
-                                          method: "get",
-                                          url: "HOST/remove-index?path=${path}",
-                                        },
-                                      },
-                                    },
-                                    {
-                                      componentId: "u:8373741bf5cf",
-                                      actionType: "reload",
-                                      dataMergeMode: "override",
-                                    },
-                                  ],
-                                },
-                              },
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                    {
-                      type: "button",
-                      label: "刷新",
-                      onEvent: {
-                        click: {
-                          weight: 0,
-                          actions: [
-                            {
-                              componentId: "u:8373741bf5cf",
-                              actionType: "reload",
-                              dataMergeMode: "override",
-                            },
-                          ],
-                        },
-                      },
-                    },
-                    {
-                      label: "重新索引",
-                      type: "button",
-                      onEvent: {
-                        click: {
-                          actions: [
-                            {
-                              actionType: "dialog",
-                              dialog: {
-                                body: "确认要重新索引所有条目吗 —— 可能需要一段时间",
+                              {
+                                // 删除按钮
+                                type: "button",
+                                icon: "fa fa-times",
                                 onEvent: {
-                                  confirm: {
+                                  click: {
                                     actions: [
                                       {
                                         actionType: "ajax",
                                         args: {
                                           api: {
                                             method: "get",
-                                            url: "HOST/rebuild-all-index",
+                                            url: "HOST/remove-index?path=${path}",
                                           },
                                         },
                                       },
@@ -293,43 +243,48 @@
                                   },
                                 },
                               },
-                            },
-                          ],
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        type: "button",
+                        label: "刷新",
+                        onEvent: {
+                          click: {
+                            weight: 0,
+                            actions: [
+                              {
+                                componentId: "u:8373741bf5cf",
+                                actionType: "reload",
+                                dataMergeMode: "override",
+                              },
+                            ],
+                          },
                         },
                       },
-                      // actionType: "ajax",
-                      // confirmText: "确认要重新索引所有条目 —— 可能需要一段时间",
-                      // api: { method: "get", url: "HOST/rebuild-all-index" },
-                    },
-                    {
-                      label: "添加监听目录",
-                      hotKey: "enter",
-                      type: "button",
-                      onEvent: {
-                        click: {
-                          actions: [
-                            {
-                              actionType: "dialog",
-                              dialog: {
-                                title: "",
-                                closeOnEsc: true,
-                                closeOnOutside: true,
-                                body: {
-                                  type: "form",
-                                  api: "HOST/add-index",
-                                  id: "u:651asdfsadf",
-                                  body: [
-                                    {
-                                      type: "input-text",
-                                      name: "path",
-                                      label: "文件夹路径",
-                                      placeholder: "绝对路径，以 / 开头",
-                                      required: true,
-                                    },
-                                  ],
+                      {
+                        label: "重新索引",
+                        type: "button",
+                        onEvent: {
+                          click: {
+                            actions: [
+                              {
+                                actionType: "dialog",
+                                dialog: {
+                                  body: "确认要重新索引所有条目吗 —— 可能需要一段时间",
                                   onEvent: {
-                                    submitSucc: {
+                                    confirm: {
                                       actions: [
+                                        {
+                                          actionType: "ajax",
+                                          args: {
+                                            api: {
+                                              method: "get",
+                                              url: "HOST/rebuild-all-index",
+                                            },
+                                          },
+                                        },
                                         {
                                           componentId: "u:8373741bf5cf",
                                           actionType: "reload",
@@ -337,32 +292,82 @@
                                         },
                                       ],
                                     },
-                                    // submitFail: {
-                                    //   actions: [
-                                    //     {
-                                    //       componentId: "u:651asdfsadf",
-                                    //       actionType: "reset",
-                                    //     },
-                                    //   ],
-                                    // },
                                   },
                                 },
                               },
-                            },
-                          ],
+                            ],
+                          },
+                        },
+                        // actionType: "ajax",
+                        // confirmText: "确认要重新索引所有条目 —— 可能需要一段时间",
+                        // api: { method: "get", url: "HOST/rebuild-all-index" },
+                      },
+                      {
+                        label: "添加监听目录",
+                        hotKey: "enter",
+                        type: "button",
+                        onEvent: {
+                          click: {
+                            actions: [
+                              {
+                                actionType: "dialog",
+                                dialog: {
+                                  title: "",
+                                  closeOnEsc: true,
+                                  closeOnOutside: true,
+                                  body: {
+                                    type: "form",
+                                    api: "HOST/add-index",
+                                    id: "u:651asdfsadf",
+                                    body: [
+                                      {
+                                        type: "input-text",
+                                        name: "path",
+                                        label: "文件夹路径",
+                                        placeholder: "绝对路径，以 / 开头",
+                                        required: true,
+                                      },
+                                    ],
+                                    onEvent: {
+                                      submitSucc: {
+                                        actions: [
+                                          {
+                                            componentId: "u:8373741bf5cf",
+                                            actionType: "reload",
+                                            dataMergeMode: "override",
+                                          },
+                                        ],
+                                      },
+                                      // submitFail: {
+                                      //   actions: [
+                                      //     {
+                                      //       componentId: "u:651asdfsadf",
+                                      //       actionType: "reset",
+                                      //     },
+                                      //   ],
+                                      // },
+                                    },
+                                  },
+                                },
+                              },
+                            ],
+                          },
                         },
                       },
-                    },
-                  ],
+                    ],
+                  },
                 },
-              },
-              {
-                title: "统计分析",
-                icon: "fa fa-bar-chart",
-                body: "TODO",
-              },
-            ],
-          },
+                {
+                  title: "统计分析",
+                  icon: "fa fa-bar-chart",
+                  body: {
+                    type: "audio",
+                    src: "HOST/yzcw.mp3",
+                  },
+                },
+              ],
+            },
+          ],
         };
         let amisScoped = amis.embed(
           "#root",
