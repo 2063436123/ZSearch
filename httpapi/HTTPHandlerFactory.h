@@ -20,7 +20,6 @@ public:
             THROW(Poco::NotImplementedException());
         }
         std::string uri_path = Poco::URI(request.getURI()).getPath();
-        httpLog("new request with uri_path = " + uri_path);
 
         if (uri_path == "/")
         {

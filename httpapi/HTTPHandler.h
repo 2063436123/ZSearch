@@ -69,18 +69,6 @@ public:
     }
 };
 
-class NotFoundHandler : public HTTPRequestHandler
-{
-public:
-    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
-    {
-
-        auto& out = makeResponseOK(response);
-        out << NotFoundMessage;
-    }
-};
-
-
 class GetFileHandler : public HTTPRequestHandler
 {
 public:
@@ -94,9 +82,9 @@ public:
         httpLog("getFile " + uri_path + " content-type=" + content_type);
         auto& out = makeResponseOK(response, content_type);
 
-        std::ifstream page1("/Users/peter/Code/GraduationDesignSrc/frontend-amis" + uri_path);
+        std::ifstream page1(RESOURCE_PATH + uri_path);
         if (!page1.is_open())
-            out << NotFoundMessage;
+            out << makeStandardResponse(-1, NotFoundMessage, nlohmann::json::object());
         else
             Poco::StreamCopier::copyStream(page1, out);
     }
