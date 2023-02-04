@@ -60,6 +60,30 @@ TEST(Daemon, base)
 //    timer.stop();
 }
 
+TEST(Daemon, reset)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    FileSystemDaemon file_system_daemon(db);
+
+    const int interval_seconds = 1;
+    const int valid_files_number = 10;
+
+    Poco::Timer timer(0, interval_seconds * 1000);
+    Poco::TimerCallback<FileSystemDaemon> callback(file_system_daemon, &FileSystemDaemon::run);
+    timer.start(callback);
+
+    // 测试初始化
+    file_system_daemon.addPath(ROOT_PATH + "/articles");
+    sleep(interval_seconds * 2);
+    EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number);
+    auto paths = file_system_daemon.getPaths();
+
+    file_system_daemon.rebuildAllPaths();
+    sleep(interval_seconds * 2);
+    EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number);
+    EXPECT_EQ(paths, file_system_daemon.getPaths());
+}
+
 TEST(Daemon, gatherExistedFiles)
 {
     auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles");

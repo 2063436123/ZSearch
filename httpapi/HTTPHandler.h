@@ -8,12 +8,34 @@ const char * InvalidParameterMessage = R"(请求失败-参数错误)";
 const char * NotFoundMessage = R"(你来到了没有知识的荒原)";
 const char * SuccessMessage = R"(请求成功)";
 
-template <typename T>
-void httpLog(const T& msg)
+std::string makeStandardResponse(int status, const std::string& msg, const nlohmann::json& data)
 {
-    static std::mutex log_lock;
-    std::lock_guard lg(log_lock);
-    std::cout << '[' << DateTime().string(true) << "] " << msg << std::endl;
+    assert(data.is_object());
+    std::ostringstream oss;
+    oss << "{"
+        << R"("status": )"
+        << status
+        << ", "
+        << R"("msg": ")"
+        << msg
+        << "\", "
+        << R"("data": )"
+        << to_string(data)
+        << "}";
+    return oss.str();
+}
+
+std::ostream& makeResponseOK(HTTPServerResponse &response, const std::string& content_type = "text/html;charset=UTF-8")
+{
+    // NOTE: setStatus、setContentType 应该发生在 send 之前
+    response.setStatus(HTTPResponse::HTTP_OK);
+    response.setContentType(content_type);
+    response.set("Access-Control-Allow-Methods", "PUT, GET, HEAD, POST, DELETE, OPTIONS");
+    response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Headers", "*");
+    response.set("Access-Control-Allow-Credentials", "true");
+
+    return response.send();
 }
 
 class HelloHandler : public HTTPRequestHandler
@@ -27,9 +49,9 @@ public:
         auto len = request.getContentLength();
         if (len > 0)
         {
-            char *buf = new char[request.getContentLength()];
-            in.read(buf, request.getContentLength());
-            std::cout << buf << std::endl;
+            char *buf = new char[len];
+            in.read(buf, len);
+            std::cout << std::string(buf, len) << std::endl;
         }
 
         // 可以获取 request header 内容
@@ -42,9 +64,7 @@ public:
 //        Poco::Net::HTMLForm form1(request);
 //        std::cout << "get test " << form1.find("test")->second << std::endl;
 
-        response.setStatus(HTTPResponse::HTTP_OK);
-        response.setContentType("text/html;charset=UTF-8");
-        auto& out = response.send();
+        auto& out = makeResponseOK(response);
         out << R"(hello world)";
     }
 };
@@ -54,11 +74,30 @@ class NotFoundHandler : public HTTPRequestHandler
 public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
     {
-        // NOTE: setStatus、setContentType 应该发生在 send 之前
-        response.setStatus(HTTPResponse::HTTP_OK);
-        response.setContentType("text/html;charset=UTF-8");
 
-        auto& out = response.send();
+        auto& out = makeResponseOK(response);
         out << NotFoundMessage;
+    }
+};
+
+
+class GetFileHandler : public HTTPRequestHandler
+{
+public:
+    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
+    {
+        std::string content_type = "text/html;charset=UTF-8";
+        auto uri_path = Poco::URI(request.getURI()).getPath();
+        if (uri_path.ends_with(".css"))
+            content_type = "text/css";
+
+        httpLog("getFile " + uri_path + " content-type=" + content_type);
+        auto& out = makeResponseOK(response, content_type);
+
+        std::ifstream page1("/Users/peter/Code/GraduationDesignSrc/frontend-amis" + uri_path);
+        if (!page1.is_open())
+            out << NotFoundMessage;
+        else
+            Poco::StreamCopier::copyStream(page1, out);
     }
 };

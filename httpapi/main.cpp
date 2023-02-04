@@ -10,6 +10,10 @@ void run()
     HTTPServer server(new HTTPHandlerFactory(db, daemon), ServerSocket(8080), new HTTPServerParams);
     server.start();
 
+    Poco::Timer timer(0, DAEMON_INTERVAL_SECONDS * 1000);
+    Poco::TimerCallback<FileSystemDaemon> callback(daemon, &FileSystemDaemon::run);
+//    timer.start(callback); // TODO: 启动 Daemon
+
     sleep(10000);
 }
 

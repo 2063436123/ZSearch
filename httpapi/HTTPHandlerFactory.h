@@ -11,11 +11,13 @@ public:
     Poco::Net::HTTPRequestHandler * createRequestHandler(const Poco::Net::HTTPServerRequest &request) override
     {
         // some useful: https://stackoverflow.com/questions/13386837/get-url-params-with-poco-library
-        if (request.getMethod() != "GET")
+
+        if (request.getMethod() != "GET" && request.getMethod() != "POST")
         {
+            httpLog("unsupported method: " + request.getMethod());
             // 获取 POST 方法的参数
             // 待验证 Poco::Net::HTMLForm form2(request, request.stream());
-            THROW(Poco::NotImplementedException("not implement post http handler"));
+            THROW(Poco::NotImplementedException());
         }
         std::string uri_path = Poco::URI(request.getURI()).getPath();
         httpLog("new request with uri_path = " + uri_path);
@@ -32,7 +34,19 @@ public:
         {
             return new RemoveIndexHandler(daemon);
         }
-        return new NotFoundHandler();
+        if (uri_path == "/get-all-index")
+        {
+            return new GetAllIndexHandler(daemon);
+        }
+        if (uri_path == "/rebuild-all-index")
+        {
+            return new RebuildAllIndexHandler(daemon);
+        }
+        if (uri_path == "/get-index-info")
+        {
+            return new GetIndexInfoHandler(daemon);
+        }
+        return new GetFileHandler();
     }
 
 private:

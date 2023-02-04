@@ -127,6 +127,14 @@ public:
             THROW(Poco::CreateFileException("can't create directory in " + path.string()));
     }
 
+    void clear()
+    {
+        std::scoped_lock sl(term_map_lock, document_map_lock);
+        term_map.clear();
+        document_map.clear();
+        next_doc_id = 1;
+    }
+
     ~Database() {
         serialize();
     }

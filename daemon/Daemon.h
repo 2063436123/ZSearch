@@ -15,6 +15,14 @@ namespace std
     };
 }
 
+template <typename T>
+void httpLog(const T& msg)
+{
+    static std::mutex log_lock;
+    std::lock_guard lg(log_lock);
+    std::cout << '[' << DateTime().string(true) << "] " << msg << std::endl;
+}
+
 using FileToDocId = std::unordered_map<std::string, size_t>;
 
 // 监听索引中的文件变化，以单条索引中的每个文件为粒度 ———— 最细粒度.
@@ -27,9 +35,20 @@ public:
         assert(timer.skipped() == 0);
         std::lock_guard lg(paths_lock);
 
-        std::cout << "indexed paths checker starting..." << std::endl;
+        httpLog("indexed paths checker starting...");
         for (const auto& path : paths)
         {
+            smartIndexAndRecord(path.first);
+        }
+    }
+
+    void rebuildAllPaths()
+    {
+        std::lock_guard lg(paths_lock);
+        db.clear();
+        for (auto& path : paths)
+        {
+            path.second.clear();
             smartIndexAndRecord(path.first);
         }
     }

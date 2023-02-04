@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>amis demo</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="sdk/sdk.css" />
+    <link rel="stylesheet" href="sdk/helper.css" />
+    <link rel="stylesheet" href="sdk/iconfont.css" />
+    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
+    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
+    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
+    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <style>
+      html,
+      body,
+      .app-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="app-wrapper"></div>
+    <script src="sdk/sdk.js"></script>
+    <script type="text/javascript">
+      (function () {
+        let amis = amisRequire("amis/embed");
+        // 通过替换下面这个配置来生成不同页面
+        let amisJSON = {
+          type: "page",
+          title: "索引管理",
+          data: {
+            var1: 1,
+          },
+          body: [
+            {
+              type: "divider",
+            },
+            {
+              type: "service",
+              api: "HOST/get-all-index",
+              id: "u:8373741bf5cf",
+              body: [
+                {
+                  type: "table",
+                  source: "$paths",
+                  columnsTogglable: false,
+                  columns: [
+                    {
+                      label: "索引路径",
+                      name: "path",
+                      copyable: true,
+                      fixed: "left",
+                    },
+                    {
+                      label: "索引文档总数",
+                      name: "document_number",
+                    },
+                    {
+                      label: "最近修改时间",
+                      name: "mtime",
+                    },
+                  ],
+                  itemActions: [
+                    {
+                      // 预览
+                      type: "button",
+                      icon: "fa fa-eye",
+                      onEvent: {
+                        click: {
+                          actions: [
+                            {
+                              actionType: "ajax",
+                              args: {
+                                api: {
+                                  method: "get",
+                                  url: "HOST/get-index-info?path=${path}",
+                                },
+                              },
+                            },
+                            {
+                              actionType: "drawer",
+                              drawer: {
+                                title: "文档信息",
+                                position: "left",
+                                size: "lg",
+                                closeOnEsc: true,
+                                closeOnOutside: true,
+                                body: {
+                                  type: "table",
+                                  source: "$infos",
+                                  columns: [
+                                    {
+                                      name: "id",
+                                      label: "文档编号",
+                                    },
+                                    {
+                                      name: "path",
+                                      label: "文档路径",
+                                      copyable: true,
+                                    },
+                                  ],
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                    {
+                      // 删除按钮
+                      type: "button",
+                      icon: "fa fa-times",
+                      onEvent: {
+                        click: {
+                          actions: [
+                            {
+                              actionType: "ajax",
+                              args: {
+                                api: {
+                                  method: "get",
+                                  url: "HOST/remove-index?path=${path}",
+                                },
+                              },
+                            },
+                            {
+                              componentId: "u:8373741bf5cf",
+                              actionType: "reload",
+                              dataMergeMode: "override",
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "button",
+              label: "刷新",
+              onEvent: {
+                click: {
+                  weight: 0,
+                  actions: [
+                    {
+                      componentId: "u:8373741bf5cf",
+                      actionType: "reload",
+                      dataMergeMode: "override",
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              label: "重新索引",
+              type: "button",
+              onEvent: {
+                click: {
+                  actions: [
+                    {
+                      actionType: "dialog",
+                      dialog: {
+                        body: "确认要重新索引所有条目吗 —— 可能需要一段时间",
+                        onEvent: {
+                          confirm: {
+                            actions: [
+                              {
+                                actionType: "ajax",
+                                args: {
+                                  api: {
+                                    method: "get",
+                                    url: "HOST/rebuild-all-index",
+                                  },
+                                },
+                              },
+                              {
+                                componentId: "u:8373741bf5cf",
+                                actionType: "reload",
+                                dataMergeMode: "override",
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+              // actionType: "ajax",
+              // confirmText: "确认要重新索引所有条目 —— 可能需要一段时间",
+              // api: { method: "get", url: "HOST/rebuild-all-index" },
+            },
+            {
+              label: "添加监听目录",
+              hotKey: "enter",
+              type: "button",
+              onEvent: {
+                click: {
+                  actions: [
+                    {
+                      actionType: "dialog",
+                      dialog: {
+                        title: "",
+                        closeOnEsc: true,
+                        closeOnOutside: true,
+                        body: {
+                          type: "form",
+                          api: "HOST/add-index",
+                          id: "u:651asdfsadf",
+                          body: [
+                            {
+                              type: "input-text",
+                              name: "path",
+                              label: "文件夹路径",
+                              placeholder: "绝对路径，以 / 开头",
+                              required: true,
+                            },
+                          ],
+                          onEvent: {
+                            submitSucc: {
+                              actions: [
+                                {
+                                  componentId: "u:8373741bf5cf",
+                                  actionType: "reload",
+                                  dataMergeMode: "override",
+                                },
+                              ],
+                            },
+                            // submitFail: {
+                            //   actions: [
+                            //     {
+                            //       componentId: "u:651asdfsadf",
+                            //       actionType: "reset",
+                            //     },
+                            //   ],
+                            // },
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        };
+        let amisScoped = amis.embed(
+          "#root",
+          amisJSON,
+          {
+            data: {
+              myData: "xianxian",
+            },
+          },
+          {
+            replaceText: {
+              HOST: "http://localhost:8080",
+            },
+          }
+        );
+        // more actions
+      })();
+    </script>
+  </body>
+</html>

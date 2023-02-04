@@ -66,6 +66,7 @@ POCO_IMPLEMENT_EXCEPTION(ParseException, Poco::LogicException, "Parse Error!")
 const std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
 const std::unordered_set<std::string> IGNORED_FILE_EXTENSIONS = {".DS_Store", "", ".csv", ".test"};
 const int SCORE_GRANULARITY = 1000;
+const int DAEMON_INTERVAL_SECONDS = 3;
 
 template<typename T>
 void THROW_HELPER(const char* file, int line, const char* func, const T& e) __attribute__ ((noreturn));
