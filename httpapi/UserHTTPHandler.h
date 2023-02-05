@@ -26,7 +26,8 @@ public:
         if (!form.has("username") || !form.has("password"))
         {
             httpLog("login format failed.");
-            response.redirect("http://localhost:8080/notfound.html");
+            response.setStatus(HTTPResponse::HTTP_UNAUTHORIZED);
+            response.send();
             return;
         }
 
@@ -35,11 +36,14 @@ public:
         if (username != "admin" || password != "admin")
         {
             httpLog("login - " + username + " " + password + " failed.");
-            response.redirect("http://localhost:8080/notfound.html");
+            response.setStatus(HTTPResponse::HTTP_UNAUTHORIZED);
+            response.send();
             return;
         }
-        response.redirect("http://localhost:8080/app.html?id=" + encrypt(username));
         httpLog("login - " + username + " " + password + " success.");
+//        response.redirect("http://localhost:8080/app.html?id=" + encrypt(username));
+        auto& out = makeResponseOK(response);
+        out << "http://localhost:8080/app.html?id=" + encrypt(username);
     }
 };
 
