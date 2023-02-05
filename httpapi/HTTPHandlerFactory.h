@@ -3,11 +3,12 @@
 #include "HTTPHandler.h"
 #include "IndexHTTPHandler.h"
 #include "SearchHTTPHandler.h"
+#include "UserHTTPHandler.h"
 
 class HTTPHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
 {
 public:
-    HTTPHandlerFactory(Database &db_, FileSystemDaemon& daemon_) : db(db_), daemon(daemon_) {}
+    HTTPHandlerFactory(std::unordered_map<std::string, std::pair<Database*, FileSystemDaemon*>> user_data_) : user_data(user_data_) {}
 
     Poco::Net::HTTPRequestHandler * createRequestHandler(const Poco::Net::HTTPServerRequest &request) override
     {
@@ -20,7 +21,25 @@ public:
             // 待验证 Poco::Net::HTMLForm form2(request, request.stream());
             THROW(Poco::NotImplementedException());
         }
+
+        // get /path
         std::string uri_path = Poco::URI(request.getURI()).getPath();
+
+        // get user id
+        Poco::Net::HTMLForm form(request);
+        auto id_iter = form.find("id");
+        if (id_iter == form.end())
+            return new GetFileHandler();
+        std::string id = decrypt(id_iter->second);
+
+        if (!user_data.contains(id))
+        {
+            return new IllegalAccessHandler();
+        }
+
+        Database &db = *user_data[id].first;
+        FileSystemDaemon& daemon = *user_data[id].second;
+
 
         if (uri_path == "/")
         {
@@ -50,10 +69,13 @@ public:
         {
             return new StartQueryHandler(db);
         }
+        if (uri_path == "/login")
+        {
+            return new LoginHandler();
+        }
         return new GetFileHandler();
     }
 
 private:
-    Database &db;
-    FileSystemDaemon& daemon;
+    std::unordered_map<std::string, std::pair<Database*, FileSystemDaemon*>> user_data;
 };

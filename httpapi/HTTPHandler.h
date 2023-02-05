@@ -6,6 +6,7 @@ using namespace Poco::Net;
 
 const char * InvalidParameterMessage = R"(请求失败-参数错误)";
 const char * NotFoundMessage = R"(你来到了没有知识的荒原)";
+const char * IllegalAccessMessage = R"(非法访问，请登录)";
 const char * SuccessMessage = R"(请求成功)";
 
 std::string makeStandardResponse(int status, const std::string& msg, const nlohmann::json& data)
@@ -87,5 +88,19 @@ public:
             out << makeStandardResponse(-1, NotFoundMessage, nlohmann::json::object());
         else
             Poco::StreamCopier::copyStream(page1, out);
+    }
+};
+
+class IllegalAccessHandler : public HTTPRequestHandler
+{
+public:
+    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
+    {
+        std::string content_type = "text/html;charset=UTF-8";
+
+        httpLog("illegalAccess");
+        auto& out = makeResponseOK(response, content_type);
+
+        out << makeStandardResponse(-1, IllegalAccessMessage, nlohmann::json::object());
     }
 };
