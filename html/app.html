@@ -9,9 +9,9 @@
       content="width=device-width, initial-scale=1, maximum-scale=1"
     />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <link rel="stylesheet" href="sdk/sdk.css" />
-    <link rel="stylesheet" href="sdk/helper.css" />
-    <link rel="stylesheet" href="sdk/iconfont.css" />
+    <link rel="stylesheet" href="../../frontend-amis/sdk/sdk.css" />
+    <link rel="stylesheet" href="../../frontend-amis/sdk/helper.css" />
+    <link rel="stylesheet" href="../../frontend-amis/sdk/iconfont.css" />
     <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
     <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
     <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
@@ -30,13 +30,16 @@
   </head>
   <body>
     <div id="root" class="app-wrapper"></div>
-    <script src="sdk/sdk.js"></script>
+    <script src="../../frontend-amis/sdk/sdk.js"></script>
     <script type="text/javascript">
       (function () {
         let amis = amisRequire("amis/embed");
         // 通过替换下面这个配置来生成不同页面
         let amisJSON = {
           type: "page",
+          data: {
+            id: "${id}",
+          },
           body: [
             {
               type: "tabs",
@@ -69,7 +72,7 @@
                           },
                           {
                             type: "service",
-                            api: "HOST/start-query?query=$query",
+                            api: "HOST/start-query?query=$query&id=$id",
                             body: {
                               type: "table",
                               name: "table",
@@ -145,7 +148,7 @@
                       },
                       {
                         type: "service",
-                        api: "HOST/get-all-index",
+                        api: "HOST/get-all-index?id=$id",
                         id: "u:8373741bf5cf",
                         body: [
                           {
@@ -181,7 +184,7 @@
                                         args: {
                                           api: {
                                             method: "get",
-                                            url: "HOST/get-index-info?path=${path}",
+                                            url: "HOST/get-index-info?path=${path}&id=$id",
                                           },
                                         },
                                       },
@@ -230,7 +233,7 @@
                                         args: {
                                           api: {
                                             method: "get",
-                                            url: "HOST/remove-index?path=${path}",
+                                            url: "HOST/remove-index?path=${path}&id=$id",
                                           },
                                         },
                                       },
@@ -281,7 +284,7 @@
                                           args: {
                                             api: {
                                               method: "get",
-                                              url: "HOST/rebuild-all-index",
+                                              url: "HOST/rebuild-all-index?id=$id",
                                             },
                                           },
                                         },
@@ -317,8 +320,9 @@
                                   closeOnOutside: true,
                                   body: {
                                     type: "form",
-                                    api: "HOST/add-index",
+                                    api: "HOST/add-index?id=$id",
                                     id: "u:651asdfsadf",
+                                    autoFocus: true,
                                     body: [
                                       {
                                         type: "input-text",
@@ -326,6 +330,7 @@
                                         label: "文件夹路径",
                                         placeholder: "绝对路径，以 / 开头",
                                         required: true,
+                                        validateOnChange: true,
                                       },
                                     ],
                                     onEvent: {
@@ -338,14 +343,6 @@
                                           },
                                         ],
                                       },
-                                      // submitFail: {
-                                      //   actions: [
-                                      //     {
-                                      //       componentId: "u:651asdfsadf",
-                                      //       actionType: "reset",
-                                      //     },
-                                      //   ],
-                                      // },
                                     },
                                   },
                                 },

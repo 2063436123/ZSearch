@@ -20,59 +20,40 @@ class LoginHandler : public HTTPRequestHandler
 public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
     {
-        auto &out = makeResponseOK(response);
+        // 获取 GET/POST 方法的参数
+        Poco::Net::HTMLForm form(request, request.stream());
 
-        // 获取 GET 方法的参数
-        Poco::Net::HTMLForm form(request);
-
-        // 获取 POST 方法的参数
-        auto len = request.getContentLength();
-        if (len > 0)
+        if (!form.has("username") || !form.has("password"))
         {
-            char *buf = new char[len];
-            request.stream().read(buf, len);
-            nlohmann::json data = nlohmann::json::parse(std::string(buf, len));
-            if (data.is_object())
-            {
-                for (auto iter = data.begin(); iter != data.end(); ++iter)
-                {
-                    form.add(iter.key(), iter.value());
-                }
-            }
-        }
-
-        std::string username, password;
-
-        auto iter = form.find("username");
-        if (iter == form.end())
-        {
-            httpLog("login failed.");
-            out << makeStandardResponse(-1, InvalidParameterMessage, nlohmann::json::object());;
+            httpLog("login format failed.");
+            response.redirect("http://localhost:8080/notfound.html");
             return;
         }
-        username = iter->second;
 
-        iter = form.find("password");
-        if (iter == form.end())
-        {
-            httpLog("login - " + username + " failed.");
-            out << makeStandardResponse(-1, InvalidParameterMessage, nlohmann::json::object());;
-            return;
-        }
-        password = iter->second;
-
+        std::string username = form.get("username"), password = form.get("password");
         // TODO: validation
         if (username != "admin" || password != "admin")
         {
             httpLog("login - " + username + " " + password + " failed.");
-            out << makeStandardResponse(-1, InvalidParameterMessage, nlohmann::json::object());
+            response.redirect("http://localhost:8080/notfound.html");
             return;
         }
+        response.redirect("http://localhost:8080/app.html?id=" + encrypt(username));
         httpLog("login - " + username + " " + password + " success.");
-
-        nlohmann::json::object_t data;
-        data["id"] = encrypt(username);
-        out << makeStandardResponse(0, SuccessMessage, data);
     }
+};
 
+
+class IllegalAccessHandler : public HTTPRequestHandler
+{
+public:
+    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
+    {
+        std::string content_type = "text/html;charset=UTF-8";
+
+        httpLog("illegalAccess");
+        auto& out = makeResponseOK(response, content_type);
+
+        out << makeStandardResponse(-1, IllegalAccessMessage, nlohmann::json::object());
+    }
 };

@@ -25,6 +25,11 @@ public:
         // get /path
         std::string uri_path = Poco::URI(request.getURI()).getPath();
 
+        if (uri_path == "/login")
+        {
+            return new LoginHandler();
+        }
+
         // get user id
         Poco::Net::HTMLForm form(request);
         auto id_iter = form.find("id");
@@ -68,10 +73,6 @@ public:
         if (uri_path == "/start-query")
         {
             return new StartQueryHandler(db);
-        }
-        if (uri_path == "/login")
-        {
-            return new LoginHandler();
         }
         return new GetFileHandler();
     }

@@ -7,7 +7,7 @@ void run()
     Database db(ROOT_PATH + "/database1", true);
     FileSystemDaemon daemon(db);
 
-    HTTPServer server(new HTTPHandlerFactory(db, daemon), ServerSocket(8080), new HTTPServerParams);
+    HTTPServer server(new HTTPHandlerFactory({{"admin", {&db, &daemon}}}), ServerSocket(8080), new HTTPServerParams);
     server.start();
 
     Poco::Timer timer(0, DAEMON_INTERVAL_SECONDS * 1000);

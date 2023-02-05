@@ -90,17 +90,3 @@ public:
             Poco::StreamCopier::copyStream(page1, out);
     }
 };
-
-class IllegalAccessHandler : public HTTPRequestHandler
-{
-public:
-    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override
-    {
-        std::string content_type = "text/html;charset=UTF-8";
-
-        httpLog("illegalAccess");
-        auto& out = makeResponseOK(response, content_type);
-
-        out << makeStandardResponse(-1, IllegalAccessMessage, nlohmann::json::object());
-    }
-};
