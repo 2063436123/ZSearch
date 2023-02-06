@@ -54,9 +54,9 @@ TEST(database, AddFind)
 {
     Database db(ROOT_PATH + "/database1", true);
 
-    db.addDocument(1, ROOT_PATH + "/articles/ABC.txt");
-    ASSERT_THROW(db.addDocument(2, ROOT_PATH + "/articles/NotFound.txt"), FileTypeUnmatchException);
-    ASSERT_THROW(db.addDocument(3, ROOT_PATH + "/articles"), FileTypeUnmatchException);
+    db.addDocument(1, ROOT_PATH + "/articles/ABC.txt", 0, {});
+    ASSERT_THROW(db.addDocument(2, ROOT_PATH + "/articles/NotFound.txt", 0, {}), FileTypeUnmatchException);
+    ASSERT_THROW(db.addDocument(3, ROOT_PATH + "/articles", 0, {}), FileTypeUnmatchException);
 
     auto doc1 = db.findDocument(1);
     ASSERT_EQ(doc1->getId(), 1);
@@ -91,13 +91,13 @@ TEST(database, AddFind)
 
 TEST(document, GetString)
 {
-    Document document(1, ROOT_PATH + "/articles/WhenYouAreOld.txt");
+    Document document(1, ROOT_PATH + "/articles/WhenYouAreOld.txt", 0, {});
     ASSERT_EQ(document.getString(0, 10, 20), "When you are old and");
     ASSERT_EQ(document.getString(180, 10, 2), ";\n\nHow man");
     ASSERT_EQ(document.getString(510, 10, 20), "d a crowd of stars.\n");
     ASSERT_EQ(document.getString(520, 10, 20), "d a crowd of stars.\n");
 
-    Document document2(2, ROOT_PATH + "/articles/Little.txt");
+    Document document2(2, ROOT_PATH + "/articles/Little.txt", 0, {});
     ASSERT_EQ(document2.getString(0, 100, 100), "This is a little text.");
     ASSERT_EQ(document2.getString(0, 0, 100), "This is a little text.");
     ASSERT_EQ(document2.getString(0, 100, 0), "This is a little text.");
@@ -108,7 +108,7 @@ TEST(database, SerializeAndDeserialize)
     {
         // store
         Database db(ROOT_PATH + "/database1", true);
-        db.addDocument(db.newDocId(), ROOT_PATH + "/articles/ABC.txt");
+        db.addDocument(db.newDocId(), ROOT_PATH + "/articles/ABC.txt", 0, {});
         db.addTerm("hello", 3, 100);
         db.addTerm("hello", 1, 1);
         db.addTerm("hello", 1, 30);
@@ -339,7 +339,7 @@ TEST(database, TidyTerm)
 {
     Database db(ROOT_PATH + "/database1", true);
 
-    db.addDocument(1, ROOT_PATH + "/articles/ABC.txt");
+    db.addDocument(1, ROOT_PATH + "/articles/ABC.txt", 0, {});
 
     auto doc1 = db.findDocument(1);
 

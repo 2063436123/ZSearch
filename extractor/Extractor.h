@@ -146,7 +146,16 @@ public:
         extractWords(reader, word_res, " \"{}:,.\t\n");
 
         std::unordered_map<Key, Value> kv_res;
-        extractKvs(reader, kv_res);
+
+        try
+        {
+            extractKvs(reader, kv_res);
+        }
+        catch (const nlohmann::json::exception& j)
+        {
+            httpLog(std::string("json parse error, but words are saved.") + j.what() + " file_path - " + reader->getFilePath().string());
+            kv_res.clear();
+        }
 
         if (word_res.empty())
             return ExtractResult{};

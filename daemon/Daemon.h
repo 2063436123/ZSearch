@@ -2,6 +2,7 @@
 #include "../typedefs.h"
 #include "core/Database.h"
 #include "indexer/Indexer.h"
+#include "utils/FileSystemUtils.h"
 
 namespace std
 {
@@ -15,14 +16,6 @@ namespace std
     };
 }
 
-template <typename T>
-void httpLog(const T& msg)
-{
-    static std::mutex log_lock;
-    std::lock_guard lg(log_lock);
-    std::cout << '[' << DateTime().string(true) << "] " << msg << std::endl;
-}
-
 using FileToDocId = std::unordered_map<std::string, size_t>;
 
 // 监听索引中的文件变化，以单条索引中的每个文件为粒度 ———— 最细粒度.
@@ -32,7 +25,8 @@ public:
 
     void run(Poco::Timer& timer)
     {
-        assert(timer.skipped() == 0);
+        if (timer.skipped() > 1)
+            httpLog("daemon skipp time too much: " + std::to_string(timer.skipped()));
         std::lock_guard lg(paths_lock);
 
         httpLog("indexed paths checker starting...");
@@ -78,25 +72,6 @@ public:
     }
 
     // TODO: 添加序列化/反序列化方法
-
-    static std::unordered_set<std::string> gatherExistedFiles(const std::filesystem::path& path)
-    {
-        if (!exists(path))
-            return {};
-
-        if (!is_directory(path))
-            return {path.string()};
-
-        std::unordered_set<std::string> res;
-        for (const auto& path_entry : std::filesystem::recursive_directory_iterator(path))
-        {
-            if (path_entry.is_regular_file() && !IGNORED_FILE_EXTENSIONS.contains(path_entry.path().extension()))
-            {
-               res.insert(path_entry.path().string());
-            }
-        }
-        return res;
-    }
 
 private:
     // 只对发生变化的(新)文件重新索引，并删除过时 doc_id.
@@ -159,12 +134,16 @@ private:
         // 3. (重新)索引文件
         for (const auto& file_path : files_to_index)
         {
+            if (indexed_documents.size() >= MAX_FILE_NUMBER_EVERY_INDEX)
+            {
+                httpLog("Reach MAX_FILE_NUMBER_EVERY_INDEX in path -- " + path.string());
+                break;
+            }
             size_t doc_id = indexer.indexFile(file_path);
             if (doc_id == 0) // indexer 决定不索引此文档 --> 文档为空或者文档类型被过滤
                 continue;
             indexed_documents.emplace(file_path, doc_id);
         }
-
     }
 
     Database& db;

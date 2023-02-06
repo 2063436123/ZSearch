@@ -13,11 +13,20 @@ using DocumentMap = std::unordered_map<size_t, DocumentPtr>;
 
 class Document {
 public:
-    Document(size_t doc_id, std::filesystem::path origin_path_)
-            : id(doc_id), origin_path(std::move(origin_path_)) {
+    Document(size_t doc_id, std::filesystem::path origin_path_, size_t word_count_, std::unordered_map<Key, Value> kvs_)
+            : id(doc_id), origin_path(std::move(origin_path_)), kvs(std::move(kvs_)) {
         if (!is_regular_file(origin_path))
             THROW(FileTypeUnmatchException());
         info.modify_time = getModifiedLastDateTime(origin_path);
+        info.word_count = word_count_;
+    }
+
+    Document(size_t doc_id, std::filesystem::path origin_path_, const DateTime& modify_time_, size_t word_count_, std::unordered_map<Key, Value> kvs_)
+            : id(doc_id), origin_path(std::move(origin_path_)), kvs(std::move(kvs_)) {
+        if (!is_regular_file(origin_path))
+            THROW(FileTypeUnmatchException());
+        info.modify_time = modify_time_;
+        info.word_count = word_count_;
     }
 
     size_t getId() const
@@ -30,46 +39,20 @@ public:
         return origin_path;
     }
 
-    void setPath(std::filesystem::path path) {
-        origin_path = path;
-    }
-
-    void setInfo(const DocumentInfo& info_)
-    {
-        info = info_;
-    }
-
     DateTime getModifyTime() const
     {
         return info.modify_time;
     }
-
-    void setModifyTime(size_t modify_time)
-    {
-        info.modify_time = modify_time;
-    }
-
 
     size_t getWordCount() const
     {
         return info.word_count;
     }
 
-    void setWordCount(size_t word_count)
-    {
-        info.word_count = word_count;
-    }
-
     std::unordered_map<Key, Value> getKvs() const
     {
         std::lock_guard<std::mutex> guard(kvs_lock);
         return kvs;
-    }
-
-    void setKvs(const std::unordered_map<Key, Value> &kvs_)
-    {
-        std::lock_guard<std::mutex> guard(kvs_lock);
-        kvs = kvs_;
     }
 
     void addKV(const Key& key, Value value)
@@ -158,7 +141,6 @@ public:
     {
         auto id = helper.readNumber<size_t>();
         std::filesystem::path path(helper.readString());
-        auto document_ptr = std::make_shared<Document>(id, path);
 
         auto size = helper.readNumber<size_t>();
         std::unordered_map<Key, Value> kvs;
@@ -166,10 +148,9 @@ public:
         {
             kvs.emplace(Key::deserialize(helper), Value::deserialize(helper));
         }
-        document_ptr->setKvs(kvs);
 
-        document_ptr->setInfo(DocumentInfo::deserialize(helper));
-        return document_ptr;
+        auto info = DocumentInfo::deserialize(helper);
+        return std::make_shared<Document>(id, path, info.modify_time, info.word_count, kvs);
     }
 
 private:

@@ -12,15 +12,21 @@ public:
 
     virtual StringInFile readUntil(const std::string &endSymbols = "\n") = 0;
 
-    virtual Names getFieldNames() const = 0;
+    virtual std::filesystem::path getFilePath() const
+    {
+        return path;
+    }
 
-    explicit Reader(const std::filesystem::path &path_)
+    explicit Reader(const std::filesystem::path &path_) : path(path_)
     {
         if (!std::filesystem::exists(path_))
             THROW(Poco::FileNotFoundException());
     }
 
     virtual ~Reader() = default;
+
+private:
+    std::filesystem::path path;
 };
 
 class TxtLineReader : public Reader
@@ -64,11 +70,6 @@ public:
         }
         else
             THROW(Poco::NotImplementedException());
-    }
-
-    Names getFieldNames() const override
-    {
-        THROW(Poco::NotImplementedException());
     }
 
 private:

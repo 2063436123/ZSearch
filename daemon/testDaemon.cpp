@@ -84,43 +84,6 @@ TEST(Daemon, reset)
     EXPECT_EQ(paths, file_system_daemon.getPaths());
 }
 
-TEST(Daemon, gatherExistedFiles)
-{
-    auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles");
-    std::unordered_set<std::string> distinct_files;
-    for (const auto& file : files)
-         distinct_files.insert(file);
-
-    std::unordered_set<std::string> expected_distinct_files{"/Users/peter/Code/GraduationDesignSrc/master/articles/tpch-json/tpch.sh",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/WhatCanIHoldYouWith.txt",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/Little.txt",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/ABC.txt",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/WhenYouAreOld.txt",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/IfIWereToFallInLove.txt",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/webapp.json",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/glossary.json",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/tpch-json/tpch.json",
-                    "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/css.json"};
-    EXPECT_EQ(distinct_files, expected_distinct_files);
-}
-
-TEST(Daemon, gatherExistedFiles2)
-{
-    auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles/IfIWereToFallInLove.txt");
-    std::unordered_set<std::string> distinct_files;
-    for (const auto& file : files)
-        distinct_files.insert(file);
-
-    std::unordered_set<std::string> expected_distinct_files{"/Users/peter/Code/GraduationDesignSrc/master/articles/IfIWereToFallInLove.txt"};
-    EXPECT_EQ(distinct_files, expected_distinct_files);
-}
-
-TEST(Daemon, gatherExistedFilesEmpty)
-{
-    auto files = FileSystemDaemon::gatherExistedFiles(ROOT_PATH + "/articles/tmp");
-    EXPECT_EQ(files.empty(), true);
-}
-
 int main()
 {
     testing::InitGoogleTest();

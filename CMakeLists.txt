@@ -30,6 +30,7 @@ add_executable(gtest_utils utils/testUtils.cpp)
 add_executable(testPoco third-party-tests/testPoco.cpp)
 add_executable(testJson third-party-tests/testJson.cpp)
 add_executable(testDaemon daemon/testDaemon.cpp)
+add_executable(testmyDaemon daemon/testDaemonLightly.cpp)
 
 add_executable(testExecutor executor/testExecutor.cpp)
 

@@ -67,8 +67,10 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
         {
             res.emplace(key, value.get<double>());
         }
-        else if (value.is_array() && !value.empty()) // 空数组没有意义; 经 flatten 后数组中元素已经是同一种类型
+        else if (value.is_array()) // 空数组没有意义; 经 flatten 后数组中元素已经是同一种类型
         {
+            if (value.empty())
+                continue;
             ValueType type;
             if (value[0].is_boolean())
                 type = ValueType::Bool;
@@ -111,9 +113,13 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
 
             res.emplace(key, v);
         }
+        else if (value.is_null())
+        {
+            httpLog("ignore null value in json file -- " + reader->getFilePath().string());
+        }
         else
         {
-            THROW(Poco::NotImplementedException());
+            THROW(Poco::NotImplementedException(value.type_name()));
         }
     }
 }

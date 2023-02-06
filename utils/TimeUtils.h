@@ -82,3 +82,11 @@ DateTime getModifiedLastDateTime(const std::filesystem::path& path)
 {
     return duration_cast<std::chrono::seconds>(last_write_time(path).time_since_epoch()).count();
 }
+
+template <typename T>
+void httpLog(const T& msg)
+{
+    static std::mutex log_lock;
+    std::lock_guard lg(log_lock);
+    std::cout << '[' << DateTime().string(true) << "] " << msg << std::endl;
+}

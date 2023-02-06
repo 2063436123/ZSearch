@@ -45,10 +45,10 @@ public:
         return sum * 1.0 / count;
     }
 
-    void addDocument(size_t doc_id, const std::string& doc_path)
+    void addDocument(size_t doc_id, const std::string& doc_path, size_t word_count, const std::unordered_map<Key, Value>& kvs)
     {
         std::lock_guard<std::mutex> guard(document_map_lock);
-        document_map.emplace(doc_id, std::make_shared<Document>(doc_id, doc_path));
+        document_map.emplace(doc_id, std::make_shared<Document>(doc_id, doc_path, word_count, kvs));
     }
 
     DocumentPtr findDocument(size_t doc_id) const
