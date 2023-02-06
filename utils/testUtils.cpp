@@ -302,6 +302,16 @@ TEST(dynamicBitSet, base)
     EXPECT_EQ(s5.toSet(1), std::set<size_t>({1, 64, 65, 128}));
 }
 
+TEST(Timer, base)
+{
+    Timer a;
+    sleep(2);
+    EXPECT_EQ((int)a.elapsedSeconds(), 2);
+
+    Timer b;
+    EXPECT_EQ((int)b.elapsedSeconds(), 0);
+}
+
 int main()
 {
     testing::InitGoogleTest();

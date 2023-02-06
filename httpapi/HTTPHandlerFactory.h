@@ -14,7 +14,7 @@ public:
     {
         // some useful: https://stackoverflow.com/questions/13386837/get-url-params-with-poco-library
 
-        if (request.getMethod() != "GET" && request.getMethod() != "POST")
+        if (request.getMethod() != "GET" && request.getMethod() != "POST" && request.getMethod() != "DOWNLOAD")
         {
             httpLog("unsupported method: " + request.getMethod());
             // 获取 POST 方法的参数
@@ -73,6 +73,10 @@ public:
         if (uri_path == "/start-query")
         {
             return new StartQueryHandler(db);
+        }
+        if (uri_path == "/download-document")
+        {
+            return new DownloadDocumentHandler(db);
         }
         return new GetFileHandler();
     }

@@ -80,7 +80,7 @@
                               source: "$results",
                               columns: [
                                 {
-                                  name: "id",
+                                  name: "doc_id",
                                   label: "文档编号",
                                 },
                                 {
@@ -123,6 +123,27 @@
                                               ],
                                             },
                                             actions: [],
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                                {
+                                  // 下载文件
+                                  type: "button",
+                                  icon: "fa fa-download",
+                                  onEvent: {
+                                    click: {
+                                      actions: [
+                                        {
+                                          actionType: "ajax",
+                                          args: {
+                                            api: {
+                                              method: "download",
+                                              // TODO: 传递文档编号而非路径
+                                              url: "HOST/download-document?doc_id=$doc_id&id=$id",
+                                            },
                                           },
                                         },
                                       ],
@@ -221,6 +242,31 @@
                                   },
                                 },
                               },
+
+                              // {
+                              //   // 上传文件
+                              //   type: "button",
+                              //   icon: "fa fa-cloud-upload",
+                              //   onEvent: {
+                              //     click: {
+                              //       actions: [
+                              //         {
+                              //           type: "input-file",
+                              //           name: "file",
+                              //           label: "File",
+                              //           accept: "*",
+                              //           receiver: "/amis/api/upload/file",
+                              //           drag: true,
+                              //         },
+                              //         {
+                              //           componentId: "u:8373741bf5cf",
+                              //           actionType: "reload",
+                              //           dataMergeMode: "override",
+                              //         },
+                              //       ],
+                              //     },
+                              //   },
+                              // },
                               {
                                 // 删除按钮
                                 type: "button",

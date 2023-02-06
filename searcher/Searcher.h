@@ -46,7 +46,7 @@ void to_json(nlohmann::json& j, const SearchResult& result) {
     {
         texts.push_back(std::unordered_map<std::string, std::string>{{"text", text}});
     }
-    j = nlohmann::json{{"id", result.doc_id}, {"path", result.doc_path}, {"highlight_texts", texts}, {"score", result.score}};
+    j = nlohmann::json{{"doc_id", result.doc_id}, {"path", result.doc_path}, {"highlight_texts", texts}, {"score", result.score}};
 }
 
 using SearchResultSet = std::vector<SearchResult>;

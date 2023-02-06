@@ -83,6 +83,23 @@ DateTime getModifiedLastDateTime(const std::filesystem::path& path)
     return duration_cast<std::chrono::seconds>(last_write_time(path).time_since_epoch()).count();
 }
 
+class Timer
+{
+public:
+    Timer()
+    {
+        start = std::chrono::steady_clock::now();
+    }
+
+    double elapsedSeconds() const
+    {
+        auto end = std::chrono::steady_clock::now();
+        return 1.0 * std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000;
+    }
+private:
+    decltype(std::chrono::steady_clock::now()) start;
+};
+
 template <typename T>
 void httpLog(const T& msg)
 {

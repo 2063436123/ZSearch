@@ -69,15 +69,13 @@ public:
     void addTerm(const std::string& word, size_t doc_id, size_t offset_in_file)
     {
         std::lock_guard<std::mutex> guard(term_map_lock);
-        if (!term_map.contains(word))
+        auto& term_ptr = term_map[word]; // use ref, for quick insertion if term_ptr is nullptr.
+        if (term_ptr == nullptr)
         {
-            auto insert_res = term_map.emplace(word, std::make_shared<Term>());
-            assert(insert_res.second);
-            auto iter = insert_res.first;
-            iter->second->word = word;
+            term_ptr = std::make_shared<Term>(word);
         }
-        auto &posting_list = term_map[word]->posting_list;
-        auto &statistics_list = term_map[word]->statistics_list;
+        auto &posting_list = term_ptr->posting_list;
+        auto &statistics_list = term_ptr->statistics_list;
 
         auto doc_iter = std::lower_bound(posting_list.begin(), posting_list.end(), doc_id);
         auto stat_offset = doc_iter - posting_list.begin();

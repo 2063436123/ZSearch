@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "typedefs.h"
 #include "utils/SerializeUtils.h"
 
@@ -22,6 +24,8 @@ struct Term {
     PostingList posting_list; // doc ids
     StatisticsList statistics_list; // statistics in correlated doc
 
+    Term(std::string word_) : word(std::move(word_)) {}
+
     void serialize(WriteBufferHelper &helper) const
     {
         helper.writeString(word);
@@ -33,8 +37,8 @@ struct Term {
 
     static TermPtr deserialize(ReadBufferHelper &helper)
     {
-        TermPtr term = std::make_shared<Term>();
-        term->word = helper.readString();
+        std::string word = helper.readString();
+        TermPtr term = std::make_shared<Term>(word);
         term->posting_list = helper.readLinearContainer<std::vector, size_t>();
         auto size = helper.readNumber<size_t>();
         for (size_t i = 0; i < size; i++)
