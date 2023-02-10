@@ -12,7 +12,7 @@ function showMessage() {
     xmlHttp = new XMLHttpRequest();
   }
 
-  xmlHttp.open("POST", "http://localhost:8080/login", false); //true表示异步请求，false表示同步
+  xmlHttp.open("POST", "http://114.116.103.123:9090/login", false); //true表示异步请求，false表示同步
   xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   //2.在回调函数中对服务器响应的数据进行处理
   xmlHttp.onreadystatechange = function () {
