@@ -12,13 +12,22 @@ void run()
 
     Poco::Timer timer(0, DAEMON_INTERVAL_SECONDS * 1000);
     Poco::TimerCallback<FileSystemDaemon> callback(daemon, &FileSystemDaemon::run);
-//    timer.start(callback); // TODO: 启动 Daemon
+    timer.start(callback); // TODO: 启动 Daemon
 
-    sleep(10000);
+    sleep(1000000);
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    if (argc < 3)
+    {
+        std::cout << "usage: ./server <articles_path> <frontend_path>" << std::endl;
+        exit(1);
+    }
+
+    ROOT_PATH = argv[1];
+    RESOURCE_PATH = argv[2];
+
     try
     {
         run();

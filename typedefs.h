@@ -63,8 +63,8 @@ POCO_IMPLEMENT_EXCEPTION(UnmatchedToken, Poco::LogicException, "Unmatched Token!
 POCO_DECLARE_EXCEPTION(Foundation_API, ParseException, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(ParseException, Poco::LogicException, "Parse Error!")
 
-const std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
-const std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/frontend-amis/";
+std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
+std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/frontend-amis/";
 
 const std::unordered_set<std::string> IGNORED_FILE_EXTENSIONS = {".DS_Store", "", ".csv", ".test"};
 const std::unordered_set<std::string> ALLOWED_FILE_EXTENSIONS = {".txt", ".h", ".cpp", ".sh", ".xml", ".json", ".story"};
