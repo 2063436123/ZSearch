@@ -86,14 +86,14 @@ public:
 
         if (std::filesystem::path(uri_path).is_relative())
         {
-            response.redirect("http://114.116.103.123:9090/notfound.html");
+            response.redirect("http://localhost:8080/notfound.html");
             return;
         }
 
         std::ifstream file(RESOURCE_PATH + uri_path);
         if (!file.is_open())
         {
-            response.redirect("http://114.116.103.123:9090/notfound.html");
+            response.redirect("http://localhost:8080/notfound.html");
         }
         else
         {

@@ -64,7 +64,7 @@ POCO_DECLARE_EXCEPTION(Foundation_API, ParseException, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(ParseException, Poco::LogicException, "Parse Error!")
 
 std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
-std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/frontend-amis/";
+std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/master/html";
 
 const std::unordered_set<std::string> IGNORED_FILE_EXTENSIONS = {".DS_Store", "", ".csv", ".test"};
 const std::unordered_set<std::string> ALLOWED_FILE_EXTENSIONS = {".txt", ".h", ".cpp", ".sh", ".xml", ".json", ".story"};

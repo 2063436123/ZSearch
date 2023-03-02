@@ -41,9 +41,9 @@ public:
             return;
         }
         httpLog("login - " + username + " " + password + " success.");
-//        response.redirect("http://114.116.103.123:9090/app.html?id=" + encrypt(username));
+//        response.redirect("http://localhost:8080/app.html?id=" + encrypt(username));
         auto& out = makeResponseOK(response);
-        out << "http://114.116.103.123:9090/app.html?id=" + encrypt(username);
+        out << "http://localhost:8080/app.html?id=" + encrypt(username);
     }
 };
 

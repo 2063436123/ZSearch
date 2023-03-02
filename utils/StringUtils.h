@@ -24,6 +24,7 @@ std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str, const std::functio
     return {first, static_cast<std::ptrdiff_t>(str.size()) - 1 - last};
 }
 
+// replaces all newline characters in output with the string "\\n"
 std::string outputSmooth(const std::string& output)
 {
     std::string res;
@@ -37,6 +38,7 @@ std::string outputSmooth(const std::string& output)
     return res;
 }
 
+// 去除一个输入字符串 str 前后的引号（单引号或双引号）
 std::string trimQuote(std::string str)
 {
     if (str.empty())
