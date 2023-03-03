@@ -7,19 +7,32 @@
 
 class Database {
 public:
-    explicit Database(std::filesystem::path path, bool cover_old = false) : database_path(std::move(path))
+    // TODO: 明确 new_database 的定位
+    // 如果 new_database == false, 那么需要提前手动在 path 处创建文件夹
+    // 如果 cover old，那么需要
+    explicit Database(std::filesystem::path path, bool new_database = false) : database_path(std::move(path)), is_new_database(new_database)
     {
         if (!exists(database_path))
         {
-            if (!cover_old)
-                return;
+            if (!new_database)
+                THROW(DatabaseTypeException("not found database"));
             else
                 std::filesystem::create_directory(database_path);
         }
         if (!is_directory(database_path))
             THROW(DatabaseTypeException());
-        if (!cover_old)
+        if (!new_database)
             deserialize();
+    }
+
+    bool is_a_new_database() const
+    {
+        return is_new_database;
+    }
+
+    std::filesystem::path getPath() const
+    {
+        return database_path;
     }
 
     size_t newDocId()
@@ -145,6 +158,8 @@ public:
     }
 
 private:
+    // 这两个变量不需要持久化
+    bool is_new_database;
     std::filesystem::path database_path;
 
     TermMap term_map;
@@ -183,6 +198,9 @@ private:
         std::scoped_lock sl(term_map_lock, document_map_lock);
 
         std::ifstream fin(database_path.string() + "/meta");
+        if (!fin.is_open())
+            return;
+
         ReadBuffer buf;
         buf.readAllFromStream(fin);
         ReadBufferHelper helper(buf);
@@ -192,13 +210,15 @@ private:
         auto size = helper.readNumber<size_t>();
         for (size_t i = 0; i < size; i++)
         {
-            term_map.emplace(helper.readString(), Term::deserialize(helper));
+            auto term_name = helper.readString();
+            term_map.emplace(term_name, Term::deserialize(helper));
         }
 
         size = helper.readNumber<size_t>();
         for (size_t i = 0; i < size; i++)
         {
-            document_map.emplace(helper.readNumber<size_t>(), Document::deserialize(helper));
+            auto doc_id = helper.readNumber<size_t>();
+            document_map.emplace(doc_id, Document::deserialize(helper));
         }
     }
 

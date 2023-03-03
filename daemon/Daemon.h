@@ -21,7 +21,10 @@ using FileToDocId = std::unordered_map<std::string, size_t>;
 // 监听索引中的文件变化，以单条索引中的每个文件为粒度 ———— 最细粒度.
 class FileSystemDaemon {
 public:
-    explicit FileSystemDaemon(Database& db_) : db(db_), indexer(db_) {}
+    explicit FileSystemDaemon(Database& db_) : db(db_), indexer(db_) {
+        if (!db.is_a_new_database())
+            deserialize();
+    }
 
     void run()
     {
@@ -67,9 +70,62 @@ public:
         return paths;
     }
 
-    // TODO: 添加序列化/反序列化方法
+    ~FileSystemDaemon()
+    {
+        serialize();
+    }
 
 private:
+    // TODO: 添加序列化/反序列化方法
+    void serialize() {
+        std::lock_guard lg(paths_lock);
+
+        std::ofstream fout(db.getPath().string() + "/listen");
+        WriteBuffer buf;
+        WriteBufferHelper helper(buf);
+
+        helper.writeNumber(paths.size());
+        for (const auto& pair : paths)
+        {
+            helper.writeString(pair.first);
+            const auto& file_to_doc_ids = pair.second;
+            helper.writeNumber(file_to_doc_ids.size());
+            for (const auto& [file_path, doc_id] : file_to_doc_ids)
+            {
+                helper.writeString(file_path);
+                helper.writeNumber(doc_id);
+            }
+        }
+        buf.dumpAllToStream(fout);
+    }
+
+    void deserialize() {
+        std::lock_guard lg(paths_lock);
+
+        std::ifstream fin(db.getPath().string() + "/listen");
+        if (!fin.is_open())
+            return;
+
+        ReadBuffer buf;
+        buf.readAllFromStream(fin);
+        ReadBufferHelper helper(buf);
+
+        auto size = helper.readNumber<size_t>();
+        for (size_t i = 0; i < size; i++)
+        {
+            auto listen_path = helper.readString();
+            FileToDocId file_to_doc_id;
+            auto map_size = helper.readNumber<size_t>();
+            for (size_t j = 0; j < map_size; j++)
+            {
+                auto file_path = helper.readString();
+                auto doc_id = helper.readNumber<size_t>();
+                file_to_doc_id.emplace(file_path, doc_id);
+            }
+            paths.emplace(listen_path, file_to_doc_id);
+        }
+    }
+
     // 只对发生变化的(新)文件重新索引，并删除过时 doc_id.
     // not thread-safe, caller promise.
     void smartIndexAndRecord(const std::filesystem::path& path)

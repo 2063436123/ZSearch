@@ -10,7 +10,7 @@ void run()
 
     for (const auto& [username, _] : USERNAME_PASSWORDS)
     {
-        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + username, true);
+        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + username, false);
 
         auto daemon = std::make_shared<FileSystemDaemon>(*db);
         daemons.add(daemon);
@@ -27,7 +27,13 @@ void run()
     HTTPServer server(new HTTPHandlerFactory(user_database), ServerSocket(8080), new HTTPServerParams);
     server.start();
 
-    sleep(1000000);
+    std::string instruction;
+    while (std::cin >> instruction)
+    {
+        if (instruction == "stop")
+            break;
+    }
+    server.stopAll(true);
 }
 
 int main(int argc, char** argv)

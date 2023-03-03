@@ -49,7 +49,6 @@ public:
         }
         else
             THROW(Poco::RangeException());
-
     }
 
     void append(const char *src, size_t len)

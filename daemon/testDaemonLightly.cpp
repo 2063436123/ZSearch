@@ -16,7 +16,8 @@ TEST(Daemon, gatherExistedFiles)
                                                             "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/webapp.json",
                                                             "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/glossary.json",
                                                             "/Users/peter/Code/GraduationDesignSrc/master/articles/tpch-json/tpch.json",
-                                                            "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/css.json"};
+                                                            "/Users/peter/Code/GraduationDesignSrc/master/articles/single-jsons/css.json",
+                                                            "/Users/peter/Code/GraduationDesignSrc/master/articles/long-story/Alice’s Adventures in Wonderland.txt"};
     EXPECT_EQ(distinct_files, expected_distinct_files);
 }
 
@@ -70,6 +71,27 @@ TEST(Daemon, bigFiles)
     EXPECT_EQ(db.maxAllocatedDocId(), 5000);
 
     EXPECT_EQ(file_system_daemon->getPaths()[ROOT_PATH + "/articles-cnn"].size(), 5000);
+}
+
+TEST(Daemon, deserialize)
+{
+    {
+        Database db(ROOT_PATH + "/database1", true);
+        FileSystemDaemon daemon(db);
+        daemon.addPath("/a");
+        daemon.addPath("/b");
+        daemon.addPath("/b/c");
+    }
+
+    Database db(ROOT_PATH + "/database1", false);
+    FileSystemDaemon daemon(db);
+    auto paths = daemon.getPaths();
+
+    ASSERT_EQ(paths.size(), 3);
+    ASSERT_EQ(paths.contains("/a"), true);
+    ASSERT_EQ(paths.contains("/b"), true);
+    ASSERT_EQ(paths.contains("/b/c"), true);
+    ASSERT_EQ(paths.contains("/c"), false);
 }
 
 int main()

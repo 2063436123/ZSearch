@@ -5,7 +5,7 @@
 
 TEST(database, CreateDatabase)
 {
-    ASSERT_THROW(Database::createDatabase(ROOT_PATH + "/database1"), Poco::CreateFileException);
+    ASSERT_NO_THROW(Database::createDatabase(ROOT_PATH + "/database1"));
 
     try
     {
@@ -50,6 +50,8 @@ TEST(database, NewDocId)
     // single thread
     for (int i = 100001; i < 200000; i++)
         ASSERT_EQ(i, db.newDocId());
+
+    Database::destroyDatabase(ROOT_PATH + "/database1");
 }
 
 TEST(database, AddFind)
@@ -89,6 +91,8 @@ TEST(database, AddFind)
     // not found
     auto term2 = db.findTerm("world");
     ASSERT_EQ(term2 == nullptr, true);
+
+    Database::destroyDatabase(ROOT_PATH + "/database1");
 }
 
 TEST(document, GetString)
@@ -166,6 +170,8 @@ TEST(database, SerializeAndDeserialize)
     EXPECT_EQ(iarr.as<Number>(0), 100);
     EXPECT_EQ(iarr.as<Number>(1), 200);
     EXPECT_EQ(iarr.as<Number>(2), 300);
+
+    Database::destroyDatabase(ROOT_PATH + "/database1");
 }
 
 TEST(Value, base)
@@ -361,6 +367,8 @@ TEST(database, TidyTerm)
     auto term3 = db.findTerm("hello");
     EXPECT_EQ(term3->posting_list.size(), 0);
     EXPECT_EQ(term3->statistics_list.size(), 0);
+
+    Database::destroyDatabase(ROOT_PATH + "/database1");
 }
 
 int main()
