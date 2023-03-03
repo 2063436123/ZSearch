@@ -15,6 +15,14 @@ std::string decrypt(std::string id)
     return id;
 }
 
+bool validateUser(const std::string& username, const std::string& password)
+{
+    auto iter = USERNAME_PASSWORDS.find(username);
+    if (iter != USERNAME_PASSWORDS.end() && iter->second == password)
+        return true;
+    return false;
+}
+
 class LoginHandler : public HTTPRequestHandler
 {
 public:
@@ -32,16 +40,15 @@ public:
         }
 
         std::string username = form.get("username"), password = form.get("password");
-        // TODO: validation
-        if (username != "admin" || password != "admin")
+        if (!validateUser(username, password))
         {
             httpLog("login - " + username + " " + password + " failed.");
             response.setStatus(HTTPResponse::HTTP_UNAUTHORIZED);
             response.send();
             return;
         }
+
         httpLog("login - " + username + " " + password + " success.");
-//        response.redirect("http://localhost:8080/app.html?id=" + encrypt(username));
         auto& out = makeResponseOK(response);
         out << "http://localhost:8080/app.html?id=" + encrypt(username);
     }
@@ -55,7 +62,7 @@ public:
     {
         std::string content_type = "text/html;charset=UTF-8";
 
-        httpLog("illegalAccess");
+        httpLog("illegalAccess -- no such a user");
         auto& out = makeResponseOK(response, content_type);
 
         out << makeStandardResponse(-1, IllegalAccessMessage, nlohmann::json::object());

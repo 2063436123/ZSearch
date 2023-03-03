@@ -73,6 +73,8 @@ const int SCORE_GRANULARITY = 1000;
 const int DAEMON_INTERVAL_SECONDS = 3;
 const int MAX_FILE_NUMBER_EVERY_INDEX = 5000;
 
+const std::unordered_map<std::string, std::string> USERNAME_PASSWORDS = {{"admin", "admin"}, {"peter", "123456"}};
+
 template<typename T>
 void THROW_HELPER(const char* file, int line, const char* func, const T& e) __attribute__ ((noreturn));
 

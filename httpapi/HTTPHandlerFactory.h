@@ -5,10 +5,12 @@
 #include "SearchHTTPHandler.h"
 #include "UserHTTPHandler.h"
 
+using DatabasePtr = std::shared_ptr<Database>;
+using FileSystemDaemonPtr = std::shared_ptr<FileSystemDaemon>;
 class HTTPHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
 {
 public:
-    HTTPHandlerFactory(std::unordered_map<std::string, std::pair<Database*, FileSystemDaemon*>> user_data_) : user_data(user_data_) {}
+    HTTPHandlerFactory(std::unordered_map<std::string, std::pair<DatabasePtr, FileSystemDaemonPtr>> user_data_) : user_data(std::move(user_data_)) {}
 
     Poco::Net::HTTPRequestHandler * createRequestHandler(const Poco::Net::HTTPServerRequest &request) override
     {
@@ -82,5 +84,5 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, std::pair<Database*, FileSystemDaemon*>> user_data;
+    std::unordered_map<std::string, std::pair<DatabasePtr, FileSystemDaemonPtr>> user_data;
 };

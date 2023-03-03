@@ -3,18 +3,20 @@
 TEST(Daemon, base)
 {
     Database db(ROOT_PATH + "/database1", true);
-    FileSystemDaemon file_system_daemon(db);
+    auto file_system_daemon = std::make_shared<FileSystemDaemon>(db);
+    FileSystemDaemons daemons;
+    daemons.add(file_system_daemon);
 
     const int interval_seconds = 1;
     const int valid_files_number = 10;
 
     Poco::Timer timer(0, interval_seconds * 1000);
-    Poco::TimerCallback<FileSystemDaemon> callback(file_system_daemon, &FileSystemDaemon::run);
+    Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);
     timer.start(callback);
 
     // 测试初始化
     std::filesystem::remove_all(ROOT_PATH + "/articles/tmp"); // NOTE: gtest bug, 会过早多执行一遍 std::filesystem::create_directory(ROOT_PATH + "/articles/tmp")，需要事先 remove all
-    file_system_daemon.addPath(ROOT_PATH + "/articles");
+    file_system_daemon->addPath(ROOT_PATH + "/articles");
     sleep(interval_seconds * 3);
     EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number);
 
@@ -43,10 +45,10 @@ TEST(Daemon, base)
     EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number + 2);
 
     // 测试 removePath
-    EXPECT_EQ(file_system_daemon.getPaths().size(), 1);
-    file_system_daemon.removePath(ROOT_PATH + "/articles");
+    EXPECT_EQ(file_system_daemon->getPaths().size(), 1);
+    file_system_daemon->removePath(ROOT_PATH + "/articles");
     sleep(interval_seconds * 2);
-    EXPECT_EQ(file_system_daemon.getPaths().size(), 0);
+    EXPECT_EQ(file_system_daemon->getPaths().size(), 0);
 
     {
         std::ofstream fout3(ROOT_PATH + "/articles/tmp/world.txt");
@@ -63,25 +65,27 @@ TEST(Daemon, base)
 TEST(Daemon, reset)
 {
     Database db(ROOT_PATH + "/database1", true);
-    FileSystemDaemon file_system_daemon(db);
+    auto file_system_daemon = std::make_shared<FileSystemDaemon>(db);
+    FileSystemDaemons daemons;
+    daemons.add(file_system_daemon);
 
     const int interval_seconds = 1;
     const int valid_files_number = 10;
 
     Poco::Timer timer(0, interval_seconds * 1000);
-    Poco::TimerCallback<FileSystemDaemon> callback(file_system_daemon, &FileSystemDaemon::run);
+    Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);
     timer.start(callback);
 
     // 测试初始化
-    file_system_daemon.addPath(ROOT_PATH + "/articles");
+    file_system_daemon->addPath(ROOT_PATH + "/articles");
     sleep(interval_seconds * 2);
     EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number);
-    auto paths = file_system_daemon.getPaths();
+    auto paths = file_system_daemon->getPaths();
 
-    file_system_daemon.rebuildAllPaths();
+    file_system_daemon->rebuildAllPaths();
     sleep(interval_seconds * 2);
     EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number);
-    EXPECT_EQ(paths, file_system_daemon.getPaths());
+    EXPECT_EQ(paths, file_system_daemon->getPaths());
 }
 
 int main()

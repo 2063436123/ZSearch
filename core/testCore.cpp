@@ -14,10 +14,12 @@ TEST(database, CreateDatabase)
     {
         std::stringstream oss;
         oss << e.what() << " " << e.message();
-        ASSERT_EQ(oss.str().substr(0, 184),
-                  "Cannot create file <message - can't create directory in /Users/peter/Code/GraduationDesignSrc/master/database1> "
+        ASSERT_EQ(oss.str().substr(0, 193),
+                  "Cannot create file <message - can't create database directory in /Users/peter/Code/GraduationDesignSrc/master/database1> "
                   "<location - /Users/peter/Code/GraduationDesignSrc/master/core/Database.h");
     }
+
+    Database::destroyDatabase(ROOT_PATH + "/database1");
 }
 
 TEST(database, NewDocId)

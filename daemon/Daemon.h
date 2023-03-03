@@ -21,15 +21,11 @@ using FileToDocId = std::unordered_map<std::string, size_t>;
 // 监听索引中的文件变化，以单条索引中的每个文件为粒度 ———— 最细粒度.
 class FileSystemDaemon {
 public:
-    FileSystemDaemon(Database& db_) : db(db_), indexer(db_) {}
+    explicit FileSystemDaemon(Database& db_) : db(db_), indexer(db_) {}
 
-    void run(Poco::Timer& timer)
+    void run()
     {
-        if (timer.skipped() > 1)
-            httpLog("daemon skipp time too much: " + std::to_string(timer.skipped()));
         std::lock_guard lg(paths_lock);
-
-        httpLog("indexed paths checker starting...");
         for (const auto& path : paths)
         {
             smartIndexAndRecord(path.first);
@@ -49,9 +45,9 @@ public:
 
     // NOTE: 这些方法应该被 http 调用
     // TODO: 添加检查合并路径的机制，移除冗余的 paths 条目
+    // e.g. '/a' includes '/a/b'
 
     // NOTE: 即使 path 当前不存在，也可以预添加
-    // e.g. '/a' includes '/a/b'
     void addPath(const std::filesystem::path& path)
     {
         std::lock_guard lg(paths_lock);
@@ -156,4 +152,25 @@ private:
     mutable std::mutex paths_lock;
     // directory(/file)_path -> (file_path -> doc_id)
     std::unordered_map<std::string, FileToDocId> paths;
+};
+
+class FileSystemDaemons
+{
+public:
+    void add(std::shared_ptr<FileSystemDaemon> daemon_ptr)
+    {
+        daemon_ptrs.push_back(std::move(daemon_ptr));
+    }
+
+    void run(Poco::Timer& timer)
+    {
+        if (timer.skipped() > 1)
+            httpLog("daemon skipp time too much: " + std::to_string(timer.skipped()));
+        httpLog("indexed paths checker starting...");
+        for (auto& daemon_ptr : daemon_ptrs)
+            daemon_ptr->run();
+    }
+
+private:
+    std::vector<std::shared_ptr<FileSystemDaemon>> daemon_ptrs;
 };

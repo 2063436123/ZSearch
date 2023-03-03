@@ -122,7 +122,14 @@ public:
     static void createDatabase(const std::filesystem::path& path)
     {
         if (!create_directory(path))
-            THROW(Poco::CreateFileException("can't create directory in " + path.string()));
+            THROW(Poco::CreateFileException("can't create database directory in " + path.string()));
+    }
+
+    static void destroyDatabase(const std::filesystem::path& path)
+    {
+        if (!exists(path))
+            THROW(Poco::CreateFileException("no such database directory in " + path.string()));
+        std::filesystem::remove_all(path);
     }
 
     void clear()

@@ -2,17 +2,30 @@
 #include <iostream>
 
 using namespace Poco::Net;
+
 void run()
 {
-    Database db(ROOT_PATH + "/database1", true);
-    FileSystemDaemon daemon(db);
+    std::unordered_map<std::string, std::pair<DatabasePtr, FileSystemDaemonPtr>> user_database;
+    FileSystemDaemons daemons;
 
-    HTTPServer server(new HTTPHandlerFactory({{"admin", {&db, &daemon}}}), ServerSocket(8080), new HTTPServerParams);
+    for (const auto& [username, _] : USERNAME_PASSWORDS)
+    {
+        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + username, true);
+
+        auto daemon = std::make_shared<FileSystemDaemon>(*db);
+        daemons.add(daemon);
+
+        user_database.emplace(username, std::make_pair(db, daemon));
+    }
+
+    // 启动 Daemon
+    Poco::Timer daemon_timer(0, DAEMON_INTERVAL_SECONDS * 1000);
+    Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);
+    daemon_timer.start(callback);
+
+    // 注册 http 服务
+    HTTPServer server(new HTTPHandlerFactory(user_database), ServerSocket(8080), new HTTPServerParams);
     server.start();
-
-    Poco::Timer timer(0, DAEMON_INTERVAL_SECONDS * 1000);
-    Poco::TimerCallback<FileSystemDaemon> callback(daemon, &FileSystemDaemon::run);
-    timer.start(callback); // TODO: 启动 Daemon
 
     sleep(1000000);
 }
