@@ -101,3 +101,52 @@ double restrictStod(const std::string& str) {
 
     return std::stod(str);
 }
+
+bool is_valid_utf8(const std::string& str) {
+    int i = 0;
+    while (i < str.size()) {
+        int len = 0;
+        unsigned char c = str[i];
+        if ((c & 0x80) == 0x00) {
+            len = 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            len = 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            len = 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            len = 4;
+        } else {
+            return false;
+        }
+        i++;
+        for (int j = 1; j < len; j++) {
+            if (i >= str.size() || (str[i] & 0xC0) != 0x80) {
+                return false;
+            }
+            i++;
+        }
+    }
+    return true;
+}
+
+std::string fix_utf8(const std::string& str) {
+    if (is_valid_utf8(str))
+        return str;
+    if (str.size() < 8)
+        return "???utf-8???";
+    int start = 3, end = str.size() - 4;
+
+    // 将一个子字符串的前后边界尽可能少地扩展，使得新的子字符串刚好满足UTF-8编码
+    int padding = 0;
+    while (start >= 0 && end < str.size() && !is_valid_utf8(str.substr(start, end - start + 1))) {
+        padding++;
+        if ((start - padding) >= 0 && is_valid_utf8(str.substr(start - padding, end - start + 1 + padding * 2))) {
+            start -= padding;
+        } else if ((end + padding) < str.size() && is_valid_utf8(str.substr(start - (padding - 1), end - start + 1 + (padding - 1) * 2))) {
+            end += padding;
+        } else {
+            return "";
+        }
+    }
+    return str.substr(start, end - start + 1);
+}

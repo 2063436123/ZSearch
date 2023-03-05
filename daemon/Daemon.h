@@ -222,7 +222,6 @@ public:
     {
         if (timer.skipped() > 1)
             httpLog("daemon skipp time too much: " + std::to_string(timer.skipped()));
-        httpLog("indexed paths checker starting...");
         for (auto& daemon_ptr : daemon_ptrs)
             daemon_ptr->run();
     }

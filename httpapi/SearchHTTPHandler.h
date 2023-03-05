@@ -44,11 +44,15 @@ public:
 
         // TODO: 执行查询并获取结果
         SearchResultSet result_set = Searcher(db).search(query);
+        httpLog("results number -- " + std::to_string(result_set.size())/*to_string(nlohmann::json({{"results", data}}))*/);
+
         nlohmann::json::array_t data;
         for (const auto& result : result_set)
             data.push_back(nlohmann::json(result));
 
-        out << makeStandardResponse(0, SuccessMessage, nlohmann::json({{"results", data}}));
+        nlohmann::json json;
+        json["results"] = data;
+        out << makeStandardResponse(0, SuccessMessage, json);
     }
 
 private:

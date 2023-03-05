@@ -3,6 +3,7 @@
 
 #include "typedefs.h"
 #include "Document.h"
+#include "Trie.h"
 #include "utils/ContainerUtils.h"
 
 class Database {
@@ -13,14 +14,11 @@ public:
     explicit Database(std::filesystem::path path, bool new_database = false) : database_path(std::move(path)), is_new_database(new_database)
     {
         if (!exists(database_path))
-        {
-            if (!new_database)
-                THROW(DatabaseTypeException("not found database"));
-            else
-                std::filesystem::create_directory(database_path);
-        }
+            std::filesystem::create_directory(database_path);
+
         if (!is_directory(database_path))
             THROW(DatabaseTypeException());
+
         if (!new_database)
             deserialize();
     }
@@ -79,8 +77,11 @@ public:
         document_map.erase(doc_id);
     }
 
+    // TODO: 决定什么时候修改 Trie 结构
     void addTerm(const std::string& word, size_t doc_id, size_t offset_in_file)
     {
+        trie.add(word);
+
         std::lock_guard<std::mutex> guard(term_map_lock);
         auto& term_ptr = term_map[word]; // use ref, for quick insertion if term_ptr is nullptr.
         if (term_ptr == nullptr)
@@ -105,7 +106,12 @@ public:
         offset_set.emplace(offset_in_file);
     }
 
-    TermPtr findTerm(const std::string &word) const
+    std::string matchTerm(const std::string& word) const
+    {
+        return trie.match(word);
+    }
+
+    TermPtr findTerm(std::string word) const
     {
         std::lock_guard<std::mutex> guard(term_map_lock);
         auto iter = term_map.find(word);
@@ -168,7 +174,9 @@ private:
     DocumentMap document_map;
     mutable std::mutex document_map_lock;
 
+    Trie trie; // self thread-safe
 
+    // TODO: 需要持久化 trie
     void serialize() {
         std::scoped_lock sl(term_map_lock, document_map_lock);
 

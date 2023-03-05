@@ -1,12 +1,31 @@
 #include "Database.h"
 #include "Value.h"
 #include "indexer/Indexer.h"
-#include <fcntl.h>
+#include "Trie.h"
+
+TEST(Trie, base)
+{
+    Trie trie;
+    trie.add("hello");
+    trie.add("aworld");
+    trie.add("hel");
+    trie.add("hellokkk");
+    trie.add("web-app");
+
+//    trie.remove("a");
+
+    EXPECT_EQ(trie.match(""), "");
+
+    EXPECT_EQ(trie.match("hel"), "hel");
+    EXPECT_EQ(trie.match("hell"), "hello");
+    EXPECT_EQ(trie.match("hello"), "hello");
+    EXPECT_EQ(trie.match("hellok"), "hellokkk");
+
+    EXPECT_EQ(trie.match("a"), "aworld");
+}
 
 TEST(database, CreateDatabase)
 {
-    ASSERT_NO_THROW(Database::createDatabase(ROOT_PATH + "/database1"));
-
     try
     {
         Database::createDatabase(ROOT_PATH + "/database1");
@@ -364,7 +383,7 @@ TEST(database, TidyTerm)
     EXPECT_EQ(term2->statistics_list.size(), 1);
 
     db.tidyTerm("hello");
-    auto term3 = db.findTerm("hello");
+    auto term3 = db.findTerm(db.matchTerm("hell"));
     EXPECT_EQ(term3->posting_list.size(), 0);
     EXPECT_EQ(term3->statistics_list.size(), 0);
 

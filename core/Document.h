@@ -118,7 +118,7 @@ public:
 
         auto res = std::string(buf, read_number);
         delete[] buf;
-        return res;
+        return fix_utf8(res);
     }
 
     void serialize(WriteBufferHelper &helper) const
