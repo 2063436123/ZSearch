@@ -106,7 +106,7 @@ public:
         offset_set.emplace(offset_in_file);
     }
 
-    std::string matchTerm(const std::string& word) const
+    std::vector<std::string> matchTerm(const std::string& word) const
     {
         return trie.match(word);
     }
@@ -136,6 +136,9 @@ public:
         }
         removeElements(iter->second->posting_list, index_to_delete);
         removeElements(iter->second->statistics_list, index_to_delete);
+
+        if (iter->second->posting_list.empty())
+            trie.remove(iter->first);
     }
 
     static void createDatabase(const std::filesystem::path& path)

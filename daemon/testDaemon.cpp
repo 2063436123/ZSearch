@@ -8,7 +8,7 @@ TEST(Daemon, base)
     daemons.add(file_system_daemon);
 
     const int interval_seconds = 1;
-    const int valid_files_number = 10;
+    const int valid_files_number = 11;
 
     Poco::Timer timer(0, interval_seconds * 1000);
     Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);
@@ -70,7 +70,7 @@ TEST(Daemon, reset)
     daemons.add(file_system_daemon);
 
     const int interval_seconds = 1;
-    const int valid_files_number = 10;
+    const int valid_files_number = 11;
 
     Poco::Timer timer(0, interval_seconds * 1000);
     Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);

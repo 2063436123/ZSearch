@@ -1,8 +1,11 @@
 #include "TermsExecutor.h"
 #include "HavingExecutor.h"
 #include "ScoreExecutor.h"
+#include "LimitExecutor.h"
 #include "indexer/Indexer.h"
 #include "gtest/gtest.h"
+
+const int IfI = 8, WhenYou = 11, WhatCan = 4, WEBAPP = 6, Alice = 10;
 
 TEST(termsExecutor, base)
 {
@@ -10,9 +13,8 @@ TEST(termsExecutor, base)
 
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
-    EXPECT_EQ(db.maxAllocatedDocId(), 10);
+    EXPECT_EQ(db.maxAllocatedDocId(), 11);
 
-    const int IfI = 4, WhenYou = 5, WhatCan = 8;
     EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
     EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
     EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
@@ -24,7 +26,7 @@ TEST(termsExecutor, base)
         r1.addChild(&l1).addChild(&l2);
 
         TermsExecutor executor(db, &r1);
-        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(nullptr)), DocIds({IfI}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(nullptr)), DocIds({IfI, Alice}));
     }
 
     {
@@ -34,7 +36,7 @@ TEST(termsExecutor, base)
         r1.addChild(&l1).addChild(&l2);
 
         TermsExecutor executor(db, &r1);
-        EXPECT_EQ(std::any_cast<DocIds>((executor.execute(nullptr))), DocIds({IfI, WhenYou}));
+        EXPECT_EQ(std::any_cast<DocIds>((executor.execute(nullptr))), DocIds({IfI, WhenYou, Alice}));
     }
 
     {
@@ -44,7 +46,7 @@ TEST(termsExecutor, base)
 
         TermsExecutor executor(db, &r2);
         EXPECT_EQ(std::any_cast<DocIds>(executor.execute(nullptr)),
-                  DynamicBitSet(db.maxAllocatedDocId()).set(WhatCan).flip().toUnorderedSet(1));
+                  DynamicBitSet(db.maxAllocatedDocId()).set(WhatCan).set(Alice).flip().toUnorderedSet(1));
     }
 
     {
@@ -171,7 +173,7 @@ TEST(havingExecutor, base)
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
 
-    EXPECT_EQ(db.findDocument(3)->getPath().filename(), "webapp.json");
+    EXPECT_EQ(db.findDocument(WEBAPP)->getPath().filename(), "webapp.json");
 
     auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toUnorderedSet(1);
     {
@@ -181,7 +183,7 @@ TEST(havingExecutor, base)
         LeafNode<Predicate> l1(Predicate(sumFunction, "web-app.i-arr", compareIn, arr1));
 
         HavingExecutor executor(db, &l1);
-        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(all_doc_ids)), DocIds({3}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(all_doc_ids)), DocIds({WEBAPP}));
     }
 
     {
@@ -195,7 +197,7 @@ TEST(havingExecutor, base)
         r1.addChild(&l1).addChild(&l2);
 
         HavingExecutor executor(db, &r1);
-        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(all_doc_ids)), DocIds({3}));
+        EXPECT_EQ(std::any_cast<DocIds>(executor.execute(all_doc_ids)), DocIds({WEBAPP}));
     }
 }
 
@@ -206,10 +208,9 @@ TEST(ScoreExecutor, base)
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
 
-    EXPECT_EQ(db.findDocument(3)->getPath().filename(), "webapp.json");
+    EXPECT_EQ(db.findDocument(WEBAPP)->getPath().filename(), "webapp.json");
     auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toUnorderedSet(1);
 
-    const int IfI = 4, WhenYou = 5, WhatCan = 8;
     EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
     EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
     EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
@@ -222,8 +223,28 @@ TEST(ScoreExecutor, base)
         ExecutePipeline pipeline;
         pipeline.addExecutor(&terms_executor).addExecutor(&score_executor);
         auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
-        std::map<size_t, size_t, std::greater<>> expected({{212, IfI}, {123, WhatCan}, {66, WhenYou}});
+        std::map<size_t, size_t, std::greater<>> expected({{167, IfI}, {138, WhatCan}, {60, WhenYou}, {2, Alice}});
         EXPECT_EQ(doc_id_vs_score, expected);
+    }
+}
+
+TEST(LimitExecutor, base)
+{
+    Database db(ROOT_PATH + "/database1", true);
+
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles-cnn");
+
+    {
+        LeafNode<String> l1("you");
+        TermsExecutor terms_executor(db, &l1);
+        ScoreExecutor score_executor(db, std::unordered_map<std::string, double>{{"you", 1.0}});
+        LimitExecutor limit_executor(db, 10);
+
+        ExecutePipeline pipeline;
+        pipeline.addExecutor(&terms_executor).addExecutor(&score_executor).addExecutor(&limit_executor);
+        auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
+        EXPECT_EQ(doc_id_vs_score.size(), 10);
     }
 }
 
@@ -234,10 +255,9 @@ TEST(Executor, deleted_document)
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
 
-    EXPECT_EQ(db.findDocument(3)->getPath().filename(), "webapp.json");
+    EXPECT_EQ(db.findDocument(WEBAPP)->getPath().filename(), "webapp.json");
     auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toUnorderedSet(1);
 
-    const int IfI = 4, WhenYou = 5, WhatCan = 8;
     EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
     EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
     EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
@@ -249,11 +269,11 @@ TEST(Executor, deleted_document)
 
         db.deleteDocument(IfI);
         DocIds inter_data = std::any_cast<DocIds>(terms_executor.execute(nullptr));
-        EXPECT_EQ(inter_data, DocIds({IfI, WhatCan, WhenYou})); // 注意即使文档被删除，TermsExecutor 也不会削减输出结果 --> 需要后续步骤去确认文档的有效性
+        EXPECT_EQ(inter_data, DocIds({IfI, WhatCan, WhenYou, Alice})); // 注意即使文档被删除，TermsExecutor 也不会削减输出结果 --> 需要后续步骤去确认文档的有效性
 
         db.deleteDocument(WhenYou);
         auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(score_executor.execute(inter_data));
-        std::map<size_t, size_t, std::greater<>> expected({{135, WhatCan}});
+        std::map<size_t, size_t, std::greater<>> expected({{141, WhatCan}, {2, Alice}});
         EXPECT_EQ(doc_id_vs_score, expected);
     }
 }

@@ -12,16 +12,19 @@ TEST(Trie, base)
     trie.add("hellokkk");
     trie.add("web-app");
 
-//    trie.remove("a");
+    trie.remove("a");
 
-    EXPECT_EQ(trie.match(""), "");
+    EXPECT_EQ(trie.match("")[0], "");
 
-    EXPECT_EQ(trie.match("hel"), "hel");
-    EXPECT_EQ(trie.match("hell"), "hello");
-    EXPECT_EQ(trie.match("hello"), "hello");
-    EXPECT_EQ(trie.match("hellok"), "hellokkk");
+    EXPECT_EQ(trie.match("hel")[0], "hel");
+    EXPECT_EQ(trie.match("hell")[0], "hello");
+    EXPECT_EQ(trie.match("hello")[0], "hello");
+    EXPECT_EQ(trie.match("hellok")[0], "hellokkk");
 
-    EXPECT_EQ(trie.match("a"), "aworld");
+    EXPECT_EQ(trie.match("a")[0], "aworld");
+
+    trie.remove("hel");
+    EXPECT_EQ(trie.match("hel")[0], "hello");
 }
 
 TEST(database, CreateDatabase)
@@ -378,12 +381,12 @@ TEST(database, TidyTerm)
     EXPECT_EQ(term1.operator bool(), true);
 
     db.deleteDocument(1);
-    auto term2 = db.findTerm("hello");
+    auto term2 = db.findTerm(db.matchTerm("hell")[0]);
     EXPECT_EQ(term2->posting_list.size(), 1);
     EXPECT_EQ(term2->statistics_list.size(), 1);
 
     db.tidyTerm("hello");
-    auto term3 = db.findTerm(db.matchTerm("hell"));
+    auto term3 = db.findTerm("hello");
     EXPECT_EQ(term3->posting_list.size(), 0);
     EXPECT_EQ(term3->statistics_list.size(), 0);
 

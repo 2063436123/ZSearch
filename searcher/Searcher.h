@@ -4,6 +4,7 @@
 #include "executor/TermsExecutor.h"
 #include "executor/HavingExecutor.h"
 #include "executor/ScoreExecutor.h"
+#include "executor/LimitExecutor.h"
 #include "core/Database.h"
 
 struct OldSearchResult
@@ -57,27 +58,27 @@ public:
     explicit Searcher(Database &db_)
             : db(db_) {}
 
-    SearchResultSet search(std::string query)
+    SearchResultSet search(const std::string& query)
     {
         ExecutePipeline pipeline;
         SearchResultSet res;
-
 
         // TODO: 加入 trie 的使用，在 executor 前找出真正单词, 这个过程获取可以放在 parser 中？
 
         // TODO: 引入 queryparser，支持更多语法的解析
         if (std::all_of(query.begin(), query.end(), [](char c) { return isalnum(c); }))
         {
-
             // TODO: 在这里处理后缀匹配吗
-            query = db.matchTerm(query);
+            auto querys = db.matchTerm(query);
 
-            LeafNode<std::string> leaf_node(query);
+            LeafNode<std::string> leaf_node(querys[0]);
             TermsExecutor terms_executor(db, &leaf_node);
             ScoreExecutor score_executor(db, {{query, 1.0}});
-            pipeline.addExecutor(&terms_executor).addExecutor(&score_executor);
+            LimitExecutor limit_executor(db, 10);
 
-            auto term_ptr = db.findTerm(query);
+            pipeline.addExecutor(&terms_executor).addExecutor(&score_executor).addExecutor(&limit_executor);
+
+            auto term_ptr = db.findTerm(querys[0]);
             if (!term_ptr)
                 return res;
 
@@ -94,7 +95,7 @@ public:
 
                 for (auto offset_in_file : term_ptr->statistics_list[cur_doc_index].offsets_in_file)
                 {
-                    auto highlight_text = outputSmooth(document_ptr->getString(offset_in_file, query.size(), 30));
+                    auto highlight_text = outputSmooth(document_ptr->getString(offset_in_file, query.size(), 50));
                     highlight_texts.push_back(highlight_text);
                 }
 

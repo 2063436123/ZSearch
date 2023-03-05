@@ -45,6 +45,13 @@ public:
             out << makeStandardResponse(-1, InvalidParameterMessage, nlohmann::json::object());
             return;
         }
+
+        if (std::filesystem::path(iter->second).is_relative())
+        {
+            httpLog("addIndexPath - " + iter->second + " relative position not allowed.");
+            out << makeStandardResponse(-1, InvalidParameterMessage, nlohmann::json::object());
+            return;
+        }
         httpLog("addIndexPath - " + iter->second + " success.");
 
         daemon.addPath(iter->second);

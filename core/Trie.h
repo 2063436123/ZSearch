@@ -34,11 +34,9 @@ public:
         if (word.empty())
             return;
         TrieNode *node = root;
-        TrieNode *parent = nullptr;
 
         for (size_t i = 0; i < word.size(); i++)
         {
-            httpLog((int)word[i]);
             assert((int)word[i] >= -0xFF && (int)word[i] <= CHAR_LIMIT);
             auto& node_ref = node->children[word[i]];
 
@@ -48,46 +46,49 @@ public:
             }
             assert(node_ref);
 
-            parent = node;
             node = node->children[word[i]];
         }
         node->is_word = true;
     }
 
-//    void remove(const std::string& word)
-//    {
-//        std::lock_guard lg(roots_lock);
-//        if (word.empty())
-//            return;
-//        TrieNode *node = root;
-//
-//        for (size_t i = 1; i < word.size(); i++)
-//        {
-//            node = &(*node)->children[word[i]];
-//            if (*node == nullptr)
-//                return;
-//        }
-//        (*node)->is_word = false;
-//    }
+    void remove(const std::string& word)
+    {
+        std::lock_guard lg(roots_lock);
+        if (word.empty())
+            return;
+        TrieNode *node = root;
 
-    std::string match(std::string word) const
+        for (size_t i = 0; i < word.size(); i++)
+        {
+            assert((int)word[i] >= -0xFF && (int)word[i] <= CHAR_LIMIT);
+            auto& node_ref = node->children[word[i]];
+            if (!node_ref)
+                return;
+
+            node = node->children[word[i]];
+        }
+        if (node)
+            node->is_word = false;
+    }
+
+    std::vector<std::string> match(std::string word, int expected_num = 1) const
     {
         std::shared_lock lg(roots_lock);
 
         if (word.empty())
-            return word;
+            return {word};
         auto node = root;
 
         for (size_t i = 0; i < word.size(); i++)
         {
             if (!node->children.contains(word[i]))
-                return word;
+                return {word};
             node = node->children.find(word[i])->second;
         }
 
         std::string suffix;
         tryMatchSuffix(node, suffix);
-        return word + suffix;
+        return {word + suffix};
     }
 
     ~Trie()

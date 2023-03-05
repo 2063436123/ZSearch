@@ -15,9 +15,12 @@ public:
     void index(const std::filesystem::path &path)
     {
         for (const auto& file : gatherExistedFiles(path))
-            indexFile(path);
+        {
+            indexFile(file);
+        }
     }
 
+    // path point at only a document.
     size_t indexFile(const std::filesystem::path &file_path)
     {
         if (!is_regular_file(file_path))
