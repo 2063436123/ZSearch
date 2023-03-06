@@ -86,39 +86,71 @@ public:
             node = node->children.find(word[i])->second;
         }
 
-        std::string suffix;
-        tryMatchSuffix(node, suffix);
-        return {word + suffix};
+        std::vector<std::string> suffixs{""};
+        tryMatchSuffix(node, suffixs, expected_num);
+        if (suffixs.size() > 1)
+            suffixs.pop_back();
+
+        std::vector<std::string> res;
+        for (const auto& suffix : suffixs)
+            res.push_back(word + suffix);
+
+        return res;
+    }
+
+    std::string print() const
+    {
+        std::stringstream oss;
+        drawTree(oss, root);
+        return oss.str();
     }
 
     ~Trie()
     {
         // TODO: delete
     }
+
 private:
+    void drawTree(std::ostream& oss, const TrieNode* node, std::string prefix = "", bool is_tail = true, char edge_char = '-') const
+    {
+        oss << prefix;
+        oss << (is_tail ? "└" + std::string(1, edge_char) + "- " : "├" + std::string(1, edge_char) + "- ");
+        oss << node->value << (node->is_word ? " (word)" : "") << '\n';
+
+        std::string new_prefix = prefix;
+        new_prefix += is_tail ? "   " : "│  ";
+
+        int child_count = node->children.size();
+        for (auto it = node->children.begin(); it != node->children.end(); ++it)
+        {
+            bool child_is_tail = (--child_count == 0);
+            drawTree(oss, it->second, new_prefix, child_is_tail, static_cast<char>(it->first));
+        }
+    }
+
     uint64_t nextNodeId()
     {
         return node_id++;
     }
 
-    bool tryMatchSuffix(const TrieNode* node, std::string& suffix) const
+    void tryMatchSuffix(const TrieNode* node, std::vector<std::string>& suffixs, int &left_suffix_num) const
     {
-        if (node == nullptr)
-            return false;
+        if (node == nullptr || left_suffix_num == 0)
+            return;
 
-        if (node->is_word)
-            return true;
+        if (node->is_word /*&& std::all_of(suffixs.back().begin(), suffixs.back().end(), [](char ch) { return Poco::Ascii::isPrintable(ch); })*/)
+        {
+            suffixs.push_back(suffixs.back());
+            if (--left_suffix_num == 0)
+                return;
+        }
 
         for (const auto& pair : node->children)
         {
-            suffix.push_back((char)pair.first);
-            if (tryMatchSuffix(pair.second, suffix))
-            {
-                return true;
-            }
-            suffix.pop_back();
+            suffixs.back().push_back((char)pair.first);
+            tryMatchSuffix(pair.second, suffixs, left_suffix_num);
+            suffixs.back().pop_back();
         }
-        return false;
     }
 
     mutable std::shared_mutex roots_lock;

@@ -14,17 +14,57 @@ TEST(Trie, base)
 
     trie.remove("a");
 
-    EXPECT_EQ(trie.match("")[0], "");
+    ASSERT_EQ(trie.match("")[0], "");
 
-    EXPECT_EQ(trie.match("hel")[0], "hel");
-    EXPECT_EQ(trie.match("hell")[0], "hello");
-    EXPECT_EQ(trie.match("hello")[0], "hello");
-    EXPECT_EQ(trie.match("hellok")[0], "hellokkk");
+    ASSERT_EQ(trie.match("hel")[0], "hel");
+    ASSERT_EQ(trie.match("hel", 2)[1], "hello");
+    ASSERT_EQ(trie.match("hel", 3)[2], "hellokkk");
+    ASSERT_EQ(trie.match("hel", 4).size(), 3);
 
-    EXPECT_EQ(trie.match("a")[0], "aworld");
+    ASSERT_EQ(trie.match("hell")[0], "hello");
+    ASSERT_EQ(trie.match("hello")[0], "hello");
+    ASSERT_EQ(trie.match("hellok")[0], "hellokkk");
+
+    ASSERT_EQ(trie.match("a")[0], "aworld");
 
     trie.remove("hel");
-    EXPECT_EQ(trie.match("hel")[0], "hello");
+    ASSERT_EQ(trie.match("hel")[0], "hello");
+
+    ASSERT_EQ(trie.print(), "└-- 0\n"
+                            "   ├a- 6\n"
+                            "   │  └w- 7\n"
+                            "   │     └o- 8\n"
+                            "   │        └r- 9\n"
+                            "   │           └l- 10\n"
+                            "   │              └d- 11 (word)\n"
+                            "   ├w- 15\n"
+                            "   │  └e- 16\n"
+                            "   │     └b- 17\n"
+                            "   │        └-- 18\n"
+                            "   │           └a- 19\n"
+                            "   │              └p- 20\n"
+                            "   │                 └p- 21 (word)\n"
+                            "   └h- 1\n"
+                            "      └e- 2\n"
+                            "         └l- 3\n"
+                            "            └l- 4\n"
+                            "               └o- 5 (word)\n"
+                            "                  └k- 12\n"
+                            "                     └k- 13\n"
+                            "                        └k- 14 (word)\n"
+                            "");
+}
+
+TEST(Trie, integrated)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    auto match_res = db.matchTerm("yo", 4);
+    ASSERT_EQ(match_res.size(), 4);
+    for (const auto& matched : match_res)
+        ASSERT_NE(db.findTerm(matched), nullptr);
 }
 
 TEST(database, CreateDatabase)
@@ -381,7 +421,7 @@ TEST(database, TidyTerm)
     EXPECT_EQ(term1.operator bool(), true);
 
     db.deleteDocument(1);
-    auto term2 = db.findTerm(db.matchTerm("hell")[0]);
+    auto term2 = db.findTerm(db.matchTerm("hell", 1 )[0]);
     EXPECT_EQ(term2->posting_list.size(), 1);
     EXPECT_EQ(term2->statistics_list.size(), 1);
 

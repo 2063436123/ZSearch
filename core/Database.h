@@ -106,9 +106,9 @@ public:
         offset_set.emplace(offset_in_file);
     }
 
-    std::vector<std::string> matchTerm(const std::string& word) const
+    std::vector<std::string> matchTerm(const std::string& word, int expected_num) const
     {
-        return trie.match(word);
+        return trie.match(word, expected_num);
     }
 
     TermPtr findTerm(std::string word) const

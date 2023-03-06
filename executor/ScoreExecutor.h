@@ -42,6 +42,11 @@ private:
         {
             std::string word = iter.first;
             auto term_ptr = db.findTerm(word);
+            if (!term_ptr)
+            {
+                httpLog("can't find term in score executor -- " + word);
+                continue;
+            }
 
             // 1.单词权重
             double df = term_ptr->posting_list.size();

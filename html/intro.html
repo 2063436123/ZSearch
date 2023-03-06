@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>三个板块的页面</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .top {
+        height: 33.33%;
+        background-color: #ffc0cb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .middle {
+        height: 33.33%;
+        background-color: #ffffe0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .bottom {
+        height: 33.33%;
+        background-color: #add8e6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        text-align: center;
+        font-family: 'Helvetica Bold', sans-serif;
+        gap: 80px;
+        max-width: 1000px;
+      }
+
+      img {
+        width: 200px;
+        height: auto;
+      }
+
+      .content.right {
+        flex-direction: row-reverse;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <div class="content">
+        <div>
+          <h2>上部分</h2>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            feugiat euismod nibh, vel egestas massa sollicitudin eget. Ut sit
+            amet libero lacinia, euismod risus eget, fringilla est. Sed aliquam
+            sit amet quam vel dignissim. Nullam nec ante quis sapien malesuada
+            congue quis ut mauris. Donec tincidunt eu nibh sed auctor.
+          </p>
+        </div>
+        <img src="https://via.placeholder.com/200x150.png" alt="图片" />
+      </div>
+    </div>
+    <div class="middle">
+      <div class="content">
+        <img src="https://via.placeholder.com/200x150.png" alt="图片" />
+        <div>
+          <h2>中间部分</h2>
+          <p>
+            Phasellus ut semper tortor. Nam non sem non nulla maximus tincidunt.
+            Nulla facilisi. Sed porta dui vel magna hendrerit, ut lacinia enim
+            dapibus. Curabitur eget nunc sed enim ullamcorper sollicitudin. Sed
+            ac lorem est. Vestibulum vitae erat tristique, suscipit odio eu,
+            cursus mi.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="content">
+        <div>
+          <h2>下部分</h2>
+          <p>
+            Quisque sagittis ligula id luctus consequat. Vestibulum lacinia
+            tincidunt risus, eget maximus sapien. Sed malesuada est nec eros
+            consequat, non aliquet dolor malesuada. Donec in turpis ac eros
+            gravida tempus. Pellentesque habitant morbi tristique senectus et
+            netus et malesuada fames ac turpis egestas.
+          </p>
+        </div>
+        <img src="https://via.placeholder.com/200x150.png" alt="图片" />
+      </div>
+    </div>
+  </body>
+</html>
