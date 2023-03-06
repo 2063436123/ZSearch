@@ -88,16 +88,27 @@ class Timer
 public:
     Timer()
     {
-        start = std::chrono::steady_clock::now();
+        start = std::chrono::system_clock::now();
+    }
+
+    DateTime getStartTime() const
+    {
+        return duration_cast<std::chrono::seconds>(start.time_since_epoch()).count();
     }
 
     double elapsedSeconds() const
     {
-        auto end = std::chrono::steady_clock::now();
+        auto end = std::chrono::system_clock::now();
         return 1.0 * std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000;
     }
+
+    double elapsedMilliseconds() const
+    {
+        auto end = std::chrono::system_clock::now();
+        return 1.0 * std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    }
 private:
-    decltype(std::chrono::steady_clock::now()) start;
+    decltype(std::chrono::system_clock::now()) start;
 };
 
 template <typename T>

@@ -70,6 +70,24 @@ public:
         return paths;
     }
 
+    // 获取文件类型的统计信息：每种类型对应的数量
+    std::unordered_map<std::string, uint64_t> getTypeStatistics() const
+    {
+        std::lock_guard lg(paths_lock);
+        std::unordered_map<std::string, uint64_t> types;
+
+        for (const auto& path : paths)
+        {
+            for (const auto& file_path : gatherExistedFiles(path.first))
+            {
+                auto extension = std::filesystem::path(file_path).extension();
+                ++types[extension];
+            }
+        }
+
+        return types;
+    }
+
     ~FileSystemDaemon()
     {
         serialize();

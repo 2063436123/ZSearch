@@ -4,6 +4,7 @@
 #include "typedefs.h"
 #include "Document.h"
 #include "Trie.h"
+#include "searcher/QueryStatistics.h"
 #include "utils/ContainerUtils.h"
 
 class Database {
@@ -141,6 +142,18 @@ public:
             trie.remove(iter->first);
     }
 
+    void addQueryStatistics(const DateTime& query_time, const QueryStatisticsPtr& stat_ptr)
+    {
+        std::lock_guard<std::mutex> guard(query_stat_map_lock);
+        query_stat_map.emplace(query_time, stat_ptr);
+    }
+
+    QueryStatisticsMap getAllQueryStatistics() const
+    {
+        std::lock_guard<std::mutex> guard(query_stat_map_lock);
+        return query_stat_map;
+    }
+
     static void createDatabase(const std::filesystem::path& path)
     {
         if (!create_directory(path))
@@ -177,9 +190,12 @@ private:
     DocumentMap document_map;
     mutable std::mutex document_map_lock;
 
+    QueryStatisticsMap query_stat_map;
+    mutable std::mutex query_stat_map_lock;
+
     Trie trie; // self thread-safe
 
-    // TODO: 需要持久化 trie
+    // TODO: 需要持久化 trie, query_stat_map
     void serialize() {
         std::scoped_lock sl(term_map_lock, document_map_lock);
 

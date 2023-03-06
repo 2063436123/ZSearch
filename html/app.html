@@ -46,6 +46,66 @@
               tabsMode: "chrome",
               tabs: [
                 {
+                  title: "首页",
+                  icon: "fa fa-home",
+                  body: {
+                    type: "page",
+                    body: [
+                      {
+                        type: "chart",
+                        config: {
+                          graphic: {
+                            elements: [
+                              {
+                                type: "text",
+                                left: "center",
+                                top: "center",
+                                style: {
+                                  text: "ZSearch",
+                                  fontSize: 150,
+                                  fontWeight: "bold",
+                                  lineDash: [0, 200],
+                                  lineDashOffset: 0,
+                                  fill: "transparent",
+                                  stroke: "#000",
+                                  lineWidth: 1,
+                                },
+                                keyframeAnimation: {
+                                  duration: 4000,
+                                  loop: false,
+                                  keyframes: [
+                                    {
+                                      percent: 0.7,
+                                      style: {
+                                        fill: "transparent",
+                                        lineDashOffset: 200,
+                                        lineDash: [200, 0],
+                                      },
+                                    },
+                                    {
+                                      // Stop for a while.
+                                      percent: 0.8,
+                                      style: {
+                                        fill: "transparent",
+                                      },
+                                    },
+                                    {
+                                      percent: 1,
+                                      style: {
+                                        fill: "black",
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
                   title: "开始查询",
                   icon: "fa fa-search",
                   body: {
@@ -292,6 +352,11 @@
                                         actionType: "reload",
                                         dataMergeMode: "override",
                                       },
+                                      {
+                                        componentId: "u:12ijo3j1o2d",
+                                        actionType: "reload",
+                                        dataMergeMode: "override",
+                                      },
                                     ],
                                   },
                                 },
@@ -309,6 +374,11 @@
                             actions: [
                               {
                                 componentId: "u:8373741bf5cf",
+                                actionType: "reload",
+                                dataMergeMode: "override",
+                              },
+                              {
+                                componentId: "u:12ijo3j1o2d",
                                 actionType: "reload",
                                 dataMergeMode: "override",
                               },
@@ -340,6 +410,11 @@
                                         },
                                         {
                                           componentId: "u:8373741bf5cf",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
+                                        },
+                                        {
+                                          componentId: "u:12ijo3j1o2d",
                                           actionType: "reload",
                                           dataMergeMode: "override",
                                         },
@@ -391,6 +466,11 @@
                                             actionType: "reload",
                                             dataMergeMode: "override",
                                           },
+                                          {
+                                            componentId: "u:12ijo3j1o2d",
+                                            actionType: "reload",
+                                            dataMergeMode: "override",
+                                          },
                                         ],
                                       },
                                     },
@@ -408,8 +488,162 @@
                   title: "统计分析",
                   icon: "fa fa-bar-chart",
                   body: {
-                    type: "audio",
-                    src: "HOST/yzcw.mp3",
+                    type: "page",
+                    body: [
+                      {
+                        type: "chart",
+                        id: "u:12ijo3j1o2d",
+                        api: "HOST/get-type-statistics?id=$id",
+                        config: {
+                          title: {
+                            text: "文件统计",
+                            left: "center",
+                          },
+                          tooltip: {
+                            trigger: "item",
+                          },
+                          legend: {
+                            orient: "vertical",
+                            left: "left",
+                          },
+                          series: [
+                            {
+                              type: "pie",
+                              radius: "50%",
+                              data: "$results",
+                              emphasis: {
+                                itemStyle: {
+                                  shadowBlur: 10,
+                                  shadowOffsetX: 0,
+                                  shadowColor: "rgba(0, 0, 0, 0.5)",
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        type: "divider",
+                      },
+                      {
+                        type: "chart",
+                        api: "HOST/get-query-statistics?id=$id",
+                        interval: 14000,
+                        height: 500,
+                        config: {
+                          title: {
+                            text: "查询统计",
+                            left: "center",
+                          },
+                          tooltip: {
+                            trigger: "axis",
+                            axisPointer: {
+                              animation: false,
+                              label: {
+                                show: true,
+                              }
+                            },
+                          },
+                          legend: {
+                            data: ["ElapsedTime", "ResultNum"],
+                            left: 10,
+                          },
+                          toolbox: {
+                            feature: {
+                              dataZoom: {
+                                yAxisIndex: "none",
+                              },
+                              restore: {},
+                              saveAsImage: {},
+                            },
+                          },
+                          axisPointer: {
+                            link: [
+                              {
+                                xAxisIndex: "all",
+                              },
+                            ],
+                          },
+                          dataZoom: [
+                            {
+                              show: true,
+                              realtime: true,
+                              start: 0,
+                              end: 100,
+                              xAxisIndex: [0, 1],
+                            },
+                            {
+                              type: "inside",
+                              realtime: true,
+                              start: 0,
+                              end: 100,
+                              xAxisIndex: [0, 1],
+                            },
+                          ],
+                          grid: [
+                            {
+                              left: 60,
+                              right: 50,
+                              height: "30%",
+                            },
+                            {
+                              left: 60,
+                              right: 50,
+                              top: "53%",
+                              height: "30%",
+                            },
+                          ],
+                          xAxis: [
+                            {
+                              type: "category",
+                              boundaryGap: false,
+                              axisLine: { onZero: true },
+                              data: "$x_strings",
+                            },
+                            {
+                              gridIndex: 1,
+                              type: "category",
+                              boundaryGap: false,
+                              axisLine: { onZero: true },
+                              data: "$x_strings",
+                              position: "top",
+                            },
+                          ],
+                          yAxis: [
+                            {
+                              name: "ElapsedTime(ms)",
+                              type: "value",
+                            },
+                            {
+                              gridIndex: 1,
+                              name: "ResultNum",
+                              type: "value",
+                              inverse: true,
+                            },
+                          ],
+                          series: [
+                            {
+                              name: "ElapsedTime",
+                              type: "line",
+                              symbolSize: 8,
+                              // prettier-ignore
+                              data: "${elapsed_time_vals}",
+                              areaStyle: {},
+                            },
+                            {
+                              name: "ResultNum",
+                              type: "line",
+                              xAxisIndex: 1,
+                              yAxisIndex: 1,
+                              symbolSize: 8,
+                              // prettier-ignore
+                              data: "${result_num_vals}",
+                              areaStyle: {},
+                            },
+                          ],
+                        },
+                      },
+                    ],
                   },
                 },
               ],

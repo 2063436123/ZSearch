@@ -133,16 +133,16 @@ std::string fix_utf8(const std::string& str) {
     if (is_valid_utf8(str))
         return str;
     if (str.size() < 8)
-        return "???utf-8???";
+        return "??????";
     int start = 3, end = str.size() - 4;
 
     // 将一个子字符串的前后边界尽可能少地扩展，使得新的子字符串刚好满足UTF-8编码
     int padding = 0;
     while (start >= 0 && end < str.size() && !is_valid_utf8(str.substr(start, end - start + 1))) {
         padding++;
-        if ((start - padding) >= 0 && is_valid_utf8(str.substr(start - padding, end - start + 1 + padding * 2))) {
+        if ((start - padding) >= 0 && is_valid_utf8(str.substr(start - padding, end - start + 1 + padding))) {
             start -= padding;
-        } else if ((end + padding) < str.size() && is_valid_utf8(str.substr(start - (padding - 1), end - start + 1 + (padding - 1) * 2))) {
+        } else if ((end + padding) < str.size() && is_valid_utf8(str.substr(start, end - start + 1 + padding))) {
             end += padding;
         } else {
             return "";

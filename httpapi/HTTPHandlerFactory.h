@@ -4,6 +4,7 @@
 #include "IndexHTTPHandler.h"
 #include "SearchHTTPHandler.h"
 #include "UserHTTPHandler.h"
+#include "StatisticsHTTPHandler.h"
 
 using DatabasePtr = std::shared_ptr<Database>;
 using FileSystemDaemonPtr = std::shared_ptr<FileSystemDaemon>;
@@ -79,6 +80,14 @@ public:
         if (uri_path == "/download-document")
         {
             return new DownloadDocumentHandler(db);
+        }
+        if (uri_path == "/get-type-statistics")
+        {
+            return new GetTypeStatisticsHandler(daemon);
+        }
+        if (uri_path == "/get-query-statistics")
+        {
+            return new GetQueryStatisticsHandler(db);
         }
         return new GetFileHandler();
     }

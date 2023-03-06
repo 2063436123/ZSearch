@@ -6,6 +6,7 @@
 #include "executor/ScoreExecutor.h"
 #include "executor/LimitExecutor.h"
 #include "core/Database.h"
+#include "QueryStatistics.h"
 
 struct OldSearchResult
 {
@@ -48,11 +49,11 @@ void to_json(nlohmann::json &j, const SearchResult &result)
     {
         texts.push_back(std::unordered_map<std::string, std::string>{{"text", text}});
     }
-    j = nlohmann::json{{"doc_id",          result.doc_id},
-                       {"path",            result.doc_path},
+    j = nlohmann::json{{"doc_id",               result.doc_id},
+                       {"path",                 result.doc_path},
                        {"first_highlight_text", result.highlight_texts[0]},
-                       {"highlight_texts", texts},
-                       {"score",           result.score}};
+                       {"highlight_texts",      texts},
+                       {"score",                result.score}};
 }
 
 using SearchResultSet = std::vector<SearchResult>;
@@ -65,14 +66,18 @@ public:
 
     SearchResultSet search(const std::string &query)
     {
+        if (query.empty())
+            return {};
+
         ExecutePipeline pipeline;
         SearchResultSet res;
 
+        Timer search_timer;
         // TODO: 引入 queryparser，支持更多语法的解析
-        if (std::all_of(query.begin(), query.end(), [](char c) { return isalnum(c); }))
+        if (std::all_of(query.begin(), query.end(), [](char c) { return !Poco::Ascii::isSpace(c); }))
         {
             // TODO: 在这里用 trie 处理后缀匹配吗
-            auto querys = db.matchTerm(query, 3);
+            std::vector<std::string> querys = db.matchTerm(query, 3);
 
             for (int query_id = 0; query_id < querys.size(); query_id++)
             {
@@ -86,7 +91,8 @@ public:
 
                 auto term_ptr = db.findTerm(querys[query_id]);
                 if (!term_ptr)
-                    return res;
+                    continue;
+
 
                 auto scores = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
                 for (const auto &iter : scores)
@@ -96,13 +102,17 @@ public:
                         continue;
 
                     std::vector<std::string> highlight_texts;
-                    auto cur_doc_index = std::lower_bound(term_ptr->posting_list.begin(), term_ptr->posting_list.end(),
-                                                          iter.second) - term_ptr->posting_list.begin();
-                    assert(cur_doc_index < term_ptr->posting_list.size());
+                    auto cur_doc_index =
+                            std::lower_bound(term_ptr->posting_list.begin(), term_ptr->posting_list.end(),
+                                             iter.second) - term_ptr->posting_list.begin();
+                    assert(cur_doc_index < term_ptr->statistics_list.size());
 
                     for (auto offset_in_file : term_ptr->statistics_list[cur_doc_index].offsets_in_file)
                     {
-                        auto highlight_text = outputSmooth(document_ptr->getString(offset_in_file, querys[query_id].size(), 80));
+                        assert(query_id < querys.size());
+                        std::string string_in_file = document_ptr->getString(offset_in_file, querys[query_id].size(),
+                                                                             80);
+                        auto highlight_text = outputSmooth(string_in_file);
                         highlight_texts.push_back(highlight_text);
                     }
 
@@ -114,26 +124,15 @@ public:
                     });
                 }
             }
-
-            // OldResultSet 逻辑
-//            SearchResultSet res;
-//
-//            TermPtr term = db.findTerm(query);
-//            if (!term)
-//                return res;
-//            assert(term->posting_list.size() == term->statistics_list.size());
-//
-//            for (size_t i = 0; i < term->posting_list.size(); i++)
-//            {
-//                for (auto offset_in_file : term->statistics_list[i].offsets_in_file)
-//                    res.insert(OldSearchResult{.document = db.findDocument(term->posting_list[i]), .offset_in_file = offset_in_file, .related_text_len = query.size()});
-//            }
-//            return res;
         }
         else
         {
             THROW(Poco::NotImplementedException("unsupported query -- " + query));
         }
+
+        if (search_timer.elapsedMilliseconds() > 0 || !res.empty())
+            db.addQueryStatistics(search_timer.getStartTime(),
+                                  std::make_shared<QueryStatistics>(query, search_timer.elapsedMilliseconds(), res.size()));
         return res;
     }
 

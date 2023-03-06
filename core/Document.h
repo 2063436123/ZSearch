@@ -118,6 +118,11 @@ public:
 
         auto res = std::string(buf, read_number);
         delete[] buf;
+        try {
+            fix_utf8(res);
+        } catch (std::exception& e) {
+            std::cout << "catched" << std::endl;
+        }
         return fix_utf8(res);
     }
 

@@ -10,7 +10,7 @@ void run()
 
     for (const auto& [username, _] : USERNAME_PASSWORDS)
     {
-        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + username, false);
+        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + username, true);
 
         auto daemon = std::make_shared<FileSystemDaemon>(*db);
         daemons.add(daemon);
@@ -31,7 +31,10 @@ void run()
     while (std::cin >> instruction)
     {
         if (instruction == "stop")
+        {
+            httpLog("exiting...");
             break;
+        }
     }
     server.stopAll(true);
 }
