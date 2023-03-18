@@ -16,10 +16,14 @@ having : where
 class HavingExecutor : public Executor
 {
 public:
-    HavingExecutor(Database& db_, const ConjunctionNode* root_) : Executor(db_), root(root_) {}
+    HavingExecutor(Database& db_, const ConjunctionNode* root_ = nullptr) : Executor(db_), root(root_) {}
 
     std::any execute(const std::any &doc_ids_) override
     {
+        if (!root) // output all get doc_ids
+        {
+            return doc_ids_;
+        }
         auto doc_ids = std::any_cast<DocIds>(doc_ids_);
         DocIds ret;
         for (size_t doc_id : doc_ids)

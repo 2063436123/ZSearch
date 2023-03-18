@@ -5,7 +5,7 @@
 /// Removes all leading and trailing whitespace/unprintable in str.
 /// return trimmed chars number of characters from left/from right.
 template<class S>
-std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str, const std::function<bool(char)>& isUseless)
+std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str, const std::function<bool(char)> &isUseless)
 {
     std::ptrdiff_t first = 0;
     std::ptrdiff_t last = static_cast<std::ptrdiff_t>(str.size()) - 1;
@@ -15,7 +15,8 @@ std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str, const std::functio
     while (last >= first && isUseless(str[last]))
         --last;
 
-    if (last >= 0) {
+    if (last >= 0)
+    {
         str.resize(last + 1);
         str.erase(0, first);
     }
@@ -25,7 +26,7 @@ std::pair<std::ptrdiff_t, std::ptrdiff_t> trimInPlace(S &str, const std::functio
 }
 
 // replaces all newline characters in output with the string "\\n"
-std::string outputSmooth(const std::string& output)
+std::string outputSmooth(const std::string &output)
 {
     std::string res;
     for (auto ch : output)
@@ -55,8 +56,9 @@ std::string trimQuote(std::string str)
 }
 
 // only [-]<number>+ is allowed
-template <typename T>
-T restrictStoi(const std::string& str) {
+template<typename T>
+T restrictStoi(const std::string &str)
+{
     T base{};
     bool is_minus = false;
 
@@ -74,7 +76,8 @@ T restrictStoi(const std::string& str) {
     {
         auto ch = str[i];
         if (!Poco::Ascii::isDigit(ch))
-            THROW(Poco::InvalidArgumentException("restrict_stoi requires a string contains only number char! -- " + str));
+            THROW(Poco::InvalidArgumentException(
+                    "restrict_stoi requires a string contains only number char! -- " + str));
         else
             base = base * 10 + ch - '0';
     }
@@ -82,7 +85,8 @@ T restrictStoi(const std::string& str) {
     return is_minus ? 0 - base : base;
 }
 
-double restrictStod(const std::string& str) {
+double restrictStod(const std::string &str)
+{
     if (str.empty())
         THROW(Poco::InvalidArgumentException("restrict_stod requires an not empty string! -- " + str));
 
@@ -96,31 +100,45 @@ double restrictStod(const std::string& str) {
     {
         auto ch = str[i];
         if (!Poco::Ascii::isDigit(ch) && ch != '.')
-            THROW(Poco::InvalidArgumentException("restrict_stod requires a string contains only number char! -- " + str));
+            THROW(Poco::InvalidArgumentException(
+                    "restrict_stod requires a string contains only number char! -- " + str));
     }
 
     return std::stod(str);
 }
 
-bool is_valid_utf8(const std::string& str) {
+bool is_valid_utf8(const std::string &str)
+{
     int i = 0;
-    while (i < str.size()) {
+    while (i < str.size())
+    {
         int len = 0;
         unsigned char c = str[i];
-        if ((c & 0x80) == 0x00) {
+        if ((c & 0x80) == 0x00)
+        {
             len = 1;
-        } else if ((c & 0xE0) == 0xC0) {
+        }
+        else if ((c & 0xE0) == 0xC0)
+        {
             len = 2;
-        } else if ((c & 0xF0) == 0xE0) {
+        }
+        else if ((c & 0xF0) == 0xE0)
+        {
             len = 3;
-        } else if ((c & 0xF8) == 0xF0) {
+        }
+        else if ((c & 0xF8) == 0xF0)
+        {
             len = 4;
-        } else {
+        }
+        else
+        {
             return false;
         }
         i++;
-        for (int j = 1; j < len; j++) {
-            if (i >= str.size() || (str[i] & 0xC0) != 0x80) {
+        for (int j = 1; j < len; j++)
+        {
+            if (i >= str.size() || (str[i] & 0xC0) != 0x80)
+            {
                 return false;
             }
             i++;
@@ -129,7 +147,8 @@ bool is_valid_utf8(const std::string& str) {
     return true;
 }
 
-std::string fix_utf8(const std::string& str) {
+std::string fix_utf8(const std::string &str)
+{
     if (is_valid_utf8(str))
         return str;
     if (str.size() < 8)
@@ -138,13 +157,19 @@ std::string fix_utf8(const std::string& str) {
 
     // 将一个子字符串的前后边界尽可能少地扩展，使得新的子字符串刚好满足UTF-8编码
     int padding = 0;
-    while (start >= 0 && end < str.size() && !is_valid_utf8(str.substr(start, end - start + 1))) {
+    while (start >= 0 && end < str.size() && !is_valid_utf8(str.substr(start, end - start + 1)))
+    {
         padding++;
-        if ((start - padding) >= 0 && is_valid_utf8(str.substr(start - padding, end - start + 1 + padding))) {
+        if ((start - padding) >= 0 && is_valid_utf8(str.substr(start - padding, end - start + 1 + padding)))
+        {
             start -= padding;
-        } else if ((end + padding) < str.size() && is_valid_utf8(str.substr(start, end - start + 1 + padding))) {
+        }
+        else if ((end + padding) < str.size() && is_valid_utf8(str.substr(start, end - start + 1 + padding)))
+        {
             end += padding;
-        } else {
+        }
+        else
+        {
             return "";
         }
     }

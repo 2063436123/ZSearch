@@ -1,10 +1,11 @@
 #pragma once
+
 #include <shared_mutex>
 
 const int CHAR_LIMIT = 0xFF; // 字符的编码值上限
 struct TrieNode
 {
-    TrieNode(TrieNode* parent_, int value_, bool is_word_) : parent(parent_), value(value_), is_word(is_word_)
+    TrieNode(TrieNode *parent_, int value_, bool is_word_) : parent(parent_), value(value_), is_word(is_word_)
     {
     }
 
@@ -15,8 +16,8 @@ struct TrieNode
 
     bool is_word;
     int value;
-    TrieNode* parent;
-    std::unordered_map<int, TrieNode*> children;
+    TrieNode *parent;
+    std::unordered_map<int, TrieNode *> children;
 };
 
 // 使用单词🌲，实现部分匹配，例如文本中没有 su，但是输入 su 可以匹配到 sun
@@ -28,7 +29,7 @@ public:
         root = new TrieNode(nullptr, nextNodeId(), false);
     }
 
-    void add(const std::string& word)
+    void add(const std::string &word)
     {
         std::lock_guard lg(roots_lock);
         if (word.empty())
@@ -37,8 +38,8 @@ public:
 
         for (size_t i = 0; i < word.size(); i++)
         {
-            assert((int)word[i] >= -0xFF && (int)word[i] <= CHAR_LIMIT);
-            auto& node_ref = node->children[word[i]];
+            assert((int) word[i] >= -0xFF && (int) word[i] <= CHAR_LIMIT);
+            auto &node_ref = node->children[word[i]];
 
             if (node_ref == nullptr)
             {
@@ -51,7 +52,7 @@ public:
         node->is_word = true;
     }
 
-    void remove(const std::string& word)
+    void remove(const std::string &word)
     {
         std::lock_guard lg(roots_lock);
         if (word.empty())
@@ -60,8 +61,8 @@ public:
 
         for (size_t i = 0; i < word.size(); i++)
         {
-            assert((int)word[i] >= -0xFF && (int)word[i] <= CHAR_LIMIT);
-            auto& node_ref = node->children[word[i]];
+            assert((int) word[i] >= -0xFF && (int) word[i] <= CHAR_LIMIT);
+            auto &node_ref = node->children[word[i]];
             if (!node_ref)
                 return;
 
@@ -92,14 +93,23 @@ public:
             suffixs.pop_back();
 
         std::vector<std::string> res;
-        for (const auto& suffix : suffixs)
+        for (const auto &suffix : suffixs)
             res.push_back(word + suffix);
 
         return res;
     }
 
+    void clear()
+    {
+        std::lock_guard lg(roots_lock);
+        node_id = 0;
+        safe_delete();
+        root = nullptr;
+    }
+
     std::string print() const
     {
+        std::shared_lock lg(roots_lock);
         std::stringstream oss;
         drawTree(oss, root);
         return oss.str();
@@ -107,11 +117,18 @@ public:
 
     ~Trie()
     {
-        // TODO: delete
+        safe_delete();
     }
 
 private:
-    void drawTree(std::ostream& oss, const TrieNode* node, std::string prefix = "", bool is_tail = true, char edge_char = '-') const
+    // TODO: delete
+    void safe_delete()
+    {
+
+    }
+
+    void drawTree(std::ostream &oss, const TrieNode *node, std::string prefix = "", bool is_tail = true,
+                  char edge_char = '-') const
     {
         oss << prefix;
         oss << (is_tail ? "└" + std::string(1, edge_char) + "- " : "├" + std::string(1, edge_char) + "- ");
@@ -133,7 +150,7 @@ private:
         return node_id++;
     }
 
-    void tryMatchSuffix(const TrieNode* node, std::vector<std::string>& suffixs, int &left_suffix_num) const
+    void tryMatchSuffix(const TrieNode *node, std::vector<std::string> &suffixs, int &left_suffix_num) const
     {
         if (node == nullptr || left_suffix_num == 0)
             return;
@@ -145,9 +162,9 @@ private:
                 return;
         }
 
-        for (const auto& pair : node->children)
+        for (const auto &pair : node->children)
         {
-            suffixs.back().push_back((char)pair.first);
+            suffixs.back().push_back((char) pair.first);
             tryMatchSuffix(pair.second, suffixs, left_suffix_num);
             suffixs.back().pop_back();
         }
@@ -155,5 +172,5 @@ private:
 
     mutable std::shared_mutex roots_lock;
     std::atomic_uint64_t node_id = 0;
-    TrieNode* root;
+    TrieNode *root;
 };

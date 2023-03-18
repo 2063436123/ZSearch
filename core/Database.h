@@ -12,7 +12,7 @@ public:
     // TODO: 明确 new_database 的定位
     // 如果 new_database == false, 那么需要提前手动在 path 处创建文件夹
     // 如果 cover old，那么需要
-    explicit Database(std::filesystem::path path, bool new_database = false) : database_path(std::move(path)), is_new_database(new_database)
+    explicit Database(std::filesystem::path location, bool new_database = false) : database_path(std::move(location)), is_new_database(new_database)
     {
         if (!exists(database_path))
             std::filesystem::create_directory(database_path);
@@ -154,6 +154,25 @@ public:
         return query_stat_map;
     }
 
+    void addDocumentDownloadFreq(size_t doc_id)
+    {
+        std::lock_guard<std::mutex> guard(document_freq_map_lock);
+        ++document_freq_map[doc_id].first;
+    }
+
+    void addDocumentQueryFreq(const std::vector<size_t>& doc_ids)
+    {
+        std::lock_guard<std::mutex> guard(document_freq_map_lock);
+        for (size_t doc_id : doc_ids)
+            ++document_freq_map[doc_id].second;
+    }
+
+    auto getAllDocumentFreq() const
+    {
+        std::lock_guard<std::mutex> guard(document_freq_map_lock);
+        return document_freq_map;
+    }
+
     static void createDatabase(const std::filesystem::path& path)
     {
         if (!create_directory(path))
@@ -169,9 +188,12 @@ public:
 
     void clear()
     {
-        std::scoped_lock sl(term_map_lock, document_map_lock);
+        std::scoped_lock sl(term_map_lock, document_map_lock, query_stat_map_lock, document_freq_map_lock);
         term_map.clear();
         document_map.clear();
+        query_stat_map.clear();
+        document_freq_map.clear();
+        trie.clear();
         next_doc_id = 1;
     }
 
@@ -192,6 +214,9 @@ private:
 
     QueryStatisticsMap query_stat_map;
     mutable std::mutex query_stat_map_lock;
+
+    std::unordered_map<size_t, std::pair<uint64_t, uint64_t>> document_freq_map; // doc_id -> (download_freq, query_freq)
+    mutable std::mutex document_freq_map_lock;
 
     Trie trie; // self thread-safe
 

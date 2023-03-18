@@ -31,6 +31,7 @@ terms : terms 'AND' terms
     | term
     ;
 
+// 可以输出 having 的值，而非根据 having 筛选
 query : terms? ('having' having)? ('order by' aggExpr)?;
 
 AggOp : 'SUM'

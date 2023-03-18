@@ -15,12 +15,16 @@ terms : terms 'AND' terms
 class TermsExecutor : public Executor
 {
 public:
-    TermsExecutor(Database& db_, const ConjunctionNode* root_) : Executor(db_), bit_set_size(0), root(root_) {}
+    TermsExecutor(Database& db_, const ConjunctionNode* root_ = nullptr) : Executor(db_), bit_set_size(0), root(root_) {}
 
     // return doc ids
     std::any execute(const std::any&) override
     {
         bit_set_size = db.maxAllocatedDocId();
+        if (!root) // output all doc_id
+        {
+            return DynamicBitSet(bit_set_size).fill().toUnorderedSet(1);
+        }
         return recursiveExecute(root).toUnorderedSet(1);
     }
 

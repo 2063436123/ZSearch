@@ -3,7 +3,7 @@
 class QueryStatistics;
 
 using QueryStatisticsPtr = std::shared_ptr<QueryStatistics>;
-using QueryStatisticsMap = std::map<DateTime, QueryStatisticsPtr>;
+using QueryStatisticsMap = std::multimap<DateTime, QueryStatisticsPtr>;
 
 struct QueryStatistics
 {

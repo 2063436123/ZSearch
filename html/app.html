@@ -52,55 +52,59 @@
                     type: "page",
                     body: [
                       {
-                        type: "chart",
-                        config: {
-                          graphic: {
-                            elements: [
-                              {
-                                type: "text",
-                                left: "center",
-                                top: "center",
-                                style: {
-                                  text: "ZSearch",
-                                  fontSize: 150,
-                                  fontWeight: "bold",
-                                  lineDash: [0, 200],
-                                  lineDashOffset: 0,
-                                  fill: "transparent",
-                                  stroke: "#000",
-                                  lineWidth: 1,
-                                },
-                                keyframeAnimation: {
-                                  duration: 4000,
-                                  loop: false,
-                                  keyframes: [
-                                    {
-                                      percent: 0.7,
-                                      style: {
-                                        fill: "transparent",
-                                        lineDashOffset: 200,
-                                        lineDash: [200, 0],
-                                      },
-                                    },
-                                    {
-                                      // Stop for a while.
-                                      percent: 0.8,
-                                      style: {
-                                        fill: "transparent",
-                                      },
-                                    },
-                                    {
-                                      percent: 1,
-                                      style: {
-                                        fill: "black",
-                                      },
-                                    },
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        },
+                        type: "image",
+                        imageMode: "original",
+                        src: "HOST/zsearch_show.jpg",
+
+                        // type: "chart",
+                        // config: {
+                        //   graphic: {
+                        //     elements: [
+                        //       {
+                        //         type: "text",
+                        //         left: "center",
+                        //         top: "center",
+                        //         style: {
+                        //           text: "ZSearch",
+                        //           fontSize: 150,
+                        //           fontWeight: "bold",
+                        //           lineDash: [0, 200],
+                        //           lineDashOffset: 0,
+                        //           fill: "transparent",
+                        //           stroke: "#000",
+                        //           lineWidth: 1,
+                        //         },
+                        //         keyframeAnimation: {
+                        //           duration: 4000,
+                        //           loop: false,
+                        //           keyframes: [
+                        //             {
+                        //               percent: 0.7,
+                        //               style: {
+                        //                 fill: "transparent",
+                        //                 lineDashOffset: 200,
+                        //                 lineDash: [200, 0],
+                        //               },
+                        //             },
+                        //             {
+                        //               // Stop for a while.
+                        //               percent: 0.8,
+                        //               style: {
+                        //                 fill: "transparent",
+                        //               },
+                        //             },
+                        //             {
+                        //               percent: 1,
+                        //               style: {
+                        //                 fill: "black",
+                        //               },
+                        //             },
+                        //           ],
+                        //         },
+                        //       },
+                        //     ],
+                        //   },
+                        // },
                       },
                     ],
                   },
@@ -209,6 +213,11 @@
                                               url: "HOST/download-document?doc_id=$doc_id&id=$id",
                                             },
                                           },
+                                        },
+                                        {
+                                          componentId: "u:90adflsdfsf",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
                                         },
                                       ],
                                     },
@@ -387,7 +396,7 @@
                         },
                       },
                       {
-                        label: "重新索引",
+                        label: "重建数据库",
                         type: "button",
                         onEvent: {
                           click: {
@@ -395,7 +404,7 @@
                               {
                                 actionType: "dialog",
                                 dialog: {
-                                  body: "确认要重新索引所有条目吗 —— 可能需要一段时间",
+                                  body: "确认要重建数据库吗 —— 已有的统计信息也会被删除",
                                   onEvent: {
                                     confirm: {
                                       actions: [
@@ -415,6 +424,11 @@
                                         },
                                         {
                                           componentId: "u:12ijo3j1o2d",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
+                                        },
+                                        {
+                                          componentId: "u:90adflsdfsf",
                                           actionType: "reload",
                                           dataMergeMode: "override",
                                         },
@@ -491,36 +505,100 @@
                     type: "page",
                     body: [
                       {
-                        type: "chart",
-                        id: "u:12ijo3j1o2d",
-                        api: "HOST/get-type-statistics?id=$id",
-                        config: {
-                          title: {
-                            text: "文件统计",
-                            left: "center",
-                          },
-                          tooltip: {
-                            trigger: "item",
-                          },
-                          legend: {
-                            orient: "vertical",
-                            left: "left",
-                          },
-                          series: [
-                            {
-                              type: "pie",
-                              radius: "50%",
-                              data: "$results",
-                              emphasis: {
-                                itemStyle: {
-                                  shadowBlur: 10,
-                                  shadowOffsetX: 0,
-                                  shadowColor: "rgba(0, 0, 0, 0.5)",
-                                },
+                        type: "grid",
+                        // justify: "space-evenly",
+                        columns: [
+                          {
+                            type: "chart",
+                            id: "u:12ijo3j1o2d",
+                            api: "HOST/get-type-statistics?id=$id",
+                            config: {
+                              title: {
+                                text: "文件类型统计",
+                                left: "center",
                               },
+                              tooltip: {
+                                trigger: "item",
+                              },
+                              legend: {
+                                orient: "vertical",
+                                left: "left",
+                              },
+                              series: [
+                                {
+                                  type: "pie",
+                                  radius: "50%",
+                                  data: "$results",
+                                  emphasis: {
+                                    itemStyle: {
+                                      shadowBlur: 10,
+                                      shadowOffsetX: 0,
+                                      shadowColor: "rgba(0, 0, 0, 0.5)",
+                                    },
+                                  },
+                                },
+                              ],
                             },
-                          ],
-                        },
+                          },
+                          {
+                            type: "service",
+                            id: "u:90adflsdfsf",
+                            api: "HOST/get-document-freq-statistics?id=$id",
+                            body: {
+                              type: "table",
+                              title: "最热门文档",
+                              className: "font-bold",
+                              source: "$results",
+                              columns: [
+                                {
+                                  label: "文件名",
+                                  name: "doc_name",
+                                  popOver: {
+                                    body: {
+                                      type: "tpl",
+                                      tpl: "${doc_path}",
+                                    },
+                                  },
+                                },
+                                {
+                                  label: "检索量",
+                                  name: "query_freq",
+                                },
+                                {
+                                  label: "下载量",
+                                  name: "download_freq",
+                                },
+                              ],
+                              itemActions: [
+                                {
+                                  // 下载文件
+                                  type: "button",
+                                  icon: "fa fa-download",
+                                  onEvent: {
+                                    click: {
+                                      actions: [
+                                        {
+                                          actionType: "ajax",
+                                          args: {
+                                            api: {
+                                              method: "download",
+                                              url: "HOST/download-document?doc_id=$doc_id&id=$id",
+                                            },
+                                          },
+                                        },
+                                        {
+                                          componentId: "u:90adflsdfsf",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
                       },
                       {
                         type: "divider",
@@ -532,7 +610,7 @@
                         height: 500,
                         config: {
                           title: {
-                            text: "查询统计",
+                            text: "查询效率统计",
                             left: "center",
                           },
                           tooltip: {
@@ -541,7 +619,7 @@
                               animation: false,
                               label: {
                                 show: true,
-                              }
+                              },
                             },
                           },
                           legend: {

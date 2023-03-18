@@ -16,11 +16,12 @@ public:
 protected:
     Database& db;
 };
+using ExecutorPtr = std::shared_ptr<Executor>;
 
 class ExecutePipeline
 {
 public:
-    ExecutePipeline& addExecutor(Executor* executor)
+    ExecutePipeline& addExecutor(ExecutorPtr executor)
     {
         executors.push_back(executor);
         return *this;
@@ -37,5 +38,5 @@ public:
     }
 
 private:
-    std::vector<Executor*> executors;
+    std::vector<ExecutorPtr> executors;
 };

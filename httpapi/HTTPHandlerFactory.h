@@ -89,6 +89,10 @@ public:
         {
             return new GetQueryStatisticsHandler(db);
         }
+        if (uri_path == "/get-document-freq-statistics")
+        {
+            return new GetDocumentFreqStatisticsHandler(db);
+        }
         return new GetFileHandler();
     }
 

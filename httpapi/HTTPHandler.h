@@ -142,6 +142,7 @@ public:
             return;
         }
 
+        db.addDocumentDownloadFreq(doc_id);
         std::ifstream file(document_ptr->getPath().string());
         if (!file.is_open())
         {
@@ -153,6 +154,7 @@ public:
             response.set("Content-Disposition", "attachment; filename=\"" + document_ptr->getPath().filename().string() + "\"");
             response.setStatus(HTTPResponse::HTTP_OK);
             auto& out = response.send();
+
             Poco::StreamCopier::copyStream(file, out);
         }
     }

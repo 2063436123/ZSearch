@@ -15,7 +15,7 @@ terms : terms 'AND' terms
 class LimitExecutor : public Executor
 {
 public:
-    LimitExecutor(Database& db_, uint64_t limit_) : Executor(db_), limit(limit_) {}
+    LimitExecutor(Database& db_, uint64_t limit_ = 10) : Executor(db_), limit(limit_) {}
 
     // return doc ids
     std::any execute(const std::any& input) override

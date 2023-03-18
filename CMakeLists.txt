@@ -32,14 +32,6 @@ add_executable(testJson third-party-tests/testJson.cpp)
 add_executable(testDaemon daemon/testDaemon.cpp)
 add_executable(testmyDaemon daemon/testDaemonLightly.cpp)
 add_executable(testSearcher searcher/testSearcher.cpp)
+add_executable(testParser queryparser/testParser.cpp)
 
 add_executable(testExecutor executor/testExecutor.cpp)
-
-add_executable(testAntlr4 queryparser/grammars/testAntlr4.cpp
-        queryparser/grammars/QueryListener.cpp
-        queryparser/grammars/QueryParser.cpp
-        queryparser/grammars/QueryLexer.cpp
-        queryparser/grammars/QueryBaseListener.cpp
-        queryparser/grammars/QueryVisitor.cpp
-        queryparser/grammars/QueryBaseVisitor.cpp
-        )

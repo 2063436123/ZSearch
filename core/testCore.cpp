@@ -67,6 +67,23 @@ TEST(Trie, integrated)
         ASSERT_NE(db.findTerm(matched), nullptr);
 }
 
+TEST(Indexer, root_path)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH);
+
+    int expected_num;
+    const char* cmd = R"(find /Users/peter/Code/GraduationDesignSrc/master -type f \( -name "*.txt" -o -name "*.h" -o -name "*.cpp" -o -name "*.sh" -o -name "*.xml" -o -name "*.json" -o -name "*.story" -o -name "*.md" \) | wc -l > tmp)";
+    system(cmd);
+    std::ifstream fin("tmp");
+    fin >> expected_num;
+    fin.close();
+    system("rm tmp");
+
+    ASSERT_EQ(db.maxAllocatedDocId(), expected_num - 1);
+}
+
 TEST(database, CreateDatabase)
 {
     try

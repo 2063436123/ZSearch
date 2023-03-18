@@ -82,12 +82,12 @@ public:
             for (int query_id = 0; query_id < querys.size(); query_id++)
             {
                 LeafNode<std::string> leaf_node(querys[query_id]);
-                TermsExecutor terms_executor(db, &leaf_node);
-                ScoreExecutor score_executor(db, {{querys[query_id], 1.0}});
-                LimitExecutor limit_executor(db, 10);
+                auto terms_executor = std::make_shared<TermsExecutor>(db, &leaf_node);
+                auto score_executor = std::make_shared<ScoreExecutor>(db, std::unordered_map<std::string, double>{{querys[query_id], 1.0}});
+                auto limit_executor = std::make_shared<LimitExecutor> (db, 10);
 
                 // TODO: 考虑执行 DAG，比如多个 score_executor 作为一个 limit_executor 的输入.
-                pipeline.addExecutor(&terms_executor).addExecutor(&score_executor).addExecutor(&limit_executor);
+                pipeline.addExecutor(terms_executor).addExecutor(score_executor).addExecutor(limit_executor);
 
                 auto term_ptr = db.findTerm(querys[query_id]);
                 if (!term_ptr)
@@ -133,6 +133,14 @@ public:
         if (search_timer.elapsedMilliseconds() > 0 || !res.empty())
             db.addQueryStatistics(search_timer.getStartTime(),
                                   std::make_shared<QueryStatistics>(query, search_timer.elapsedMilliseconds(), res.size()));
+        // 收集最经常被查询到的文档的编号
+        std::vector<size_t> doc_ids;
+        for (const auto& search_result : res)
+        {
+            doc_ids.push_back(search_result.doc_id);
+        }
+        db.addDocumentQueryFreq(doc_ids);
+
         return res;
     }
 

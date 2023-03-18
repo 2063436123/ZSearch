@@ -217,11 +217,11 @@ TEST(ScoreExecutor, base)
 
     {
         LeafNode<String> l1("you");
-        TermsExecutor terms_executor(db, &l1);
-        ScoreExecutor score_executor(db, std::unordered_map<std::string, double>{{"you", 1.0}});
+        auto terms_executor = std::make_shared<TermsExecutor>(db, &l1);
+        auto score_executor = std::make_shared<ScoreExecutor>(db, std::unordered_map<std::string, double>{{"you", 1.0}});
 
         ExecutePipeline pipeline;
-        pipeline.addExecutor(&terms_executor).addExecutor(&score_executor);
+        pipeline.addExecutor(terms_executor).addExecutor(score_executor);
         auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
         std::map<size_t, size_t, std::greater<>> expected({{167, IfI}, {138, WhatCan}, {60, WhenYou}, {2, Alice}});
         EXPECT_EQ(doc_id_vs_score, expected);
@@ -237,12 +237,12 @@ TEST(LimitExecutor, base)
 
     {
         LeafNode<String> l1("you");
-        TermsExecutor terms_executor(db, &l1);
-        ScoreExecutor score_executor(db, std::unordered_map<std::string, double>{{"you", 1.0}});
-        LimitExecutor limit_executor(db, 10);
+        auto terms_executor = std::make_shared<TermsExecutor>(db, &l1);
+        auto score_executor = std::make_shared<ScoreExecutor>(db, std::unordered_map<std::string, double>{{"you", 1.0}});
+        auto limit_executor = std::make_shared<LimitExecutor>(db, 10);
 
         ExecutePipeline pipeline;
-        pipeline.addExecutor(&terms_executor).addExecutor(&score_executor).addExecutor(&limit_executor);
+        pipeline.addExecutor(terms_executor).addExecutor(score_executor).addExecutor(limit_executor);
         auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
         EXPECT_EQ(doc_id_vs_score.size(), 10);
     }
