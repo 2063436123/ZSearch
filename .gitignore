@@ -11,4 +11,6 @@
 .antlr
 .DS_Store
 */grammars
+*/meta
+*/listen
 /relational

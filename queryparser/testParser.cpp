@@ -3,6 +3,7 @@
 #include "Pos.h"
 #include "indexer/Indexer.h"
 #include "executor/TermsExecutor.h"
+#include "Parser.h"
 
 TEST(quotedString, base)
 {
@@ -74,9 +75,22 @@ TEST(Cpp20, base)
 
     auto f = foo<TermsExecutor>(db);
     auto us = f.execute(nullptr);
-    // TODO: check
-    std::cout << std::any_cast<std::unordered_set<size_t>>(us).size() << std::endl;
     ASSERT_EQ(std::any_cast<std::unordered_set<size_t>>(us), DynamicBitSet(db.maxAllocatedDocId()).fill().toUnorderedSet(1));
+}
+
+TEST(parser, integrated_without_having)
+{
+    Database db(ROOT_PATH + "/database1");
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    auto [type, ast] = executeQuery(R"('love' LIMIT 10)");
+    ASSERT_EQ(QueryErrorType::Non, type);
+
+    auto pipeline = ast->as<ASTQuery>()->toExecutorPipeline(db);
+    auto scores = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
+
+    ASSERT_EQ(scores.size(), 3);
 }
 
 int main()

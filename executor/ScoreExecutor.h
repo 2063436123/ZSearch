@@ -10,6 +10,7 @@
 class ScoreExecutor : public Executor
 {
 public:
+    // word_freq 表示 word 在 query 中的词频
     ScoreExecutor(Database& db_, const std::unordered_map<std::string, double>& word_freq_) : Executor(db_), word_freq(word_freq_) {}
 
     std::any execute(const std::any &doc_ids_) override

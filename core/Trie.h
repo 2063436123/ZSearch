@@ -104,7 +104,7 @@ public:
         std::lock_guard lg(roots_lock);
         node_id = 0;
         safe_delete();
-        root = nullptr;
+        root = new TrieNode(nullptr, nextNodeId(), false);
     }
 
     std::string print() const
@@ -121,7 +121,7 @@ public:
     }
 
 private:
-    // TODO: delete
+    // TODO: delete recursively
     void safe_delete()
     {
 

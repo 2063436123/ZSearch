@@ -3,6 +3,7 @@
 #include "IParser.h"
 #include "CommonParsers.h"
 #include "ExpressionListParsers.h"
+#include "ASTQuery.h"
 
 class ParserQuery : public IParserBase
 {

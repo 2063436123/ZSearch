@@ -76,7 +76,7 @@ private:
     {
         if (token.type == TokenType::Number)
         {
-            node = std::make_shared<ASTLimit>(restrictStod(std::string(token.begin, token.end)));
+            node = std::make_shared<ASTLimit>(restrictStoi<int>(std::string(token.begin, token.end)));
         }
         else
         {

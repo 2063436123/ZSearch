@@ -9,7 +9,7 @@ enum class QueryErrorType
     SyntaxError
 };
 
-static std::tuple<QueryErrorType, ASTPtr> executeQuery(const char *begin, const char* end)
+static std::tuple<QueryErrorType, ASTPtr> parseQuery(const char *begin, const char* end)
 {
     ASTPtr ast;
     Tokens tokens(begin, end, 100);
@@ -31,5 +31,10 @@ static std::tuple<QueryErrorType, ASTPtr> executeQuery(const char *begin, const 
     }
 
     assert(ast != nullptr);
-    return {Non, ast};
+    return {QueryErrorType::Non, ast};
+}
+
+static std::tuple<QueryErrorType, ASTPtr> executeQuery(const std::string& str)
+{
+    return parseQuery(str.data(), str.data() + str.size());
 }

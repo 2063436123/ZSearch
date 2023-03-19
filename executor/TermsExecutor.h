@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Executor.h"
+
+#include <utility>
 #include "ConjunctionTree.h"
 #include "utils/DynamicBitSet.h"
 
@@ -15,7 +17,7 @@ terms : terms 'AND' terms
 class TermsExecutor : public Executor
 {
 public:
-    TermsExecutor(Database& db_, const ConjunctionNode* root_ = nullptr) : Executor(db_), bit_set_size(0), root(root_) {}
+    TermsExecutor(Database& db_, ConjunctionTree root_ = nullptr) : Executor(db_), bit_set_size(0), root(std::move(root_)) {}
 
     // return doc ids
     std::any execute(const std::any&) override
@@ -25,7 +27,7 @@ public:
         {
             return DynamicBitSet(bit_set_size).fill().toUnorderedSet(1);
         }
-        return recursiveExecute(root).toUnorderedSet(1);
+        return recursiveExecute(root.ptr()).toUnorderedSet(1);
     }
 
 private:
@@ -76,5 +78,5 @@ private:
 
 private:
     size_t bit_set_size;
-    const ConjunctionNode* root;
+    ConjunctionTree root;
 };

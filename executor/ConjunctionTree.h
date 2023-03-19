@@ -20,6 +20,33 @@ struct ConjunctionNode {
     std::vector<ConjunctionNode*> children;
 };
 
+class ConjunctionTree
+{
+public:
+    ConjunctionTree(ConjunctionNode* root_, bool adopt_pointer_ = false) : adopt_pointer(adopt_pointer_)
+    {
+        if (adopt_pointer)
+            own_root = std::shared_ptr<ConjunctionNode>(root_);
+        else
+            root = root_;
+    }
+
+    bool operator!() const
+    {
+        return ptr() == nullptr;
+    }
+
+    ConjunctionNode* ptr() const
+    {
+        return adopt_pointer ? own_root.get() : root;
+    }
+
+private:
+    bool adopt_pointer = false;
+    ConjunctionNode* root = nullptr;
+    std::shared_ptr<ConjunctionNode> own_root;
+};
+
 struct InterNode : public ConjunctionNode {
     InterNode(ConjunctionType type_) : type(type_) {}
     ConjunctionType type;

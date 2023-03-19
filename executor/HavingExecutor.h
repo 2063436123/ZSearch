@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Executor.h"
+
+#include <utility>
 #include "ConjunctionTree.h"
 #include "utils/DynamicBitSet.h"
 #include "Predicate.h"
@@ -16,7 +18,7 @@ having : where
 class HavingExecutor : public Executor
 {
 public:
-    HavingExecutor(Database& db_, const ConjunctionNode* root_ = nullptr) : Executor(db_), root(root_) {}
+    HavingExecutor(Database& db_, ConjunctionTree root_ = nullptr) : Executor(db_), root(std::move(root_)) {}
 
     std::any execute(const std::any &doc_ids_) override
     {
@@ -33,7 +35,7 @@ public:
                 continue;
 
             auto kvs = document_ptr->getKvs();
-            if (determinePredicate(kvs, root))
+            if (determinePredicate(kvs, root.ptr()))
                 ret.emplace(doc_id);
         }
         return ret;
@@ -82,5 +84,5 @@ private:
         THROW(UnreachableException());
     }
 
-    const ConjunctionNode* root;
+    ConjunctionTree root;
 };

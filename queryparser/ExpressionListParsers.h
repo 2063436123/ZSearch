@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IParser.h"
+#include "utils/StringUtils.h"
 
 class ParserWordList : public IParserBase
 {
@@ -14,7 +15,7 @@ public:
     {
         if (pos->type == TokenType::StringLiteral)
         {
-            node = std::make_shared<ASTWord>(std::string{pos->begin, pos->end});
+            node = std::make_shared<ASTWord>(trimQuote({pos->begin, pos->end}));
             ++pos;
             return true;
         }
