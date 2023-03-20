@@ -52,6 +52,9 @@
                     type: "page",
                     body: [
                       {
+                        type: "divider",
+                      },
+                      {
                         type: "image",
                         imageMode: "original",
                         src: "HOST/zsearch_show.jpg",
@@ -122,6 +125,10 @@
                         type: "wrapper",
                         name: "my_form",
                         body: [
+                          {
+                            type: "tpl",
+                            tpl: "<p>语法: term having expr limit number, 例如 'hello' HAVING AUTHOR() = 'jd' LIMIT 2; having value('author') = 'ljz'</p>"
+                          },
                           {
                             type: "input-text",
                             name: "query",
@@ -504,6 +511,9 @@
                   body: {
                     type: "page",
                     body: [
+                      {
+                        type: "divider",
+                      },
                       {
                         type: "grid",
                         // justify: "space-evenly",

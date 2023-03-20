@@ -79,7 +79,7 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
             else if (value[0].is_string())
                 type = ValueType::String;
             else
-                THROW(Poco::NotImplementedException());
+                THROW(UnreachableException());
 
             Value v(ArrayLabel{}, type);
 
@@ -107,7 +107,7 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
                 };
             }
             else
-                THROW(Poco::NotImplementedException());
+                THROW(UnreachableException());
 
             v.doArrayHandler(hb, hn, hs, hd);
 
@@ -119,7 +119,7 @@ void extractKvs(const std::unique_ptr<Reader>& reader, std::unordered_map<Key, V
         }
         else
         {
-            THROW(Poco::NotImplementedException(value.type_name()));
+            THROW(UnreachableException(value.type_name()));
         }
     }
 }

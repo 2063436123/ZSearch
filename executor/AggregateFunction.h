@@ -2,7 +2,7 @@
 #include "../typedefs.h"
 #include "core/Value.h"
 
-// assert: Predicate 保证调用 AggregateFunction 时，value.isArray() 成立.
+// TODO: 实现无参函数：AUTHOR(), MTIME(), EXISTS(), VALUE()
 
 Value sumFunction(const Value& value)
 {
@@ -108,4 +108,31 @@ Value minFunction(const Value& value)
                          });
 
     return min;
+}
+
+Value valueFunction(const Value& value)
+{
+    if (value.isArray())
+        THROW(Poco::InvalidArgumentException("valueFunction() can't handle Array type"));
+    return value;
+}
+
+using AggregateFunction = std::function<Value(const Value&)>;
+
+AggregateFunction getAggByName(std::string agg_name)
+{
+    auto lower_agg_name = Poco::toLower(agg_name);
+    if (lower_agg_name == "sum")
+        return sumFunction;
+    if (lower_agg_name == "count")
+        return countFunction;
+    if (lower_agg_name == "avg")
+        return avgFunction;
+    if (lower_agg_name == "max")
+        return maxFunction;
+    if (lower_agg_name == "min")
+        return minFunction;
+    if (lower_agg_name == "value")
+        return valueFunction;
+    THROW(UnreachableException("getAggByName --" + agg_name));
 }

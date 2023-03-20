@@ -22,12 +22,15 @@ enum class TokenType
     Slash, // /
     Plus, // +
     Minus, // -
+
     Equals, // =
     NotEquals, // !=
     Less, // <
     Greater, // >
     LessOrEquals, // <=
     GreaterOrEquals, // >=
+    InRange, // IN ()
+
     Concatenation, // ||
 
     EndOfStream,
@@ -35,13 +38,19 @@ enum class TokenType
     Error
 };
 
+bool isComparableTokenType(TokenType type)
+{
+    return type == TokenType::Less || type == TokenType::LessOrEquals || type == TokenType::Equals
+           || type == TokenType::NotEquals || type == TokenType::Greater || type == TokenType::GreaterOrEquals;
+}
+
 struct Token
 {
     TokenType type;
     const char *begin;
     const char *end;
 
-    std::string toString()
+    std::string string() const
     {
         if (!begin)
             return "";
@@ -218,6 +227,15 @@ private:
                 if (pos < end && *pos == '=')
                     return Token(TokenType::GreaterOrEquals, token_begin, ++pos);
                 return Token(TokenType::Greater, token_begin, pos);
+            }
+            case 'I':
+            {
+                if (pos < end - 1 && *(pos + 1) == 'N')
+                {
+                    ++pos;
+                    ++pos;
+                    return Token(TokenType::InRange, token_begin, pos);
+                }
             }
 
             default:

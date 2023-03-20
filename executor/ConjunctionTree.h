@@ -36,13 +36,13 @@ public:
         return ptr() == nullptr;
     }
 
-    ConjunctionNode* ptr() const
+    [[nodiscard]] ConjunctionNode* ptr() const
     {
         return adopt_pointer ? own_root.get() : root;
     }
 
 private:
-    bool adopt_pointer = false;
+    bool adopt_pointer;
     ConjunctionNode* root = nullptr;
     std::shared_ptr<ConjunctionNode> own_root;
 };

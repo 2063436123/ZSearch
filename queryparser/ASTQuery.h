@@ -25,11 +25,21 @@ public:
         THROW(UnreachableException("ASTQuery::toExecutor"));
     }
 
+    // for displayed results detail generation.
+    std::optional<std::string> getTerm() const
+    {
+        if (!word_list)
+            return std::nullopt;
+        return word_list->as<ASTWord>()->getWord();
+    }
+
     ExecutePipeline toExecutorPipeline(Database & db) const
     {
         ExecutePipeline pipeline;
 
-        std::unordered_map<std::string, double> word_freq{{word_list->as<ASTWord>()->getWord(), 1.0}};
+        std::unordered_map<std::string, double> word_freq;
+        if (word_list)
+            word_freq.emplace(word_list->as<ASTWord>()->getWord(), 1.0);
 
         pipeline.addExecutor(toExecutorHelper<TermsExecutor>(db, word_list))
                 .addExecutor(toExecutorHelper<HavingExecutor>(db, having_expression))

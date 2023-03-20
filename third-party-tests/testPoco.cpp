@@ -22,6 +22,7 @@ TEST(Poco, StreamCopier)
     Poco::StreamCopier::copyToString64(fin, full_text);
     EXPECT_EQ(full_text,
         "{\n"
+        "  \"author\": \"ljz\",\n"
         "  \"widget\": {\n"
         "    \"debug\": \"on\",\n"
         "    \"window\": {\n"

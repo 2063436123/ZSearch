@@ -84,15 +84,15 @@ TEST(CompareFunction, base)
         Value v1(172), v2(172.0), v3(169), v4(100000);
         EXPECT_EQ(compareLess(v1, v2), false);
         EXPECT_EQ(compareGreater(v3, v2), false);
-        EXPECT_EQ(compareGreaterEqual(v1, v2), true);
+        EXPECT_EQ(compareGreaterOrEqual(v1, v2), true);
         EXPECT_EQ(compareLess(v3, v4), true);
-        EXPECT_EQ(compareLessEqual(v3, v2), true);
+        EXPECT_EQ(compareLessOrEqual(v3, v2), true);
 
         Value vs1("hello"), vs2("hella"), vs3("hell"), vs4("helko");
         EXPECT_EQ(compareLess(vs2, vs1), true);
         EXPECT_EQ(compareLess(vs3, vs1), true);
         EXPECT_EQ(compareLess(vs4, vs3), true);
-        EXPECT_EQ(compareGreaterEqual(vs2, vs1), false);
+        EXPECT_EQ(compareGreaterOrEqual(vs2, vs1), false);
     }
     {
         Value v1(100), v2(500);
@@ -222,8 +222,8 @@ TEST(ScoreExecutor, base)
 
         ExecutePipeline pipeline;
         pipeline.addExecutor(terms_executor).addExecutor(score_executor);
-        auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
-        std::map<size_t, size_t, std::greater<>> expected({{167, IfI}, {138, WhatCan}, {60, WhenYou}, {2, Alice}});
+        auto doc_id_vs_score = std::any_cast<Scores>(pipeline.execute());
+        Scores expected({{167, IfI}, {138, WhatCan}, {60, WhenYou}, {2, Alice}});
         EXPECT_EQ(doc_id_vs_score, expected);
     }
 }
@@ -243,7 +243,7 @@ TEST(LimitExecutor, base)
 
         ExecutePipeline pipeline;
         pipeline.addExecutor(terms_executor).addExecutor(score_executor).addExecutor(limit_executor);
-        auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
+        auto doc_id_vs_score = std::any_cast<Scores>(pipeline.execute());
         EXPECT_EQ(doc_id_vs_score.size(), 10);
     }
 }
@@ -272,8 +272,8 @@ TEST(Executor, deleted_document)
         EXPECT_EQ(inter_data, DocIds({IfI, WhatCan, WhenYou, Alice})); // 注意即使文档被删除，TermsExecutor 也不会削减输出结果 --> 需要后续步骤去确认文档的有效性
 
         db.deleteDocument(WhenYou);
-        auto doc_id_vs_score = std::any_cast<std::map<size_t, size_t, std::greater<>>>(score_executor.execute(inter_data));
-        std::map<size_t, size_t, std::greater<>> expected({{141, WhatCan}, {2, Alice}});
+        auto doc_id_vs_score = std::any_cast<Scores>(score_executor.execute(inter_data));
+        Scores expected({{141, WhatCan}, {2, Alice}});
         EXPECT_EQ(doc_id_vs_score, expected);
     }
 }

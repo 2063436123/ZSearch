@@ -20,7 +20,7 @@ class HavingExecutor : public Executor
 public:
     HavingExecutor(Database& db_, ConjunctionTree root_ = nullptr) : Executor(db_), root(std::move(root_)) {}
 
-    std::any execute(const std::any &doc_ids_) override
+    std::any execute(const std::any &doc_ids_) const override
     {
         if (!root) // output all get doc_ids
         {
@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    bool determinePredicate(const std::unordered_map<Key, Value>& kvs, const ConjunctionNode *node)
+    bool determinePredicate(const std::unordered_map<Key, Value>& kvs, const ConjunctionNode *node) const
     {
         if (auto leaf = dynamic_cast<const LeafNode<Predicate>*>(node))
         {

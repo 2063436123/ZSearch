@@ -7,6 +7,7 @@
 #include "executor/LimitExecutor.h"
 #include "core/Database.h"
 #include "QueryStatistics.h"
+#include "queryparser/Parser.h"
 
 struct OldSearchResult
 {
@@ -69,11 +70,52 @@ public:
         if (query.empty())
             return {};
 
-        ExecutePipeline pipeline;
         SearchResultSet res;
 
+        auto transformScoresToResult = [this, &res](ExecutePipeline& pipeline, const std::string& word) -> void {
+            auto scores = std::any_cast<Scores>(pipeline.execute());
+
+            auto term_ptr = db.findTerm(word);
+            if (!word.empty() && !term_ptr) // term_ptr 被删除，结果集失效 ———— 无法描述结果集
+                return;
+
+            for (const auto &iter : scores)
+            {
+                auto document_ptr = db.findDocument(iter.second);
+                if (!document_ptr)
+                    continue;
+
+                std::vector<std::string> highlight_texts;
+                if (!word.empty()) // query 中有 terms
+                {
+                    auto cur_doc_index =
+                            std::lower_bound(term_ptr->posting_list.begin(), term_ptr->posting_list.end(),
+                                             iter.second) - term_ptr->posting_list.begin();
+                    assert(cur_doc_index < term_ptr->statistics_list.size());
+
+                    for (auto offset_in_file : term_ptr->statistics_list[cur_doc_index].offsets_in_file)
+                    {
+                        std::string string_in_file = document_ptr->getString(offset_in_file, word.size(), 80);
+                        auto highlight_text = outputSmooth(string_in_file);
+                        highlight_texts.push_back(highlight_text);
+                    }
+                }
+                else // query 中有 having 子句，而没有 terms
+                {
+                    highlight_texts.emplace_back("未产生匹配文本 —— 因为查询未指定 term");
+                }
+
+                res.push_back(SearchResult{
+                        .doc_id = iter.second,
+                        .doc_path = document_ptr->getPath().string(),
+                        .highlight_texts = highlight_texts,
+                        .score = 1.0 * iter.first / SCORE_GRANULARITY
+                });
+            }
+        };
+
         Timer search_timer;
-        // TODO: 引入 queryparser，支持更多语法的解析
+
         if (std::all_of(query.begin(), query.end(), [](char c) { return !Poco::Ascii::isSpace(c); }))
         {
             // TODO: 在这里用 trie 处理后缀匹配吗
@@ -87,52 +129,28 @@ public:
                 auto limit_executor = std::make_shared<LimitExecutor> (db, 10);
 
                 // TODO: 考虑执行 DAG，比如多个 score_executor 作为一个 limit_executor 的输入.
+                ExecutePipeline pipeline;
                 pipeline.addExecutor(terms_executor).addExecutor(score_executor).addExecutor(limit_executor);
 
-                auto term_ptr = db.findTerm(querys[query_id]);
-                if (!term_ptr)
-                    continue;
-
-
-                auto scores = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
-                for (const auto &iter : scores)
-                {
-                    auto document_ptr = db.findDocument(iter.second);
-                    if (!document_ptr)
-                        continue;
-
-                    std::vector<std::string> highlight_texts;
-                    auto cur_doc_index =
-                            std::lower_bound(term_ptr->posting_list.begin(), term_ptr->posting_list.end(),
-                                             iter.second) - term_ptr->posting_list.begin();
-                    assert(cur_doc_index < term_ptr->statistics_list.size());
-
-                    for (auto offset_in_file : term_ptr->statistics_list[cur_doc_index].offsets_in_file)
-                    {
-                        assert(query_id < querys.size());
-                        std::string string_in_file = document_ptr->getString(offset_in_file, querys[query_id].size(),
-                                                                             80);
-                        auto highlight_text = outputSmooth(string_in_file);
-                        highlight_texts.push_back(highlight_text);
-                    }
-
-                    res.push_back(SearchResult{
-                            .doc_id = iter.second,
-                            .doc_path = document_ptr->getPath().string(),
-                            .highlight_texts = highlight_texts,
-                            .score = 1.0 * iter.first / SCORE_GRANULARITY
-                    });
-                }
+                transformScoresToResult(pipeline, querys[query_id]);
             }
         }
         else
         {
-            THROW(Poco::NotImplementedException("unsupported query -- " + query));
+            auto [type, ast] = parseQuery(query);
+            if (type == QueryErrorType::Non)
+            {
+                auto query_ast = ast->as<ASTQuery>();
+                ExecutePipeline pipeline = query_ast->toExecutorPipeline(db);
+                transformScoresToResult(pipeline, query_ast->getTerm().value_or(""));
+            }
         }
 
+        // 收集查询本身的统计信息
         if (search_timer.elapsedMilliseconds() > 0 || !res.empty())
             db.addQueryStatistics(search_timer.getStartTime(),
                                   std::make_shared<QueryStatistics>(query, search_timer.elapsedMilliseconds(), res.size()));
+
         // 收集最经常被查询到的文档的编号
         std::vector<size_t> doc_ids;
         for (const auto& search_result : res)

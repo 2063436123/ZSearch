@@ -55,6 +55,26 @@ private:
     std::string word;
 };
 
+class ASTHaving : public IAST
+{
+public:
+    ASTHaving(std::string func_name_, std::string column_name_, TokenType compare_type_, Value compare_value_)
+        : func_name(std::move(func_name_)), column_name(std::move(column_name_)), compare_type(compare_type_), compare_value(std::move(compare_value_)) {}
+
+    ExecutorPtr toExecutor(Database &db) const override
+    {
+        return std::make_shared<HavingExecutor>(db, ConjunctionTree(
+                    new LeafNode<Predicate>(Predicate(getAggByName(func_name), column_name, getCompByType(compare_type), compare_value)
+                ), true));
+    }
+
+private:
+    std::string func_name;
+    std::string column_name; // can be empty —— AUTHOR(), MTIME(), EXISTS(), VALUE()
+    TokenType compare_type;
+    Value compare_value; // single value or multi values like (1, 2, 3)
+};
+
 class ASTLimit : public IAST
 {
 public:

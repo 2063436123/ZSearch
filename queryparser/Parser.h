@@ -34,7 +34,7 @@ static std::tuple<QueryErrorType, ASTPtr> parseQuery(const char *begin, const ch
     return {QueryErrorType::Non, ast};
 }
 
-static std::tuple<QueryErrorType, ASTPtr> executeQuery(const std::string& str)
+static std::tuple<QueryErrorType, ASTPtr> parseQuery(const std::string& str)
 {
     return parseQuery(str.data(), str.data() + str.size());
 }

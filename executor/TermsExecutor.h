@@ -17,21 +17,21 @@ terms : terms 'AND' terms
 class TermsExecutor : public Executor
 {
 public:
-    TermsExecutor(Database& db_, ConjunctionTree root_ = nullptr) : Executor(db_), bit_set_size(0), root(std::move(root_)) {}
+    TermsExecutor(Database& db_, ConjunctionTree root_ = nullptr) : Executor(db_), root(std::move(root_)) {}
 
     // return doc ids
-    std::any execute(const std::any&) override
+    std::any execute(const std::any&) const override
     {
-        bit_set_size = db.maxAllocatedDocId();
+        const size_t bit_set_size = db.maxAllocatedDocId();
         if (!root) // output all doc_id
         {
             return DynamicBitSet(bit_set_size).fill().toUnorderedSet(1);
         }
-        return recursiveExecute(root.ptr()).toUnorderedSet(1);
+        return recursiveExecute(root.ptr(), bit_set_size).toUnorderedSet(1);
     }
 
 private:
-    DynamicBitSet recursiveExecute(const ConjunctionNode *node)
+    DynamicBitSet recursiveExecute(const ConjunctionNode *node, const size_t bit_set_size) const
     {
         if (auto leaf = dynamic_cast<const LeafNode<std::string>*>(node))
         {
@@ -45,7 +45,7 @@ private:
         {
             std::vector<DynamicBitSet> children_doc_ids;
             for (ConjunctionNode *child_node : node->children)
-                children_doc_ids.push_back(recursiveExecute(child_node));
+                children_doc_ids.push_back(recursiveExecute(child_node, bit_set_size));
 
             assert(!children_doc_ids.empty()); // AND, OR 至少有一个操作对象
             assert(inter->type != ConjunctionType::NOT || children_doc_ids.size() == 1); // NOT 只有一个操作对象
@@ -77,6 +77,5 @@ private:
     }
 
 private:
-    size_t bit_set_size;
     ConjunctionTree root;
 };

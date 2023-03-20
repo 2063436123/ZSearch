@@ -33,7 +33,7 @@ protected:
             if (word_length != pos->size())
                 return false;
 
-            if (0 != strncmp(pos->begin, current_word, word_length))
+            if (0 != strncasecmp(pos->begin, current_word, word_length))
                 return false;
 
             ++pos;

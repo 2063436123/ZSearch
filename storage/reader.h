@@ -69,7 +69,7 @@ public:
             return {line, offset_in_file - read_number + left_trim_number};
         }
         else
-            THROW(Poco::NotImplementedException());
+            THROW(UnreachableException());
     }
 
 private:

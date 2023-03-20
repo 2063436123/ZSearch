@@ -9,7 +9,7 @@ class Executor
 public:
     Executor(Database& db_) : db(db_) {}
 
-    virtual std::any execute(const std::any &) = 0;
+    virtual std::any execute(const std::any &) const = 0;
 
     virtual ~Executor() = default;
 
@@ -27,7 +27,7 @@ public:
         return *this;
     }
 
-    std::any execute()
+    std::any execute() const
     {
         std::any inter_data;
         for (int i = 0; i < executors.size(); i++)
@@ -40,3 +40,5 @@ public:
 private:
     std::vector<ExecutorPtr> executors;
 };
+
+using Scores = std::multimap<size_t, size_t, std::greater<>>;

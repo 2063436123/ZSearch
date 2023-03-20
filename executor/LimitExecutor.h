@@ -15,14 +15,16 @@ terms : terms 'AND' terms
 class LimitExecutor : public Executor
 {
 public:
-    LimitExecutor(Database& db_, uint64_t limit_ = 10) : Executor(db_), limit(limit_) {}
+    LimitExecutor(Database& db_, uint64_t limit_ = 100) : Executor(db_), limit(limit_) {}
 
     // return doc ids
-    std::any execute(const std::any& input) override
+    std::any execute(const std::any& input) const override
     {
-        auto doc_ids = std::any_cast<std::map<size_t, size_t, std::greater<>>>(input);
+        auto doc_ids = std::any_cast<Scores>(input);
         auto iter = doc_ids.begin();
-        while (limit-- && iter != doc_ids.end())
+
+        uint64_t cur_limit = limit;
+        while (cur_limit-- && iter != doc_ids.end())
             ++iter;
         doc_ids.erase(iter, doc_ids.end());
         return doc_ids;

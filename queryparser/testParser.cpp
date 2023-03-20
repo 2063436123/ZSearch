@@ -4,6 +4,35 @@
 #include "indexer/Indexer.h"
 #include "executor/TermsExecutor.h"
 #include "Parser.h"
+#include "searcher/Searcher.h"
+
+TEST(Lexer, base)
+{
+    std::string str("SUM('auv') IN (12, 13)");
+    Tokens tokens(str.data(), str.data() + str.size(), 100);
+
+    ASSERT_EQ(tokens[0].type, TokenType::BareWord);
+
+    ASSERT_EQ(tokens[1].type, TokenType::OpeningRoundBracket);
+
+    ASSERT_EQ(tokens[2].type, TokenType::StringLiteral);
+
+    ASSERT_EQ(tokens[3].type, TokenType::ClosingRoundBracket);
+
+    ASSERT_EQ(tokens[4].type, TokenType::InRange);
+
+    ASSERT_EQ(tokens[5].type, TokenType::OpeningRoundBracket);
+
+    ASSERT_EQ(tokens[6].type, TokenType::Number);
+
+    ASSERT_EQ(tokens[7].type, TokenType::Comma);
+
+    ASSERT_EQ(tokens[8].type, TokenType::Number);
+
+    ASSERT_EQ(tokens[9].type, TokenType::ClosingRoundBracket);
+
+    ASSERT_EQ(tokens[10].type, TokenType::EndOfStream);
+}
 
 TEST(quotedString, base)
 {
@@ -19,7 +48,7 @@ TEST(quotedString, base)
         }
         ASSERT_EQ(res.type, TokenType::StringLiteral);
 //        std::cout << res.toString() << std::endl;
-        ASSERT_TRUE(str.starts_with(res.toString()));
+        ASSERT_TRUE(str.starts_with(res.string()));
     };
 //    testFunc(R"('hello world')");
     testFunc(R"("hello world")");
@@ -43,15 +72,17 @@ TEST(ParserQuery, base)
 
         ASSERT_EQ(parse_res, assert_bool);
     };
-    judge("\'word\' HAVING LIMIT 10", true);
+    judge("\'word\' LIMIT 10", true);
+    judge("\'word\' limit 10", true);
+    judge("\'word\' HAVING LIMIT 10", false);
+    judge("\"word\" LIMIT 10", false);
 
-    judge("\'word\' having LIMIT 10", false);
+    judge("\'word\' HAVING sum('hello') = 0 LIMIT 10", true);
+    judge("\'word\' HAVING min('word') >= 'hello' LIMIT 10", true);
+    judge("\'word\' HAVING AUTHOR() = 'hello' LIMIT 10", true);
 
-    judge("\"word\" HAVING LIMIT 10", false);
-    judge("word HAVING LIMIT 10", false);
-
-    judge("\'word\' HAVING LIMIT", false);
-
+    judge("word LIMIT 10", false);
+    judge("\'word\' LIMIT", false);
     judge("\'word\' LIMIT 10", true);
 }
 
@@ -80,17 +111,46 @@ TEST(Cpp20, base)
 
 TEST(parser, integrated_without_having)
 {
-    Database db(ROOT_PATH + "/database1");
+    Database db(ROOT_PATH + "/database1", true);
     Indexer indexer(db);
     indexer.index(ROOT_PATH + "/articles");
 
-    auto [type, ast] = executeQuery(R"('love' LIMIT 10)");
+    auto [type, ast] = parseQuery(R"('love' LIMIT 10)");
     ASSERT_EQ(QueryErrorType::Non, type);
 
     auto pipeline = ast->as<ASTQuery>()->toExecutorPipeline(db);
-    auto scores = std::any_cast<std::map<size_t, size_t, std::greater<>>>(pipeline.execute());
+    auto scores = std::any_cast<Scores>(pipeline.execute());
 
     ASSERT_EQ(scores.size(), 3);
+}
+
+TEST(Searcher, integrated_without_having)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    Searcher searcher(db);
+    ASSERT_EQ(searcher.search(R"('love' LIMIT 10)").size(), 3);
+    ASSERT_EQ(searcher.search(R"('love' LIMIT 2)").size(), 2);
+    ASSERT_EQ(searcher.search(R"('you' LIMIT 10)").size(), 4);
+}
+
+TEST(Searcher, integrated_with_having)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    Searcher searcher(db);
+    auto res = searcher.search(R"(having min('web-app.i-arr') = 100)");
+    ASSERT_EQ(res.size(), 1);
+    ASSERT_EQ(res[0].doc_path, ROOT_PATH + "/articles/single-jsons/webapp.json");
+
+    res = searcher.search(R"(having value('author') = 'ljz')");
+    ASSERT_EQ(res.size(), 2);
+    ASSERT_EQ(res[0].doc_path, ROOT_PATH + "/articles/single-jsons/webapp.json");
+    ASSERT_EQ(res[1].doc_path, ROOT_PATH + "/articles/single-jsons/css.json");
 }
 
 int main()

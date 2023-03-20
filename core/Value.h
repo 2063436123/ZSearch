@@ -107,7 +107,7 @@ public:
         {
             return get<DynamicArray>(var).get<T>(i);
         }
-        THROW(Poco::NotImplementedException());
+        THROW(UnreachableException());
     }
 
     void doArrayHandler(const ValueArrayHandler<Bool>& bool_handler,
