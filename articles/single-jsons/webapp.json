@@ -98,6 +98,7 @@
       "taglib-location": "/WEB-INF/tlds/cofax.tld"
     },
     "b-arr": [true, false],
-    "i-arr": [100, 200, 300]
+    "i-arr": [100, 200, 300],
+    "kk": -1
   }
 }

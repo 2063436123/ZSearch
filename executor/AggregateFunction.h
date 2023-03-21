@@ -2,7 +2,7 @@
 #include "../typedefs.h"
 #include "core/Value.h"
 
-// TODO: 实现无参函数：AUTHOR(), MTIME(), EXISTS(), VALUE()
+// TODO: 实现无参函数：MTIME(), EXISTS(), VALUE()
 
 Value sumFunction(const Value& value)
 {

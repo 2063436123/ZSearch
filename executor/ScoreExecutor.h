@@ -20,10 +20,10 @@ public:
 
         for (size_t doc_id : doc_ids)
         {
-            double score = determineScore(doc_id);
-            if (score == 0.0) // document 已被删除
+            std::optional<double> score = determineScore(doc_id);
+            if (!score.has_value()) // document 已被删除
                 continue;
-            scores.emplace(score, doc_id);
+            scores.emplace(score.value(), doc_id);
         }
 
         // 提取 doc_ids order by score
@@ -32,11 +32,11 @@ public:
 
 private:
     // 计算查询与指定文档的相关性
-    double determineScore(size_t doc_id) const
+    std::optional<double> determineScore(size_t doc_id) const
     {
         auto document_ptr = db.findDocument(doc_id);
         if (!document_ptr)
-            return 0.0;
+            return std::nullopt;
 
         double score = 0.0;
         for (auto iter : word_freq)
@@ -52,8 +52,8 @@ private:
             // 1.单词权重
             double df = term_ptr->posting_list.size();
             if (df == 0) // TODO: 如果没有任何文档包含此单词（纯 AND terms 不会出现此情况），降低其权重为最低
-                df = db.maxAllocatedDocId();
-            double idf = log((db.maxAllocatedDocId() - df + 0.5) / (df + 0.5));
+                df = db.getDocumentCount();
+            double idf = log((db.getDocumentCount() - df + 0.5) / (df + 0.5));
 
             // 2.单词与文档的相关性
             auto tf_iter = std::lower_bound(term_ptr->posting_list.begin(), term_ptr->posting_list.end(), doc_id);
@@ -72,7 +72,7 @@ private:
 
             score += idf * sqd * sqq;
         }
-        return score * SCORE_GRANULARITY + 1.0 /* + 1.0 是为了区分文档被删除的情况 */;
+        return score * SCORE_GRANULARITY /* + 1.0 是为了区分文档被删除的情况 */;
     }
 
     const double k1 = 1.5, k3 = 1.5, b = 0.75;

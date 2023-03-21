@@ -9,16 +9,14 @@
 
 class Database {
 public:
-    // TODO: 明确 new_database 的定位
-    // 如果 new_database == false, 那么需要提前手动在 path 处创建文件夹
-    // 如果 cover old，那么需要
+    // 如果 new_database == false, 那么尝试反序列化.
     explicit Database(std::filesystem::path location, bool new_database = false) : database_path(std::move(location)), is_new_database(new_database)
     {
         if (!exists(database_path))
             std::filesystem::create_directory(database_path);
 
         if (!is_directory(database_path))
-            THROW(DatabaseTypeException());
+            THROW(DatabaseOccupiedException());
 
         if (!new_database)
             deserialize();
@@ -46,21 +44,47 @@ public:
 
     double getAvgWordCount() const
     {
-        // TODO: 优化性能 保存 total + size 来计算 avg，注意文档被添加/删除时都要修改 total + size.
+        static size_t old_sum = 0, old_count = 0, old_max_mallocated_id = 0;
+
         std::lock_guard<std::mutex> guard(document_map_lock);
+        // 优化性能: 保存 total + size 来计算 avg.
+        if (old_max_mallocated_id == maxAllocatedDocId() && old_count == document_map.size())
+            return old_sum / old_count;
+
         size_t sum = 0, count = document_map.size();
         for (const auto& iter : document_map)
         {
             sum += iter.second->getWordCount();
         }
+        {
+            old_sum = sum;
+            old_count = count;
+            old_max_mallocated_id = maxAllocatedDocId();
+        }
 
         return sum * 1.0 / count;
+    }
+
+    size_t getDocumentCount() const
+    {
+        std::lock_guard<std::mutex> guard(document_map_lock);
+        return document_map.size();
     }
 
     void addDocument(size_t doc_id, const std::string& doc_path, size_t word_count, const std::unordered_map<Key, Value>& kvs)
     {
         std::lock_guard<std::mutex> guard(document_map_lock);
         document_map.emplace(doc_id, std::make_shared<Document>(doc_id, doc_path, word_count, kvs));
+    }
+
+    void deleteDocument(size_t doc_id)
+    {
+        DocumentPtr document_ptr = findDocument(doc_id);
+        {
+            std::lock_guard<std::mutex> guard(document_map_lock);
+            document_map.erase(doc_id);
+        }
+        tidyTerm(document_ptr);
     }
 
     DocumentPtr findDocument(size_t doc_id) const
@@ -72,13 +96,6 @@ public:
         return document_ptr->second;
     }
 
-    void deleteDocument(size_t doc_id)
-    {
-        std::lock_guard<std::mutex> guard(document_map_lock);
-        document_map.erase(doc_id);
-    }
-
-    // TODO: 决定什么时候修改 Trie 结构
     void addTerm(const std::string& word, size_t doc_id, size_t offset_in_file)
     {
         trie.add(word);
@@ -121,7 +138,18 @@ public:
         return iter->second;
     }
 
-    // 删除 posting_list, statistics_list 中过时元素（产生自已被删除的 document）
+    void tidyTerm(DocumentPtr document_ptr)
+    {
+        if (!document_ptr)
+            return;
+        std::unique_ptr<Reader> reader = std::make_unique<TxtLineReader>(document_ptr->getPath().string());
+        StringInFiles res;
+        extractWords(reader, res);
+        for (const auto& sif : res)
+            tidyTerm(sif.str);
+    }
+
+    // 删除 posting_list, statistics_list 中过时元素（driven by 已被删除的 document）
     void tidyTerm(const std::string& word)
     {
         std::lock_guard<std::mutex> guard(term_map_lock);

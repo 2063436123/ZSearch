@@ -16,7 +16,7 @@ struct TrieNode
 
     bool is_word;
     int value;
-    TrieNode *parent;
+    const TrieNode * const parent;
     std::unordered_map<int, TrieNode *> children;
 };
 
@@ -121,10 +121,9 @@ public:
     }
 
 private:
-    // TODO: delete recursively
     void safe_delete()
     {
-
+        delete root;
     }
 
     void drawTree(std::ostream &oss, const TrieNode *node, std::string prefix = "", bool is_tail = true,

@@ -143,6 +143,7 @@ private:
                 return Token(TokenType::Whitespace, token_begin, pos);
             }
 
+            case '-':
             case '0':
             case '1':
             case '2':
@@ -154,6 +155,7 @@ private:
             case '8':
             case '9':
             {
+                ++pos;
                 // parse number
                 while (pos < end && isnumber(*pos))
                     ++pos;
@@ -197,14 +199,14 @@ private:
                 return Token(TokenType::Error, token_begin, pos);
             }
 
-            case '+':
-                return Token(TokenType::Plus, token_begin, ++pos);
-            case '-':
-                return Token(TokenType::Minus, token_begin, ++pos);
-            case '*':
-                return Token(TokenType::Asterisk, token_begin, ++pos);
-            case '/':
-                return Token(TokenType::Slash, token_begin, ++pos);
+//            case '+':
+//                return Token(TokenType::Plus, token_begin, ++pos);
+//            case '-':
+//                return Token(TokenType::Minus, token_begin, ++pos);
+//            case '*':
+//                return Token(TokenType::Asterisk, token_begin, ++pos);
+//            case '/':
+//                return Token(TokenType::Slash, token_begin, ++pos);
             case '=':
                 return Token(TokenType::Equals, token_begin, ++pos);
             case '!':

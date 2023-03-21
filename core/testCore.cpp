@@ -228,7 +228,7 @@ TEST(database, SerializeAndDeserialize)
 
     auto document_ptr = db.findDocument(2);
     auto kvs = document_ptr->getKvs();
-    EXPECT_EQ(kvs.size(), 77);
+    EXPECT_EQ(kvs.size(), 78);
 
     EXPECT_EQ(kvs["web-app.servlet.0.init-param.useJSP"].as<Bool>(), false);
     EXPECT_EQ(kvs["web-app.servlet.0.init-param.jspListTemplate"].as<String>(), "listTemplate.jsp");

@@ -116,7 +116,7 @@ public:
                         const ValueArrayHandler<DateTime>& datetime_handler) const
     {
         if (!is_array)
-            THROW(Poco::LogicException("only array value can call doArrayHandler()"));
+            THROW(QueryException("only array value can call doArrayHandler()"));
         get<DynamicArray>(var).applyHandler(bool_handler, number_handler, string_handler, datetime_handler);
     }
 
@@ -124,7 +124,7 @@ public:
     void doArrayHandler(const ValueArrayHandler<T>& array_handler) const
     {
         if (!is_array)
-            THROW(Poco::LogicException("only array value can call doArrayHandler()"));
+            THROW(QueryException("only array value can call doArrayHandler()"));
         if constexpr (std::is_same_v<T, Bool>)
             get<DynamicArray>(var).applyHandler(array_handler, PanicValueArrayHandler<Number>, PanicValueArrayHandler<String>, PanicValueArrayHandler<DateTime>);
         else if constexpr (std::is_same_v<T, Number>)

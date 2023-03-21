@@ -7,6 +7,42 @@
 
 const int IfI = 8, WhenYou = 11, WhatCan = 4, WEBAPP = 6, Alice = 10;
 
+TEST(ScoreExecutor, base)
+{
+    Database db(ROOT_PATH + "/database1", true);
+
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    EXPECT_EQ(db.findDocument(WEBAPP)->getPath().filename(), "webapp.json");
+    auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toUnorderedSet(1);
+
+    EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
+    EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
+    EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
+
+    {
+        LeafNode<String> l1("you");
+        auto terms_executor = std::make_shared<TermsExecutor>(db, &l1);
+        auto score_executor = std::make_shared<ScoreExecutor>(db, std::unordered_map<std::string, double>{{"you", 1.0}});
+
+        ExecutePipeline pipeline;
+        pipeline.addExecutor(terms_executor).addExecutor(score_executor);
+        auto doc_id_vs_score = std::any_cast<Scores>(pipeline.execute());
+        Scores expected({{166, IfI}, {137, WhatCan}, {59, WhenYou}, {1, Alice}});
+        EXPECT_EQ(doc_id_vs_score, expected);
+
+        indexer.indexFile(ROOT_PATH + "/articles-cnn/1452.story");
+        doc_id_vs_score = std::any_cast<Scores>(pipeline.execute());
+        Scores expected2({{100, IfI}, {82, WhatCan}, {35, WhenYou}, {2, 12}, {0, Alice}});
+        EXPECT_EQ(doc_id_vs_score, expected2);
+
+        db.deleteDocument(12);
+        doc_id_vs_score = std::any_cast<Scores>(pipeline.execute());
+        EXPECT_EQ(doc_id_vs_score, expected);
+    }
+}
+
 TEST(termsExecutor, base)
 {
     Database db(ROOT_PATH + "/database1", true);
@@ -201,33 +237,6 @@ TEST(havingExecutor, base)
     }
 }
 
-TEST(ScoreExecutor, base)
-{
-    Database db(ROOT_PATH + "/database1", true);
-
-    Indexer indexer(db);
-    indexer.index(ROOT_PATH + "/articles");
-
-    EXPECT_EQ(db.findDocument(WEBAPP)->getPath().filename(), "webapp.json");
-    auto all_doc_ids = DynamicBitSet(db.maxAllocatedDocId()).flip().toUnorderedSet(1);
-
-    EXPECT_EQ(db.findDocument(IfI)->getPath().filename(), "IfIWereToFallInLove.txt");
-    EXPECT_EQ(db.findDocument(WhenYou)->getPath().filename(), "WhenYouAreOld.txt");
-    EXPECT_EQ(db.findDocument(WhatCan)->getPath().filename(), "WhatCanIHoldYouWith.txt");
-
-    {
-        LeafNode<String> l1("you");
-        auto terms_executor = std::make_shared<TermsExecutor>(db, &l1);
-        auto score_executor = std::make_shared<ScoreExecutor>(db, std::unordered_map<std::string, double>{{"you", 1.0}});
-
-        ExecutePipeline pipeline;
-        pipeline.addExecutor(terms_executor).addExecutor(score_executor);
-        auto doc_id_vs_score = std::any_cast<Scores>(pipeline.execute());
-        Scores expected({{167, IfI}, {138, WhatCan}, {60, WhenYou}, {2, Alice}});
-        EXPECT_EQ(doc_id_vs_score, expected);
-    }
-}
-
 TEST(LimitExecutor, base)
 {
     Database db(ROOT_PATH + "/database1", true);
@@ -269,11 +278,11 @@ TEST(Executor, deleted_document)
 
         db.deleteDocument(IfI);
         DocIds inter_data = std::any_cast<DocIds>(terms_executor.execute(nullptr));
-        EXPECT_EQ(inter_data, DocIds({IfI, WhatCan, WhenYou, Alice})); // 注意即使文档被删除，TermsExecutor 也不会削减输出结果 --> 需要后续步骤去确认文档的有效性
+        EXPECT_EQ(inter_data, DocIds({WhatCan, WhenYou, Alice}));
 
         db.deleteDocument(WhenYou);
         auto doc_id_vs_score = std::any_cast<Scores>(score_executor.execute(inter_data));
-        Scores expected({{141, WhatCan}, {2, Alice}});
+        Scores expected({{303, WhatCan}, {3, Alice}});
         EXPECT_EQ(doc_id_vs_score, expected);
     }
 }

@@ -194,7 +194,7 @@ public:
     {
         ValueType type = helper.readNumber<ValueType>();
         DynamicArray ret(type);
-        void* data = ret.data; // TODO: ? private
+        void* data = ret.data;
         switch (type)
         {
             case ValueType::Null:

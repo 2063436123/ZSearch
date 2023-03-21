@@ -42,9 +42,15 @@ public:
 
         httpLog("starting query - " + query);
 
-        // TODO: 执行查询并获取结果
-        SearchResultSet result_set = Searcher(db).search(query);
-        httpLog("results number -- " + std::to_string(result_set.size())/*to_string(nlohmann::json({{"results", data}}))*/);
+        SearchResultSet result_set;
+        try
+        {
+            result_set = Searcher(db).search(query);
+        }
+        catch (const QueryException& e)
+        {
+            httpLog("query syntax error, return empty result");
+        }
 
         nlohmann::json::array_t data;
         for (const auto& result : result_set)

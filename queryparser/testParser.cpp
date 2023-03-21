@@ -153,6 +153,29 @@ TEST(Searcher, integrated_with_having)
     ASSERT_EQ(res[1].doc_path, ROOT_PATH + "/articles/single-jsons/css.json");
 }
 
+TEST(Searcher, integrated_with_having_in)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+
+    Searcher searcher(db);
+
+    auto res = searcher.search(R"(having value('web-app.kk') IN (-1))");
+    ASSERT_EQ(res.size(), 1);
+    ASSERT_EQ(res[0].doc_path, ROOT_PATH + "/articles/single-jsons/webapp.json");
+
+    res = searcher.search(R"(having MIN('web-app.i-arr') IN (-1, 100, 0, -2))");
+    ASSERT_EQ(res.size(), 1);
+    ASSERT_EQ(res[0].doc_path, ROOT_PATH + "/articles/single-jsons/webapp.json");
+
+    res = searcher.search(R"(having value('web-app.servlet.0.servlet-name') IN ('cofaxCDS',))");
+    ASSERT_EQ(res.size(), 1);
+    ASSERT_EQ(res[0].doc_path, ROOT_PATH + "/articles/single-jsons/webapp.json");
+
+    ASSERT_THROW(searcher.search(R"(having min('web-app.servlet.0.servlet-name') IN ('cofaxCDS',))"), QueryException);
+}
+
 int main()
 {
     testing::InitGoogleTest();

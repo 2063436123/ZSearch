@@ -127,7 +127,7 @@
                         body: [
                           {
                             type: "tpl",
-                            tpl: "<p>语法: term having expr limit number, 例如 'hello' HAVING AUTHOR() = 'jd' LIMIT 2; having value('author') = 'ljz'</p>"
+                            tpl: "<p>语法: term having expr limit number, 例如 'hello' HAVING AUTHOR() = 'jd' LIMIT 2; having value('author') = 'ljz'</p>",
                           },
                           {
                             type: "input-text",
@@ -165,7 +165,7 @@
                                 },
                                 {
                                   name: "score",
-                                  label: "查询得分",
+                                  label: "查询得分——BM25",
                                 },
                               ],
                               itemActions: [
@@ -205,6 +205,40 @@
                                   },
                                 },
                                 {
+                                  type: "button",
+                                  icon: "fa fa-commenting",
+                                  onEvent: {
+                                    click: {
+                                      actions: [
+                                      {
+                                          actionType: "drawer",
+                                          drawer: {
+                                            title: "文档评论",
+                                            position: "left",
+                                            size: "lg",
+                                            resizable: true,
+                                            showCloseButton: false,
+                                            overlay: false,
+                                            closeOnEsc: true,
+                                            closeOnOutside: true,
+                                            body: {
+                                              type: "table",
+                                              source: "$comments",
+                                              columns: [
+                                                {
+                                                  name: "text",
+                                                  label: "匹配文本",
+                                                },
+                                              ],
+                                            },
+                                            actions: [],
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                                {
                                   // 下载文件
                                   type: "button",
                                   icon: "fa fa-download",
@@ -216,7 +250,6 @@
                                           args: {
                                             api: {
                                               method: "download",
-                                              // TODO: 传递文档编号而非路径
                                               url: "HOST/download-document?doc_id=$doc_id&id=$id",
                                             },
                                           },

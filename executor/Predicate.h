@@ -26,7 +26,7 @@ public:
         auto iter = kvs.find(id);
         if (iter == kvs.end())
             return false;
-        if (iter->second.isArray() && agg == nullptr)
+        if (agg == nullptr)
             return false;
         assert(agg);
         Value v = agg(iter->second);

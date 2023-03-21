@@ -42,8 +42,8 @@ using Names = std::vector<std::string>;
 POCO_DECLARE_EXCEPTION(Foundation_API, FileTypeUnmatchException, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(FileTypeUnmatchException, Poco::LogicException, "file type unmatch with reader")
 
-POCO_DECLARE_EXCEPTION(Foundation_API, DatabaseTypeException, Poco::LogicException)
-POCO_IMPLEMENT_EXCEPTION(DatabaseTypeException, Poco::LogicException, "database path must be a directory")
+POCO_DECLARE_EXCEPTION(Foundation_API, DatabaseOccupiedException, Poco::LogicException)
+POCO_IMPLEMENT_EXCEPTION(DatabaseOccupiedException, Poco::LogicException, "database path must be a directory")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, DateTimeFormatException, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(DateTimeFormatException, Poco::LogicException, "date time format error")
@@ -62,6 +62,9 @@ POCO_IMPLEMENT_EXCEPTION(UnmatchedToken, Poco::LogicException, "Unmatched Token!
 
 POCO_DECLARE_EXCEPTION(Foundation_API, ParseException, Poco::LogicException)
 POCO_IMPLEMENT_EXCEPTION(ParseException, Poco::LogicException, "Parse Error!")
+
+POCO_DECLARE_EXCEPTION(Foundation_API, QueryException, Poco::LogicException)
+POCO_IMPLEMENT_EXCEPTION(QueryException, Poco::LogicException, "Query Error!")
 
 std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
 std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/master/html";

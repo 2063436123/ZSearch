@@ -15,7 +15,6 @@ struct OldSearchResult
     size_t offset_in_file;
     size_t related_text_len;
 
-    // TODO: add score
     double score = 0.0;
 
     bool operator<(const OldSearchResult &rhs) const

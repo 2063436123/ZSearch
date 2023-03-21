@@ -90,11 +90,48 @@ public:
             else if (pos->type == TokenType::InRange)
             {
                 ++pos;
-                while (pos->type == TokenType::Number || pos->type == TokenType::StringLiteral)
+                if (pos->type != TokenType::OpeningRoundBracket)
+                    return false;
+                ++pos;
+
+                if (pos->type == TokenType::Number)
                 {
-                    // TODO: not implement
-                    THROW(Poco::NotImplementedException("parse IN expr"));
+                    compare_value = Value(ArrayLabel{}, ValueType::Number);
+                    std::vector<double> doubles;
+                    while (pos->type == TokenType::Number)
+                    {
+                        doubles.push_back(restrictStod(pos->string()));
+                        ++pos;
+                        if (pos->type != TokenType::Comma)
+                            break;
+                        ++pos;
+                    }
+                    ValueArrayHandler<double> double_array_handler = [&](std::vector<double>* vec) {
+                        *vec = doubles;
+                    };
+                    compare_value.doArrayHandler(double_array_handler);
                 }
+                else if (pos->type == TokenType::StringLiteral)
+                {
+                    compare_value = Value(ArrayLabel{}, ValueType::String);
+                    std::vector<std::string> strings;
+                    while (pos->type == TokenType::StringLiteral)
+                    {
+                        strings.push_back(trimQuote(pos->string()));
+                        ++pos;
+                        if (pos->type != TokenType::Comma)
+                            break;
+                        ++pos;
+                    }
+                    ValueArrayHandler<std::string> string_array_handler = [&](std::vector<std::string>* vec) {
+                        *vec = strings;
+                    };
+                    compare_value.doArrayHandler(string_array_handler);
+                }
+
+                if (pos->type != TokenType::ClosingRoundBracket)
+                    return false;
+                ++pos;
             }
             else
             {
