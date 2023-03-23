@@ -5,6 +5,7 @@
 #include "SearchHTTPHandler.h"
 #include "UserHTTPHandler.h"
 #include "StatisticsHTTPHandler.h"
+#include "DocumentHTTPHandler.h"
 
 using DatabasePtr = std::shared_ptr<Database>;
 using FileSystemDaemonPtr = std::shared_ptr<FileSystemDaemon>;
@@ -92,6 +93,22 @@ public:
         if (uri_path == "/get-document-freq-statistics")
         {
             return new GetDocumentFreqStatisticsHandler(db);
+        }
+        if (uri_path == "/get-document-comment-rating")
+        {
+            return new GetDocumentCommentRatingHandler(db);
+        }
+        if (uri_path == "/score-document")
+        {
+            return new ScoreDocumentHandler(db, id);
+        }
+        if (uri_path == "/comment-document")
+        {
+            return new CommentDocumentHandler(db, id);
+        }
+        if (uri_path == "/get-document-property")
+        {
+            return new GetDocumentPropertyHandler(db);
         }
         return new GetFileHandler();
     }

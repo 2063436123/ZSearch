@@ -50,7 +50,7 @@ void to_json(nlohmann::json &j, const SearchResult &result)
         texts.push_back(std::unordered_map<std::string, std::string>{{"text", text}});
     }
     j = nlohmann::json{{"doc_id",               result.doc_id},
-                       {"path",                 result.doc_path},
+                       {"doc_path",                 result.doc_path},
                        {"first_highlight_text", result.highlight_texts[0]},
                        {"highlight_texts",      texts},
                        {"score",                result.score}};

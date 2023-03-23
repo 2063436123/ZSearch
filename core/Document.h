@@ -39,6 +39,11 @@ public:
         return origin_path;
     }
 
+    size_t getFileByteSize() const
+    {
+        return file_size(origin_path);
+    }
+
     DateTime getModifyTime() const
     {
         return info.modify_time;
@@ -47,6 +52,37 @@ public:
     size_t getWordCount() const
     {
         return info.word_count;
+    }
+
+    void addComment(const std::string& user_id, const DateTime& comment_time, const std::string& comment)
+    {
+        std::lock_guard lg(info_lock);
+        info.comments.emplace(user_id, std::make_pair(comment_time, comment));
+    }
+
+    auto getComments() const
+    {
+        std::lock_guard lg(info_lock);
+        return info.comments;
+    }
+
+    std::tuple<size_t, double> getRatingStat() const
+    {
+        std::lock_guard<std::mutex> guard(info_lock);
+        double sum_rating = std::accumulate(info.ratings.begin(), info.ratings.end(), 0.0, [](double init, const std::pair<std::string, double>& id_with_rating) {
+            return init + id_with_rating.second;
+        });
+        size_t size = info.ratings.size();
+        return {size, sum_rating / (size == 0 ? 1 : size)};
+    }
+
+    void setRating(const std::string& user_id, double rating)
+    {
+        std::lock_guard<std::mutex> guard(info_lock);
+        if (rating == 0)
+            info.ratings.erase(user_id);
+        else
+            info.ratings[user_id] = rating;
     }
 
     std::unordered_map<Key, Value> getKvs() const
@@ -118,11 +154,7 @@ public:
 
         auto res = std::string(buf, read_number);
         delete[] buf;
-        try {
-            fix_utf8(res);
-        } catch (std::exception& e) {
-            std::cout << "catched" << std::endl;
-        }
+
         return fix_utf8(res);
     }
 
@@ -165,5 +197,6 @@ private:
     mutable std::mutex kvs_lock;
     std::unordered_map<Key, Value> kvs;
 
+    mutable std::mutex info_lock;
     DocumentInfo info;
 };

@@ -173,8 +173,8 @@ public:
         std::vector<nlohmann::json> data;
         for (const auto &path_info : ordered_paths_infos)
         {
-            data.emplace_back(std::unordered_map<std::string, nlohmann::json>{{"id",   path_info.first},
-                                                                              {"path", path_info.second}});
+            data.emplace_back(std::unordered_map<std::string, nlohmann::json>{{"doc_id",   path_info.first},
+                                                                              {"doc_path", path_info.second}});
         }
 
         out << makeStandardResponse(0, SuccessMessage, std::unordered_map<std::string, nlohmann::json>{{"infos", data}});

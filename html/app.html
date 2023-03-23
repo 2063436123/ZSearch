@@ -155,7 +155,7 @@
                                   label: "文档编号",
                                 },
                                 {
-                                  name: "path",
+                                  name: "doc_path",
                                   label: "文档路径",
                                   copyable: true,
                                 },
@@ -184,19 +184,52 @@
                                             size: "lg",
                                             resizable: true,
                                             showCloseButton: false,
-                                            overlay: false,
+                                            overlay: true,
                                             closeOnEsc: true,
                                             closeOnOutside: true,
-                                            body: {
-                                              type: "table",
-                                              source: "$highlight_texts",
-                                              columns: [
-                                                {
-                                                  name: "text",
-                                                  label: "匹配文本",
+                                            body: [
+                                              {
+                                                type: "service",
+                                                api: "HOST/get-document-property?doc_id=$doc_id&id=$id",
+                                                body: {
+                                                  type: "property",
+                                                  column: 1,
+                                                  title: "文档属性",
+                                                  items: [
+                                                    {
+                                                      label: "完整路径",
+                                                      content: "$doc_path",
+                                                    },
+                                                    {
+                                                      label: "单词量",
+                                                      content: "$word_count",
+                                                    },
+                                                    {
+                                                      label: "键值对量",
+                                                      content: "$kvs_count",
+                                                    },
+                                                    {
+                                                      label: "文件大小",
+                                                      content: "$size",
+                                                    },
+                                                    {
+                                                      label: "最近修改时间",
+                                                      content: "$mtime",
+                                                    },
+                                                  ],
                                                 },
-                                              ],
-                                            },
+                                              },
+                                              {
+                                                type: "table",
+                                                source: "$highlight_texts",
+                                                columns: [
+                                                  {
+                                                    name: "text",
+                                                    label: "匹配文本",
+                                                  },
+                                                ],
+                                              },
+                                            ],
                                             actions: [],
                                           },
                                         },
@@ -210,7 +243,7 @@
                                   onEvent: {
                                     click: {
                                       actions: [
-                                      {
+                                        {
                                           actionType: "drawer",
                                           drawer: {
                                             title: "文档评论",
@@ -218,19 +251,112 @@
                                             size: "lg",
                                             resizable: true,
                                             showCloseButton: false,
-                                            overlay: false,
+                                            overlay: true,
                                             closeOnEsc: true,
                                             closeOnOutside: true,
-                                            body: {
-                                              type: "table",
-                                              source: "$comments",
-                                              columns: [
-                                                {
-                                                  name: "text",
-                                                  label: "匹配文本",
-                                                },
-                                              ],
-                                            },
+                                            body: [
+                                              {
+                                                type: "service",
+                                                api: "HOST/get-document-comment-rating?doc_id=$doc_id&id=$id",
+                                                id: "u:1sadfnn2kjf",
+                                                body: [
+                                                  {
+                                                    type: "table",
+                                                    source: "$comments",
+                                                    columns: [
+                                                      {
+                                                        name: "user_name",
+                                                        label: "评论用户",
+                                                      },
+                                                      {
+                                                        name: "comment_time",
+                                                        label: "评论时间",
+                                                      },
+                                                      {
+                                                        name: "comment",
+                                                        label: "评论内容",
+                                                      },
+                                                    ],
+                                                  },
+                                                  {
+                                                    type: "tag",
+                                                    color: "processing",
+                                                    label:
+                                                      "$people_number个评价 平均评分 $avg_rating",
+                                                  },
+                                                  {
+                                                    type: "input-rating",
+                                                    count: 5,
+                                                    value: 0,
+                                                    half: true,
+                                                    texts: {
+                                                      1: "特别差评",
+                                                      2: "差评",
+                                                      3: "一般",
+                                                      4: "好评",
+                                                      5: "特别好评",
+                                                    },
+                                                    onEvent: {
+                                                      change: {
+                                                        actions: [
+                                                          {
+                                                            actionType: "ajax",
+                                                            args: {
+                                                              api: {
+                                                                method: "get",
+                                                                url: "HOST/score-document?doc_id=$doc_id&id=$id&rating=${event.data.value}",
+                                                              },
+                                                            },
+                                                          },
+                                                          {
+                                                            componentId:
+                                                              "u:1sadfnn2kjf",
+                                                            actionType:
+                                                              "reload",
+                                                            dataMergeMode:
+                                                              "override",
+                                                          },
+                                                        ],
+                                                      },
+                                                    },
+                                                  },
+                                                  {
+                                                    type: "form",
+                                                    api: "HOST/comment-document?id=$id&doc_id=$doc_id",
+                                                    body: [
+                                                      {
+                                                        name: "comment",
+                                                        id: "u:jiof1fsdf",
+                                                        type: "input-text",
+                                                        label: "留下你的评价吧",
+                                                        borderMode: "half",
+                                                        inputControlClassName:
+                                                          "bg-gray-100",
+                                                      },
+                                                    ],
+                                                    onEvent: {
+                                                      submitSucc: {
+                                                        actions: [
+                                                          {
+                                                            componentId:
+                                                              "u:1sadfnn2kjf",
+                                                            actionType:
+                                                              "reload",
+                                                            dataMergeMode:
+                                                              "override",
+                                                          },
+                                                          {
+                                                            componentId:
+                                                              "u:jiof1fsdf",
+                                                            actionType: "reset",
+                                                          },
+                                                        ],
+                                                      },
+                                                    },
+                                                  },
+                                                ],
+                                              },
+                                            ],
                                             actions: [],
                                           },
                                         },
@@ -330,7 +456,7 @@
                                           size: "lg",
                                           resizable: true,
                                           showCloseButton: false,
-                                          overlay: false,
+                                          overlay: true,
                                           closeOnEsc: true,
                                           closeOnOutside: true,
                                           body: {
@@ -338,13 +464,83 @@
                                             source: "$infos",
                                             columns: [
                                               {
-                                                name: "id",
+                                                name: "doc_id",
                                                 label: "文档编号",
                                               },
                                               {
-                                                name: "path",
+                                                name: "doc_path",
                                                 label: "文档路径",
                                                 copyable: true,
+                                              },
+                                            ],
+                                            itemActions: [
+                                              {
+                                                // 预览
+                                                type: "button",
+                                                icon: "fa fa-eye",
+                                                onEvent: {
+                                                  click: {
+                                                    actions: [
+                                                      {
+                                                        actionType: "drawer",
+                                                        drawer: {
+                                                          title: "文档信息",
+                                                          position: "left",
+                                                          size: "lg",
+                                                          resizable: true,
+                                                          showCloseButton: false,
+                                                          overlay: true,
+                                                          closeOnEsc: true,
+                                                          closeOnOutside: true,
+                                                          body: [
+                                                            {
+                                                              type: "service",
+                                                              api: "HOST/get-document-property?doc_id=$doc_id&id=$id",
+                                                              body: {
+                                                                type: "property",
+                                                                column: 1,
+                                                                title:
+                                                                  "文档属性",
+                                                                items: [
+                                                                  {
+                                                                    label:
+                                                                      "完整路径",
+                                                                    content:
+                                                                      "$doc_path",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "单词量",
+                                                                    content:
+                                                                      "$word_count",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "键值对量",
+                                                                    content:
+                                                                      "$kvs_count",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "文件大小",
+                                                                    content:
+                                                                      "$size",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "最近修改时间",
+                                                                    content:
+                                                                      "$mtime",
+                                                                  },
+                                                                ],
+                                                              },
+                                                            },
+                                                          ],
+                                                        },
+                                                      },
+                                                    ],
+                                                  },
+                                                },
                                               },
                                             ],
                                           },
@@ -486,7 +682,6 @@
                       },
                       {
                         label: "添加监听目录",
-                        hotKey: "enter",
                         type: "button",
                         onEvent: {
                           click: {
@@ -613,6 +808,190 @@
                                 },
                               ],
                               itemActions: [
+                                {
+                                  // 预览
+                                  type: "button",
+                                  icon: "fa fa-eye",
+                                  onEvent: {
+                                    click: {
+                                      actions: [
+                                        {
+                                          actionType: "drawer",
+                                          drawer: {
+                                            title: "文档信息",
+                                            position: "left",
+                                            size: "lg",
+                                            resizable: true,
+                                            showCloseButton: false,
+                                            overlay: true,
+                                            closeOnEsc: true,
+                                            closeOnOutside: true,
+                                            body: [
+                                              {
+                                                type: "service",
+                                                api: "HOST/get-document-property?doc_id=$doc_id&id=$id",
+                                                body: {
+                                                  type: "property",
+                                                  column: 1,
+                                                  title: "文档属性",
+                                                  items: [
+                                                    {
+                                                      label: "完整路径",
+                                                      content: "$doc_path",
+                                                    },
+                                                    {
+                                                      label: "单词量",
+                                                      content: "$word_count",
+                                                    },
+                                                    {
+                                                      label: "键值对量",
+                                                      content: "$kvs_count",
+                                                    },
+                                                    {
+                                                      label: "文件大小",
+                                                      content: "$size",
+                                                    },
+                                                    {
+                                                      label: "最近修改时间",
+                                                      content: "$mtime",
+                                                    },
+                                                  ],
+                                                },
+                                              },
+                                            ],
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                                {
+                                  type: "button",
+                                  icon: "fa fa-commenting",
+                                  onEvent: {
+                                    click: {
+                                      actions: [
+                                        {
+                                          actionType: "drawer",
+                                          drawer: {
+                                            title: "文档评论",
+                                            position: "left",
+                                            size: "lg",
+                                            resizable: true,
+                                            showCloseButton: false,
+                                            overlay: true,
+                                            closeOnEsc: true,
+                                            closeOnOutside: true,
+                                            body: [
+                                              {
+                                                type: "service",
+                                                api: "HOST/get-document-comment-rating?doc_id=$doc_id&id=$id",
+                                                id: "u:1sadfnn2kjf",
+                                                body: [
+                                                  {
+                                                    type: "table",
+                                                    source: "$comments",
+                                                    columns: [
+                                                      {
+                                                        name: "user_name",
+                                                        label: "评论用户",
+                                                      },
+                                                      {
+                                                        name: "comment_time",
+                                                        label: "评论时间",
+                                                      },
+                                                      {
+                                                        name: "comment",
+                                                        label: "评论内容",
+                                                      },
+                                                    ],
+                                                  },
+                                                  {
+                                                    type: "tag",
+                                                    color: "processing",
+                                                    label:
+                                                      "$people_number个评价 平均评分 $avg_rating",
+                                                  },
+                                                  {
+                                                    type: "input-rating",
+                                                    count: 5,
+                                                    value: 0,
+                                                    half: true,
+                                                    texts: {
+                                                      1: "特别差评",
+                                                      2: "差评",
+                                                      3: "一般",
+                                                      4: "好评",
+                                                      5: "特别好评",
+                                                    },
+                                                    onEvent: {
+                                                      change: {
+                                                        actions: [
+                                                          {
+                                                            actionType: "ajax",
+                                                            args: {
+                                                              api: {
+                                                                method: "get",
+                                                                url: "HOST/score-document?doc_id=$doc_id&id=$id&rating=${event.data.value}",
+                                                              },
+                                                            },
+                                                          },
+                                                          {
+                                                            componentId:
+                                                              "u:1sadfnn2kjf",
+                                                            actionType:
+                                                              "reload",
+                                                            dataMergeMode:
+                                                              "override",
+                                                          },
+                                                        ],
+                                                      },
+                                                    },
+                                                  },
+                                                  {
+                                                    type: "form",
+                                                    api: "HOST/comment-document?id=$id&doc_id=$doc_id",
+                                                    body: [
+                                                      {
+                                                        name: "comment",
+                                                        id: "u:jiof1fsdf",
+                                                        type: "input-text",
+                                                        label: "留下你的评价吧",
+                                                        borderMode: "half",
+                                                        inputControlClassName:
+                                                          "bg-gray-100",
+                                                      },
+                                                    ],
+                                                    onEvent: {
+                                                      submitSucc: {
+                                                        actions: [
+                                                          {
+                                                            componentId:
+                                                              "u:1sadfnn2kjf",
+                                                            actionType:
+                                                              "reload",
+                                                            dataMergeMode:
+                                                              "override",
+                                                          },
+                                                          {
+                                                            componentId:
+                                                              "u:jiof1fsdf",
+                                                            actionType: "reset",
+                                                          },
+                                                        ],
+                                                      },
+                                                    },
+                                                  },
+                                                ],
+                                              },
+                                            ],
+                                            actions: [],
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
                                 {
                                   // 下载文件
                                   type: "button",
