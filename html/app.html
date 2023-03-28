@@ -56,58 +56,486 @@
                       },
                       {
                         type: "image",
-                        imageMode: "original",
+                        width: "200px",
+                        height: "200px",
                         src: "HOST/zsearch_show.jpg",
-
-                        // type: "chart",
-                        // config: {
-                        //   graphic: {
-                        //     elements: [
-                        //       {
-                        //         type: "text",
-                        //         left: "center",
-                        //         top: "center",
-                        //         style: {
-                        //           text: "ZSearch",
-                        //           fontSize: 150,
-                        //           fontWeight: "bold",
-                        //           lineDash: [0, 200],
-                        //           lineDashOffset: 0,
-                        //           fill: "transparent",
-                        //           stroke: "#000",
-                        //           lineWidth: 1,
-                        //         },
-                        //         keyframeAnimation: {
-                        //           duration: 4000,
-                        //           loop: false,
-                        //           keyframes: [
-                        //             {
-                        //               percent: 0.7,
-                        //               style: {
-                        //                 fill: "transparent",
-                        //                 lineDashOffset: 200,
-                        //                 lineDash: [200, 0],
-                        //               },
-                        //             },
-                        //             {
-                        //               // Stop for a while.
-                        //               percent: 0.8,
-                        //               style: {
-                        //                 fill: "transparent",
-                        //               },
-                        //             },
-                        //             {
-                        //               percent: 1,
-                        //               style: {
-                        //                 fill: "black",
-                        //               },
-                        //             },
-                        //           ],
-                        //         },
-                        //       },
-                        //     ],
-                        //   },
-                        // },
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "索引管理",
+                  icon: "fa fa-indent",
+                  body: {
+                    type: "page",
+                    body: [
+                      {
+                        type: "divider",
+                      },
+                      {
+                        type: "service",
+                        api: "HOST/get-all-index?id=$id",
+                        id: "u:8373741bf5cf",
+                        body: [
+                          {
+                            type: "table",
+                            source: "$paths",
+                            columnsTogglable: false,
+                            columns: [
+                              {
+                                label: "索引路径",
+                                name: "path",
+                                copyable: true,
+                                fixed: "left",
+                              },
+                              {
+                                label: "索引文档总数",
+                                name: "document_number",
+                              },
+                              {
+                                label: "最近修改时间",
+                                name: "mtime",
+                              },
+                            ],
+                            itemActions: [
+                              {
+                                // 预览
+                                type: "button",
+                                icon: "fa fa-eye",
+                                onEvent: {
+                                  click: {
+                                    actions: [
+                                      {
+                                        actionType: "ajax",
+                                        args: {
+                                          api: {
+                                            method: "get",
+                                            url: "HOST/get-index-info?path=${path}&id=$id",
+                                          },
+                                        },
+                                      },
+                                      {
+                                        actionType: "drawer",
+                                        drawer: {
+                                          title: "文档信息",
+                                          position: "left",
+                                          size: "lg",
+                                          resizable: true,
+                                          showCloseButton: false,
+                                          overlay: true,
+                                          closeOnEsc: true,
+                                          closeOnOutside: true,
+                                          body: {
+                                            type: "table",
+                                            source: "$infos",
+                                            columns: [
+                                              {
+                                                name: "doc_id",
+                                                label: "文档编号",
+                                              },
+                                              {
+                                                name: "doc_path",
+                                                label: "文档路径",
+                                                copyable: true,
+                                              },
+                                            ],
+                                            itemActions: [
+                                              {
+                                                // 预览
+                                                type: "button",
+                                                icon: "fa fa-eye",
+                                                onEvent: {
+                                                  click: {
+                                                    actions: [
+                                                      {
+                                                        actionType: "drawer",
+                                                        drawer: {
+                                                          title: "文档信息",
+                                                          position: "left",
+                                                          size: "lg",
+                                                          resizable: true,
+                                                          showCloseButton: false,
+                                                          overlay: true,
+                                                          closeOnEsc: true,
+                                                          closeOnOutside: true,
+                                                          body: [
+                                                            {
+                                                              type: "service",
+                                                              api: "HOST/get-document-property?doc_id=$doc_id&id=$id",
+                                                              body: {
+                                                                type: "property",
+                                                                column: 1,
+                                                                title:
+                                                                  "文档属性",
+                                                                items: [
+                                                                  {
+                                                                    label:
+                                                                      "完整路径",
+                                                                    content:
+                                                                      "$doc_path",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "单词量",
+                                                                    content:
+                                                                      "$word_count",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "键值对量",
+                                                                    content:
+                                                                      "$kvs_count",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "文件大小",
+                                                                    content:
+                                                                      "$size",
+                                                                  },
+                                                                  {
+                                                                    label:
+                                                                      "最近修改时间",
+                                                                    content:
+                                                                      "$mtime",
+                                                                  },
+                                                                ],
+                                                              },
+                                                            },
+                                                          ],
+                                                        },
+                                                      },
+                                                    ],
+                                                  },
+                                                },
+                                              },
+                                              {
+                                                type: "button",
+                                                icon: "fa fa-commenting",
+                                                onEvent: {
+                                                  click: {
+                                                    actions: [
+                                                      {
+                                                        actionType: "drawer",
+                                                        drawer: {
+                                                          title: "文档评论",
+                                                          position: "left",
+                                                          size: "lg",
+                                                          resizable: true,
+                                                          showCloseButton: false,
+                                                          overlay: true,
+                                                          closeOnEsc: true,
+                                                          closeOnOutside: true,
+                                                          body: [
+                                                            {
+                                                              type: "service",
+                                                              api: "HOST/get-document-comment-rating?doc_id=$doc_id&id=$id",
+                                                              id: "u:1sadfnn2kjf",
+                                                              body: [
+                                                                {
+                                                                  type: "table",
+                                                                  source:
+                                                                    "$comments",
+                                                                  columns: [
+                                                                    {
+                                                                      name: "user_name",
+                                                                      label:
+                                                                        "评论用户",
+                                                                    },
+                                                                    {
+                                                                      name: "comment_time",
+                                                                      label:
+                                                                        "评论时间",
+                                                                    },
+                                                                    {
+                                                                      name: "comment",
+                                                                      label:
+                                                                        "评论内容",
+                                                                    },
+                                                                  ],
+                                                                },
+                                                                {
+                                                                  type: "tag",
+                                                                  color:
+                                                                    "processing",
+                                                                  label:
+                                                                    "$people_number个评价 平均评分 $avg_rating",
+                                                                },
+                                                                {
+                                                                  type: "input-rating",
+                                                                  count: 5,
+                                                                  value: 0,
+                                                                  half: true,
+                                                                  texts: {
+                                                                    1: "特别差评",
+                                                                    2: "差评",
+                                                                    3: "一般",
+                                                                    4: "好评",
+                                                                    5: "特别好评",
+                                                                  },
+                                                                  onEvent: {
+                                                                    change: {
+                                                                      actions: [
+                                                                        {
+                                                                          actionType:
+                                                                            "ajax",
+                                                                          args: {
+                                                                            api: {
+                                                                              method:
+                                                                                "get",
+                                                                              url: "HOST/score-document?doc_id=$doc_id&id=$id&rating=${event.data.value}",
+                                                                            },
+                                                                          },
+                                                                        },
+                                                                        {
+                                                                          componentId:
+                                                                            "u:1sadfnn2kjf",
+                                                                          actionType:
+                                                                            "reload",
+                                                                          dataMergeMode:
+                                                                            "override",
+                                                                        },
+                                                                      ],
+                                                                    },
+                                                                  },
+                                                                },
+                                                                {
+                                                                  type: "form",
+                                                                  api: "HOST/comment-document?id=$id&doc_id=$doc_id",
+                                                                  body: [
+                                                                    {
+                                                                      name: "comment",
+                                                                      id: "u:jiof1fsdf",
+                                                                      type: "input-text",
+                                                                      label:
+                                                                        "留下你的评价吧",
+                                                                      borderMode:
+                                                                        "half",
+                                                                      inputControlClassName:
+                                                                        "bg-gray-100",
+                                                                    },
+                                                                  ],
+                                                                  onEvent: {
+                                                                    submitSucc:
+                                                                      {
+                                                                        actions:
+                                                                          [
+                                                                            {
+                                                                              componentId:
+                                                                                "u:1sadfnn2kjf",
+                                                                              actionType:
+                                                                                "reload",
+                                                                              dataMergeMode:
+                                                                                "override",
+                                                                            },
+                                                                            {
+                                                                              componentId:
+                                                                                "u:jiof1fsdf",
+                                                                              actionType:
+                                                                                "reset",
+                                                                            },
+                                                                          ],
+                                                                      },
+                                                                  },
+                                                                },
+                                                              ],
+                                                            },
+                                                          ],
+                                                          actions: [],
+                                                        },
+                                                      },
+                                                    ],
+                                                  },
+                                                },
+                                              },
+                                              {
+                                                // 下载文件
+                                                type: "button",
+                                                icon: "fa fa-download",
+                                                onEvent: {
+                                                  click: {
+                                                    actions: [
+                                                      {
+                                                        actionType: "ajax",
+                                                        args: {
+                                                          api: {
+                                                            method: "download",
+                                                            url: "HOST/download-document?doc_id=$doc_id&id=$id",
+                                                          },
+                                                        },
+                                                      },
+                                                      {
+                                                        componentId:
+                                                          "u:90adflsdfsf",
+                                                        actionType: "reload",
+                                                        dataMergeMode:
+                                                          "override",
+                                                      },
+                                                    ],
+                                                  },
+                                                },
+                                              },
+                                            ],
+                                          },
+                                          actions: [],
+                                        },
+                                      },
+                                    ],
+                                  },
+                                },
+                              },
+                              {
+                                // 删除按钮
+                                type: "button",
+                                icon: "fa fa-times",
+                                onEvent: {
+                                  click: {
+                                    actions: [
+                                      {
+                                        actionType: "ajax",
+                                        args: {
+                                          api: {
+                                            method: "get",
+                                            url: "HOST/remove-index?path=${path}&id=$id",
+                                          },
+                                        },
+                                      },
+                                      {
+                                        componentId: "u:8373741bf5cf",
+                                        actionType: "reload",
+                                        dataMergeMode: "override",
+                                      },
+                                      {
+                                        componentId: "u:12ijo3j1o2d",
+                                        actionType: "reload",
+                                        dataMergeMode: "override",
+                                      },
+                                    ],
+                                  },
+                                },
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        type: "button",
+                        label: "刷新",
+                        onEvent: {
+                          click: {
+                            weight: 0,
+                            actions: [
+                              {
+                                componentId: "u:8373741bf5cf",
+                                actionType: "reload",
+                                dataMergeMode: "override",
+                              },
+                              {
+                                componentId: "u:12ijo3j1o2d",
+                                actionType: "reload",
+                                dataMergeMode: "override",
+                              },
+                            ],
+                          },
+                        },
+                      },
+                      {
+                        label: "重建数据库",
+                        type: "button",
+                        onEvent: {
+                          click: {
+                            actions: [
+                              {
+                                actionType: "dialog",
+                                dialog: {
+                                  body: "确认要重建数据库吗 —— 已有的统计信息也会被删除",
+                                  onEvent: {
+                                    confirm: {
+                                      actions: [
+                                        {
+                                          actionType: "ajax",
+                                          args: {
+                                            api: {
+                                              method: "get",
+                                              url: "HOST/rebuild-all-index?id=$id",
+                                            },
+                                          },
+                                        },
+                                        {
+                                          componentId: "u:8373741bf5cf",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
+                                        },
+                                        {
+                                          componentId: "u:12ijo3j1o2d",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
+                                        },
+                                        {
+                                          componentId: "u:90adflsdfsf",
+                                          actionType: "reload",
+                                          dataMergeMode: "override",
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                              },
+                            ],
+                          },
+                        },
+                        // actionType: "ajax",
+                        // confirmText: "确认要重新索引所有条目 —— 可能需要一段时间",
+                        // api: { method: "get", url: "HOST/rebuild-all-index" },
+                      },
+                      {
+                        label: "添加监听目录",
+                        type: "button",
+                        onEvent: {
+                          click: {
+                            actions: [
+                              {
+                                actionType: "dialog",
+                                dialog: {
+                                  title: "",
+                                  closeOnEsc: true,
+                                  closeOnOutside: true,
+                                  body: {
+                                    type: "form",
+                                    api: "HOST/add-index?id=$id",
+                                    id: "u:651asdfsadf",
+                                    autoFocus: true,
+                                    body: [
+                                      {
+                                        type: "input-text",
+                                        name: "path",
+                                        label: "文件夹路径",
+                                        placeholder: "绝对路径，以 / 开头",
+                                        required: true,
+                                        validateOnChange: true,
+                                      },
+                                    ],
+                                    onEvent: {
+                                      submitSucc: {
+                                        actions: [
+                                          {
+                                            componentId: "u:8373741bf5cf",
+                                            actionType: "reload",
+                                            dataMergeMode: "override",
+                                          },
+                                          {
+                                            componentId: "u:12ijo3j1o2d",
+                                            actionType: "reload",
+                                            dataMergeMode: "override",
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            ],
+                          },
+                        },
                       },
                     ],
                   },
@@ -393,342 +821,6 @@
                             },
                           },
                         ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "索引管理",
-                  icon: "fa fa-indent",
-                  body: {
-                    type: "page",
-                    body: [
-                      {
-                        type: "divider",
-                      },
-                      {
-                        type: "service",
-                        api: "HOST/get-all-index?id=$id",
-                        id: "u:8373741bf5cf",
-                        body: [
-                          {
-                            type: "table",
-                            source: "$paths",
-                            columnsTogglable: false,
-                            columns: [
-                              {
-                                label: "索引路径",
-                                name: "path",
-                                copyable: true,
-                                fixed: "left",
-                              },
-                              {
-                                label: "索引文档总数",
-                                name: "document_number",
-                              },
-                              {
-                                label: "最近修改时间",
-                                name: "mtime",
-                              },
-                            ],
-                            itemActions: [
-                              {
-                                // 预览
-                                type: "button",
-                                icon: "fa fa-eye",
-                                onEvent: {
-                                  click: {
-                                    actions: [
-                                      {
-                                        actionType: "ajax",
-                                        args: {
-                                          api: {
-                                            method: "get",
-                                            url: "HOST/get-index-info?path=${path}&id=$id",
-                                          },
-                                        },
-                                      },
-                                      {
-                                        actionType: "drawer",
-                                        drawer: {
-                                          title: "文档信息",
-                                          position: "left",
-                                          size: "lg",
-                                          resizable: true,
-                                          showCloseButton: false,
-                                          overlay: true,
-                                          closeOnEsc: true,
-                                          closeOnOutside: true,
-                                          body: {
-                                            type: "table",
-                                            source: "$infos",
-                                            columns: [
-                                              {
-                                                name: "doc_id",
-                                                label: "文档编号",
-                                              },
-                                              {
-                                                name: "doc_path",
-                                                label: "文档路径",
-                                                copyable: true,
-                                              },
-                                            ],
-                                            itemActions: [
-                                              {
-                                                // 预览
-                                                type: "button",
-                                                icon: "fa fa-eye",
-                                                onEvent: {
-                                                  click: {
-                                                    actions: [
-                                                      {
-                                                        actionType: "drawer",
-                                                        drawer: {
-                                                          title: "文档信息",
-                                                          position: "left",
-                                                          size: "lg",
-                                                          resizable: true,
-                                                          showCloseButton: false,
-                                                          overlay: true,
-                                                          closeOnEsc: true,
-                                                          closeOnOutside: true,
-                                                          body: [
-                                                            {
-                                                              type: "service",
-                                                              api: "HOST/get-document-property?doc_id=$doc_id&id=$id",
-                                                              body: {
-                                                                type: "property",
-                                                                column: 1,
-                                                                title:
-                                                                  "文档属性",
-                                                                items: [
-                                                                  {
-                                                                    label:
-                                                                      "完整路径",
-                                                                    content:
-                                                                      "$doc_path",
-                                                                  },
-                                                                  {
-                                                                    label:
-                                                                      "单词量",
-                                                                    content:
-                                                                      "$word_count",
-                                                                  },
-                                                                  {
-                                                                    label:
-                                                                      "键值对量",
-                                                                    content:
-                                                                      "$kvs_count",
-                                                                  },
-                                                                  {
-                                                                    label:
-                                                                      "文件大小",
-                                                                    content:
-                                                                      "$size",
-                                                                  },
-                                                                  {
-                                                                    label:
-                                                                      "最近修改时间",
-                                                                    content:
-                                                                      "$mtime",
-                                                                  },
-                                                                ],
-                                                              },
-                                                            },
-                                                          ],
-                                                        },
-                                                      },
-                                                    ],
-                                                  },
-                                                },
-                                              },
-                                            ],
-                                          },
-                                          actions: [],
-                                        },
-                                      },
-                                    ],
-                                  },
-                                },
-                              },
-
-                              // {
-                              //   // 上传文件
-                              //   type: "button",
-                              //   icon: "fa fa-cloud-upload",
-                              //   onEvent: {
-                              //     click: {
-                              //       actions: [
-                              //         {
-                              //           type: "input-file",
-                              //           name: "file",
-                              //           label: "File",
-                              //           accept: "*",
-                              //           receiver: "/amis/api/upload/file",
-                              //           drag: true,
-                              //         },
-                              //         {
-                              //           componentId: "u:8373741bf5cf",
-                              //           actionType: "reload",
-                              //           dataMergeMode: "override",
-                              //         },
-                              //       ],
-                              //     },
-                              //   },
-                              // },
-                              {
-                                // 删除按钮
-                                type: "button",
-                                icon: "fa fa-times",
-                                onEvent: {
-                                  click: {
-                                    actions: [
-                                      {
-                                        actionType: "ajax",
-                                        args: {
-                                          api: {
-                                            method: "get",
-                                            url: "HOST/remove-index?path=${path}&id=$id",
-                                          },
-                                        },
-                                      },
-                                      {
-                                        componentId: "u:8373741bf5cf",
-                                        actionType: "reload",
-                                        dataMergeMode: "override",
-                                      },
-                                      {
-                                        componentId: "u:12ijo3j1o2d",
-                                        actionType: "reload",
-                                        dataMergeMode: "override",
-                                      },
-                                    ],
-                                  },
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        type: "button",
-                        label: "刷新",
-                        onEvent: {
-                          click: {
-                            weight: 0,
-                            actions: [
-                              {
-                                componentId: "u:8373741bf5cf",
-                                actionType: "reload",
-                                dataMergeMode: "override",
-                              },
-                              {
-                                componentId: "u:12ijo3j1o2d",
-                                actionType: "reload",
-                                dataMergeMode: "override",
-                              },
-                            ],
-                          },
-                        },
-                      },
-                      {
-                        label: "重建数据库",
-                        type: "button",
-                        onEvent: {
-                          click: {
-                            actions: [
-                              {
-                                actionType: "dialog",
-                                dialog: {
-                                  body: "确认要重建数据库吗 —— 已有的统计信息也会被删除",
-                                  onEvent: {
-                                    confirm: {
-                                      actions: [
-                                        {
-                                          actionType: "ajax",
-                                          args: {
-                                            api: {
-                                              method: "get",
-                                              url: "HOST/rebuild-all-index?id=$id",
-                                            },
-                                          },
-                                        },
-                                        {
-                                          componentId: "u:8373741bf5cf",
-                                          actionType: "reload",
-                                          dataMergeMode: "override",
-                                        },
-                                        {
-                                          componentId: "u:12ijo3j1o2d",
-                                          actionType: "reload",
-                                          dataMergeMode: "override",
-                                        },
-                                        {
-                                          componentId: "u:90adflsdfsf",
-                                          actionType: "reload",
-                                          dataMergeMode: "override",
-                                        },
-                                      ],
-                                    },
-                                  },
-                                },
-                              },
-                            ],
-                          },
-                        },
-                        // actionType: "ajax",
-                        // confirmText: "确认要重新索引所有条目 —— 可能需要一段时间",
-                        // api: { method: "get", url: "HOST/rebuild-all-index" },
-                      },
-                      {
-                        label: "添加监听目录",
-                        type: "button",
-                        onEvent: {
-                          click: {
-                            actions: [
-                              {
-                                actionType: "dialog",
-                                dialog: {
-                                  title: "",
-                                  closeOnEsc: true,
-                                  closeOnOutside: true,
-                                  body: {
-                                    type: "form",
-                                    api: "HOST/add-index?id=$id",
-                                    id: "u:651asdfsadf",
-                                    autoFocus: true,
-                                    body: [
-                                      {
-                                        type: "input-text",
-                                        name: "path",
-                                        label: "文件夹路径",
-                                        placeholder: "绝对路径，以 / 开头",
-                                        required: true,
-                                        validateOnChange: true,
-                                      },
-                                    ],
-                                    onEvent: {
-                                      submitSucc: {
-                                        actions: [
-                                          {
-                                            componentId: "u:8373741bf5cf",
-                                            actionType: "reload",
-                                            dataMergeMode: "override",
-                                          },
-                                          {
-                                            componentId: "u:12ijo3j1o2d",
-                                            actionType: "reload",
-                                            dataMergeMode: "override",
-                                          },
-                                        ],
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            ],
-                          },
-                        },
                       },
                     ],
                   },
