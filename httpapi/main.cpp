@@ -8,14 +8,23 @@ void run()
     std::unordered_map<std::string, std::pair<DatabasePtr, FileSystemDaemonPtr>> user_database;
     FileSystemDaemons daemons;
 
-    for (const auto& [username, _] : USERNAME_PASSWORDS)
+    // db_name -> (username, password)
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>> db_with_users;
+
+    for (const UserAttribute &user_attribute : USERNAME_PASSWORDS)
     {
-        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + username, true);
+        db_with_users[user_attribute.database_name].push_back(std::make_pair(user_attribute.username, user_attribute.password));
+    }
+
+    for (const auto&[db_name, users] : db_with_users)
+    {
+        auto db = std::make_shared<Database>(ROOT_PATH + "/database/" + db_name, true);
 
         auto daemon = std::make_shared<FileSystemDaemon>(*db);
         daemons.add(daemon);
 
-        user_database.emplace(username, std::make_pair(db, daemon));
+        for (const auto& [username, _] : users)
+            user_database.emplace(username, std::make_pair(db, daemon));
     }
 
     // 启动 Daemon
@@ -39,7 +48,7 @@ void run()
     server.stopAll(true);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     if (argc < 3)
     {

@@ -17,8 +17,8 @@ std::string decrypt(std::string id)
 
 bool validateUser(const std::string& username, const std::string& password)
 {
-    auto iter = USERNAME_PASSWORDS.find(username);
-    if (iter != USERNAME_PASSWORDS.end() && iter->second == password)
+    auto iter = USERNAME_PASSWORDS.find(UserAttribute(username, "", ""));
+    if (iter != USERNAME_PASSWORDS.end() && iter->password == password)
         return true;
     return false;
 }

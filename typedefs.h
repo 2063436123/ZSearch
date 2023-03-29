@@ -40,51 +40,90 @@
 using Names = std::vector<std::string>;
 
 POCO_DECLARE_EXCEPTION(Foundation_API, FileTypeUnmatchException, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(FileTypeUnmatchException, Poco::LogicException, "file type unmatch with reader")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, DatabaseOccupiedException, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(DatabaseOccupiedException, Poco::LogicException, "database path must be a directory")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, DateTimeFormatException, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(DateTimeFormatException, Poco::LogicException, "date time format error")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, UnreachableException, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(UnreachableException, Poco::LogicException, "unreachable!")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, UnexpectedChar, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(UnexpectedChar, Poco::LogicException, "Unexpected Char!")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, UnexpectedToken, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(UnexpectedToken, Poco::LogicException, "Unexpected Token!")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, UnmatchedToken, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(UnmatchedToken, Poco::LogicException, "Unmatched Token!")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, ParseException, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(ParseException, Poco::LogicException, "Parse Error!")
 
 POCO_DECLARE_EXCEPTION(Foundation_API, QueryException, Poco::LogicException)
+
 POCO_IMPLEMENT_EXCEPTION(QueryException, Poco::LogicException, "Query Error!")
 
 std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
 std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/master/html";
 
 const std::unordered_set<std::string> IGNORED_FILE_EXTENSIONS = {".DS_Store", "", ".csv", ".test"};
-const std::unordered_set<std::string> ALLOWED_FILE_EXTENSIONS = {".txt", ".h", ".cpp", ".sh", ".xml", ".json", ".story", ".md"};
+const std::unordered_set<std::string> ALLOWED_FILE_EXTENSIONS = {".txt", ".h", ".cpp", ".sh", ".xml", ".json", ".story",
+                                                                 ".md"};
 
 const int SCORE_GRANULARITY = 1000;
 const int DAEMON_INTERVAL_SECONDS = 3;
 const int MAX_FILE_NUMBER_EVERY_INDEX = 5000;
 
-const std::unordered_map<std::string, std::string> USERNAME_PASSWORDS = {{"admin", "admin"}, {"peter", "123456"}};
+struct UserAttribute
+{
+    UserAttribute(const std::string& username_, const std::string& password_, const std::string& database_name_)
+        : username(username_), password(password_), database_name(database_name_) {}
+
+    std::string username;
+    std::string password;
+    std::string database_name;
+
+    bool operator==(const UserAttribute& rhs) const
+    {
+        return username == rhs.username;
+    }
+};
+
+namespace std {
+    template<> struct hash<UserAttribute>
+    {
+        std::size_t operator()(const UserAttribute& s) const noexcept
+        {
+            return std::hash<std::string>{}(s.username);
+        }
+    };
+}
+
+const std::unordered_set<UserAttribute> USERNAME_PASSWORDS = {
+        UserAttribute("admin", "admin", "database1"),
+        UserAttribute("peter", "123456", "database1"),
+        UserAttribute("louis", "123456", "database2")
+};
 
 template<typename T>
-void THROW_HELPER(const char* file, int line, const char* func, const T& e) __attribute__ ((noreturn));
+void THROW_HELPER(const char *file, int line, const char *func, const T &e) __attribute__ ((noreturn));
 
 #define THROW(exception) THROW_HELPER(__FILE__, __LINE__, __func__, exception)
 
 template<typename T>
-void THROW_HELPER(const char* file, int line, const char* func, const T& e)
+void THROW_HELPER(const char *file, int line, const char *func, const T &e)
 {
     static_assert(std::is_base_of_v<Poco::Exception, T>);
     std::string location_msg = std::string(file) + ':' + std::to_string(line) + "," + func;
