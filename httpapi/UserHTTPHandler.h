@@ -1,10 +1,47 @@
 #pragma once
 
 #include "../typedefs.h"
+#include <random>
 #include "HTTPHandler.h"
+
+void addRandPiece(std::string& id, int piece_length = 5)
+{
+    auto generate_piece = [=]() {
+        const std::string allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-+_";
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, allowed_chars.size() - 1);
+
+        std::string random_string(piece_length, ' ');
+        for (int i = 0; i < random_string.length(); i++) {
+            random_string[i] = allowed_chars[dis(gen)];
+        }
+        return random_string;
+    };
+
+    std::string res;
+    for (char ch : id)
+    {
+        res += ch;
+        res += generate_piece();
+    }
+    id = res;
+}
+
+void removePiece(std::string& id, int piece_length = 5)
+{
+    std::string res;
+    for (size_t i = 0; i < id.size(); i++)
+    {
+        res += id[i];
+        i += piece_length;
+    }
+    id = res;
+}
 
 std::string encrypt(std::string id)
 {
+    addRandPiece(id);
     std::reverse(id.begin(), id.end());
     return id;
 }
@@ -12,6 +49,7 @@ std::string encrypt(std::string id)
 std::string decrypt(std::string id)
 {
     std::reverse(id.begin(), id.end());
+    removePiece(id);
     return id;
 }
 
