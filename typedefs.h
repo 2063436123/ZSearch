@@ -28,6 +28,7 @@
 #include <Poco/URI.h>
 #include <Poco/Net/HTMLForm.h>
 #include <Poco/Net/HTTPServer.h>
+#include <Poco/ErrorHandler.h>
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPRequestHandlerFactory.h>
 #include <Poco/Net/HTTPResponse.h>
@@ -75,16 +76,17 @@ POCO_DECLARE_EXCEPTION(Foundation_API, QueryException, Poco::LogicException)
 
 POCO_IMPLEMENT_EXCEPTION(QueryException, Poco::LogicException, "Query Error!")
 
-std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
-std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/master/html";
+inline std::string ROOT_PATH = "/Users/peter/Code/GraduationDesignSrc/master";
+inline std::string RESOURCE_PATH = "/Users/peter/Code/GraduationDesignSrc/master/html";
 
 const std::unordered_set<std::string> IGNORED_FILE_EXTENSIONS = {".DS_Store", "", ".csv", ".test"};
 const std::unordered_set<std::string> ALLOWED_FILE_EXTENSIONS = {".txt", ".h", ".cpp", ".sh", ".xml", ".json", ".story",
                                                                  ".md"};
 
 const int SCORE_GRANULARITY = 1000;
-const int DAEMON_INTERVAL_SECONDS = 3;
+const int DAEMON_INTERVAL_SECONDS = 10;
 const int MAX_FILE_NUMBER_EVERY_INDEX = 5000;
+const int DEFAULT_PATCH_SIZE = 4;
 
 struct UserAttribute
 {

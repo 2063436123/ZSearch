@@ -113,7 +113,7 @@ public:
             }
         };
 
-        Timer search_timer;
+        StopWatch search_timer;
 
         if (std::all_of(query.begin(), query.end(), [](char c) { return !Poco::Ascii::isSpace(c); }))
         {

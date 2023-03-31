@@ -109,7 +109,8 @@ public:
         }
 
         db.addDocumentDownloadFreq(doc_id);
-        std::ifstream file(document_ptr->getPath().string());
+        auto file_path = document_ptr->getPath();
+        std::ifstream file(file_path.string());
         if (!file.is_open())
         {
             auto& out = makeResponseOK(response, content_type);
@@ -118,7 +119,9 @@ public:
         else
         {
             response.set("Content-Disposition", "attachment; filename=\"" + document_ptr->getPath().filename().string() + "\"");
+            response.setContentType("application/json; charset=UTF-8");
             response.setStatus(HTTPResponse::HTTP_OK);
+            response.setContentLength(file_size(file_path));
             auto& out = response.send();
 
             Poco::StreamCopier::copyStream(file, out);

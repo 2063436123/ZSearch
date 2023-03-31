@@ -304,11 +304,11 @@ TEST(dynamicBitSet, base)
 
 TEST(Timer, base)
 {
-    Timer a;
+    StopWatch a;
     sleep(2);
     EXPECT_EQ((int)a.elapsedSeconds(), 2);
 
-    Timer b;
+    StopWatch b;
     EXPECT_EQ((int)b.elapsedSeconds(), 0);
 }
 

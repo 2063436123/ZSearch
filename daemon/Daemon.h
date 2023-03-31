@@ -150,7 +150,7 @@ private:
         if (!exists(path))
             return;
 
-        Timer index_timer;
+        StopWatch index_timer;
 //        std::cout << "[smartIndex " << path.string() << "]" << std::endl;
         std::unordered_map<std::string, size_t>& indexed_documents = paths[path];
         std::unordered_set<std::string> existed_files = gatherExistedFiles(path);

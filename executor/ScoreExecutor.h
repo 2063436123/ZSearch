@@ -13,7 +13,7 @@ public:
     // word_freq 表示 word 在 query 中的词频
     ScoreExecutor(Database& db_, const std::unordered_map<std::string, double>& word_freq_) : Executor(db_), word_freq(word_freq_) {}
 
-    std::any execute(const std::any &doc_ids_) const override
+    std::pair<bool, std::any> execute(const std::any &doc_ids_) override
     {
         auto doc_ids = std::any_cast<DocIds>(doc_ids_);
         Scores scores; // score -> doc_id
@@ -27,7 +27,7 @@ public:
         }
 
         // 提取 doc_ids order by score
-        return scores;
+        return {true, scores};
     }
 
 private:

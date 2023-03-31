@@ -20,11 +20,11 @@ class HavingExecutor : public Executor
 public:
     HavingExecutor(Database& db_, ConjunctionTree root_ = nullptr) : Executor(db_), root(std::move(root_)) {}
 
-    std::any execute(const std::any &doc_ids_) const override
+    std::pair<bool, std::any> execute(const std::any &doc_ids_) override
     {
         if (!root) // output all get doc_ids
         {
-            return doc_ids_;
+            return {true, doc_ids_};
         }
         auto doc_ids = std::any_cast<DocIds>(doc_ids_);
         DocIds ret;
@@ -38,7 +38,7 @@ public:
             if (determinePredicate(kvs, root.ptr()))
                 ret.emplace(doc_id);
         }
-        return ret;
+        return {true, ret};
     }
 
 private:

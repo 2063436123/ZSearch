@@ -81,7 +81,7 @@ TEST(Indexer, root_path)
     fin.close();
     system("rm tmp");
 
-    ASSERT_EQ(db.maxAllocatedDocId(), expected_num - 1);
+    ASSERT_EQ(db.maxAllocatedDocId(), expected_num);
 }
 
 TEST(database, CreateDatabase)

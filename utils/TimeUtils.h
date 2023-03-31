@@ -83,10 +83,10 @@ DateTime getModifiedLastDateTime(const std::filesystem::path& path)
     return duration_cast<std::chrono::seconds>(last_write_time(path).time_since_epoch()).count();
 }
 
-class Timer
+class StopWatch
 {
 public:
-    Timer()
+    StopWatch()
     {
         start = std::chrono::system_clock::now();
     }

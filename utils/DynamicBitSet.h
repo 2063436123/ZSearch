@@ -8,15 +8,43 @@ public:
     explicit DynamicBitSet(size_t size_) : size(size_), bit_set((size + ByteNum - 1) / ByteNum) {}
 
     // the minimal in vec_ should >= 1, and the maximal should <= size_.
-    explicit DynamicBitSet(size_t size_, const std::vector<size_t>& vec) : DynamicBitSet(size_)
+    explicit DynamicBitSet(size_t size_, const std::vector<size_t>& vec, size_t cut_begin = 0, size_t cut_end = 0) : DynamicBitSet(size_)
     {
-        for (size_t i : vec)
-            set(i);
+        if (!cut_end)
+        {
+            for (size_t i : vec)
+                set(i);
+        }
+        else
+        {
+            for (size_t i = cut_begin; i < cut_end && i < vec.size(); i++)
+            {
+                set(vec[i]);
+            }
+        }
+    }
+
+    DynamicBitSet& operator=(const DynamicBitSet& rhs)
+    {
+        if (size != rhs.size)
+            THROW(Poco::InvalidArgumentException());
+        bit_set = rhs.bit_set;
+        return *this;
     }
 
     DynamicBitSet& fill()
     {
         std::fill(bit_set.begin(), bit_set.end(), UINT64_MAX);
+        return *this;
+    }
+
+    // cut_index starts from 0.
+    DynamicBitSet& fill_range(size_t cut_begin, size_t cut_end)
+    {
+        for (size_t i = cut_begin; i < cut_end && i < size; i++)
+        {
+            set(i + 1);
+        }
         return *this;
     }
 
@@ -90,6 +118,11 @@ public:
             THROW(Poco::InvalidArgumentException());
         std::transform(bit_set.begin(), bit_set.end(), rhs.bit_set.begin(), bit_set.begin(), [](uint64_t a, uint64_t b) { return a | b; });
         return *this;
+    }
+
+    bool empty() const
+    {
+        return std::all_of(bit_set.begin(), bit_set.end(), [](uint64_t v) { return v == 0; });
     }
 
 private:

@@ -1,4 +1,5 @@
 #include "HTTPHandlerFactory.h"
+#include "ErrorHandler.h"
 #include <iostream>
 
 using namespace Poco::Net;
@@ -31,6 +32,10 @@ void run()
     Poco::Timer daemon_timer(0, DAEMON_INTERVAL_SECONDS * 1000);
     Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);
     daemon_timer.start(callback);
+
+    // 注册异常handler
+    MyErrorHandler my_error_handler;
+    Poco::ErrorHandler::set(&my_error_handler);
 
     // 注册 http 服务
     HTTPServer server(new HTTPHandlerFactory(user_database), ServerSocket(8080), new HTTPServerParams);
