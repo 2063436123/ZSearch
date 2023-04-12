@@ -72,7 +72,7 @@ private:
 
             score += idf * sqd * sqq;
         }
-        return score * SCORE_GRANULARITY /* + 1.0 是为了区分文档被删除的情况 */;
+        return score * SCORE_GRANULARITY;
     }
 
     const double k1 = 1.5, k3 = 1.5, b = 0.75;

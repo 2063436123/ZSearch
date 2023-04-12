@@ -17,12 +17,9 @@ public:
     Poco::Net::HTTPRequestHandler * createRequestHandler(const Poco::Net::HTTPServerRequest &request) override
     {
         // some useful: https://stackoverflow.com/questions/13386837/get-url-params-with-poco-library
-
         if (request.getMethod() != "GET" && request.getMethod() != "POST" && request.getMethod() != "DOWNLOAD")
         {
             httpLog("unsupported method: " + request.getMethod());
-            // 获取 POST 方法的参数
-            // 待验证 Poco::Net::HTMLForm form2(request, request.stream());
             THROW(Poco::NotImplementedException());
         }
 

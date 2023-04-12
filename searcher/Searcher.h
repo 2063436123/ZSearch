@@ -72,7 +72,11 @@ public:
         SearchResultSet res;
 
         auto transformScoresToResult = [this, &res](ExecutePipeline& pipeline, const std::string& word) -> void {
-            auto scores = std::any_cast<Scores>(pipeline.execute());
+            auto execution_res = pipeline.execute();
+            if (!execution_res.has_value())
+                return;
+
+            auto scores = std::any_cast<Scores>(execution_res);
 
             auto term_ptr = db.findTerm(word);
             if (!word.empty() && !term_ptr) // term_ptr 被删除，结果集失效 ———— 无法描述结果集
@@ -123,7 +127,7 @@ public:
             for (int query_id = 0; query_id < querys.size(); query_id++)
             {
                 LeafNode<std::string> leaf_node(querys[query_id]);
-                auto terms_executor = std::make_shared<TermsExecutor>(db, &leaf_node);
+                auto terms_executor = std::make_shared<TermsExecutor>(db, ConjunctionTree(&leaf_node));
                 auto score_executor = std::make_shared<ScoreExecutor>(db, std::unordered_map<std::string, double>{{querys[query_id], 1.0}});
                 auto limit_executor = std::make_shared<LimitExecutor> (db, 10);
 

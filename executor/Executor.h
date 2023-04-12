@@ -9,6 +9,7 @@ class Executor
 public:
     Executor(Database& db_) : db(db_) {}
 
+    // return first 表示是否还能再次执行，second表示该次执行的结果（仅当first == true时有效）
     virtual std::pair<bool, std::any> execute(const std::any &) = 0;
 
     virtual void clear() {}

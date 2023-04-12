@@ -2,6 +2,18 @@
 #include "Searcher.h"
 #include "indexer/Indexer.h"
 
+TEST(Searcher, base)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    Indexer indexer(db);
+    indexer.index(ROOT_PATH + "/articles");
+    Searcher searcher(db);
+
+    auto res = searcher.search("hello");
+    ASSERT_EQ(res.size(), 0);
+}
+
+
 TEST(Trie, you)
 {
     Database db(ROOT_PATH + "/database1", true);
