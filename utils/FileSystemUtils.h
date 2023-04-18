@@ -2,7 +2,7 @@
 
 #include "../typedefs.h"
 
-std::unordered_set<std::string> gatherExistedFiles(const std::filesystem::path& path)
+std::unordered_set<std::string> gatherExistedFiles(const std::filesystem::path &path)
 {
     if (!exists(path))
         return {};
@@ -11,12 +11,18 @@ std::unordered_set<std::string> gatherExistedFiles(const std::filesystem::path& 
         return {path.string()};
 
     std::unordered_set<std::string> res;
-    for (const auto& path_entry : std::filesystem::recursive_directory_iterator(path))
+    try
     {
-        if (path_entry.is_regular_file() && ALLOWED_FILE_EXTENSIONS.contains(path_entry.path().extension()))
+        for (const auto &path_entry : std::filesystem::recursive_directory_iterator(path))
         {
-            res.insert(path_entry.path().string());
+            if (path_entry.is_regular_file() && ALLOWED_FILE_EXTENSIONS.contains(path_entry.path().extension()))
+            {
+                res.insert(path_entry.path().string());
+            }
+
         }
+    } catch (std::exception &e) // TODO: 解决遍历文件时的权限问题，而不是跳过之
+    {
     }
     return res;
 }

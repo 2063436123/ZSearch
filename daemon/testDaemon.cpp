@@ -1,5 +1,24 @@
 #include "Daemon.h"
 
+TEST(Daemon, base0)
+{
+    Database db(ROOT_PATH + "/database1", true);
+    auto file_system_daemon = std::make_shared<FileSystemDaemon>(db);
+    FileSystemDaemons daemons;
+    daemons.add(file_system_daemon);
+
+    const int interval_seconds = 10;
+    const int valid_files_number = 5;
+
+    Poco::Timer timer(0, interval_seconds * 1000);
+    Poco::TimerCallback<FileSystemDaemons> callback(daemons, &FileSystemDaemons::run);
+    timer.start(callback);
+
+    file_system_daemon->addPath("/");
+    sleep(interval_seconds * 3);
+    EXPECT_EQ(db.maxAllocatedDocId(), valid_files_number);
+}
+
 TEST(Daemon, base)
 {
     Database db(ROOT_PATH + "/database1", true);
