@@ -118,13 +118,13 @@ public:
         }
         else
         {
+            response.setContentType("text/html;charset=UTF-8");
             response.set("Content-Disposition", "attachment; filename=\"" + document_ptr->getPath().filename().string() + "\"");
-            response.setContentType("application/json; charset=UTF-8");
             response.setStatus(HTTPResponse::HTTP_OK);
-            response.setContentLength(file_size(file_path));
             auto& out = response.send();
 
             Poco::StreamCopier::copyStream(file, out);
+            out << '.'; // fix `json text file` downloading `[object Object]` bug.
         }
     }
 
