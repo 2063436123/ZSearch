@@ -4,7 +4,7 @@
 
 template<typename T>
 concept ConstructorOnlyNeedDatabase = requires(T a) {
-    T{a}; // T must have a single argument constructor
+    T{a}; // T must have a single argument constructor which will be used for constructing by database
 };
 
 template <ConstructorOnlyNeedDatabase Executor>
